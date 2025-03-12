@@ -12,8 +12,8 @@ httpx==0.24.1
 tensorflow==2.13.0
 sentence-transformers==2.2.2
 python-multipart==0.0.6
-numpy>=1.23,<1.25  # Đảm bảo tương thích với TensorFlow
-transformers>=4.30.0
-torch>=2.0.0  # Phiên bản mới nhất của PyTorch
-beautifulsoup4
-requests
+numpy>=1.24,<=1.26
+transformers>=4.40.0
+torch>=2.0.0
+beautifulsoup4==4.12.3
+requests==2.32.3
