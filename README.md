@@ -1,3 +1,17 @@
+---
+title: My Hugging Face Space
+emoji: 🚀
+
+colorFrom: blue
+colorTo: purple
+sdk: streamlit
+sdk_version: "1.25.0"
+app_file: app.py
+pinned: false
+---
+
+Check out the configuration reference at [Hugging Face Spaces Config](https://huggingface.co/docs/hub/spaces-config-reference).
+
 # Social Media Toxicity Detector
 
 A browser extension that detects toxic, offensive, hate speech, and spam content on social media platforms using a machine learning model.
