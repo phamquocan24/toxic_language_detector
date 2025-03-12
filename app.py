@@ -2,8 +2,8 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-# Tạo một app mới hoặc sử dụng app từ backend
-app = backend_app
+# Khởi tạo app FastAPI (KHÔNG dùng backend_app)
+app = FastAPI()
 
 # Đảm bảo CORS được cấu hình đúng
 app.add_middleware(
