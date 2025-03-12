@@ -1,8 +1,9 @@
-FROM python:3.9-slim
+FROM python:3.10-slim
 
+# Thiết lập thư mục làm việc
 WORKDIR /app
 
-# Cài đặt các dependencies cần thiết
+# Cài đặt các gói hệ thống cần thiết
 RUN apt-get update && apt-get install -y \
     postgresql-client \
     sqlite3 \
@@ -16,12 +17,12 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Cập nhật pip, setuptools, wheel trước
+# Cập nhật pip, setuptools, wheel
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel
 
-# Sao chép và cài đặt dependencies trước (tối ưu cache)
+# Sao chép file requirements.txt và cài đặt dependencies
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN --mount=type=cache,target=/root/.cache/pip pip install --no-cache-dir -r requirements.txt
 
 # Sao chép toàn bộ ứng dụng
 COPY . .
