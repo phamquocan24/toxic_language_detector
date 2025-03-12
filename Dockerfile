@@ -14,6 +14,9 @@ RUN apt-get update && apt-get install -y \
 # Copy requirements first for better caching
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel
+RUN apt-get update && apt-get install -y git
+RUN apt-get update && apt-get install -y libgl1-mesa-glx libglib2.0-0
 
 # Copy the rest of the application
 COPY . .
