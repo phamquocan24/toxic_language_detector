@@ -126,7 +126,7 @@ async def api_root():
     }
 
 # Run application when executed directly
-if __name__ == "__main__":
-    port = int(settings.PORT) if hasattr(settings, "PORT") else 7860
-    logger.info(f"Starting application on port {port}")
-    uvicorn.run("app:app", host="0.0.0.0", port=port, reload=False)
+# if __name__ == "__main__":
+#     port = int(settings.PORT) if hasattr(settings, "PORT") else 7860
+#     logger.info(f"Starting application on port {port}")
+#     uvicorn.run("app:app", host="0.0.0.0", port=port, reload=False)
