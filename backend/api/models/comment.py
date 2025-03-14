@@ -1,8 +1,13 @@
+import sys
+print("Python version:", sys.version)
+print("SQLAlchemy version:", __import__('sqlalchemy').__version__)
+print("Available SQLAlchemy imports:", dir(__import__('sqlalchemy')))
 from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, DateTime, Text, Float, UniqueConstraint
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
 from backend.db.base import Base
+from sqlalchemy import Index
 
 class Comment(Base):
     __tablename__ = "comments"
@@ -30,7 +35,7 @@ class Comment(Base):
     user = relationship("User", back_populates="comments")
 
     # Add unique constraint for platform + comment_id to avoid duplicates
+    # Sử dụng Index thay vì UniqueConstraint
     __table_args__ = (
-        UniqueConstraint('source_platform', 'platform_comment_id', name='uix_platform_comment'),
+        Index('uix_platform_comment', 'source_platform', 'platform_comment_id', unique=True),
     )
-    
