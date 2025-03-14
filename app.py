@@ -346,10 +346,10 @@ async def login_form():
     """
     return HTMLResponse(content=html_content)
 
-# Note: DO NOT include the main block that starts the server
-# This is handled by Hugging Face Space directly through Procfile# Run application when executed directly
-if __name__ == "__main__":
-    import datetime
-    port = int(settings.PORT) if hasattr(settings, "PORT") else 7860
-    logger.info(f"Starting application on port {port}")
-    uvicorn.run("app:app", host="0.0.0.0", port=port, reload=False)
+# # Note: DO NOT include the main block that starts the server
+# # This is handled by Hugging Face Space directly through Procfile# Run application when executed directly
+# if __name__ == "__main__":
+#     import datetime
+#     port = int(settings.PORT) if hasattr(settings, "PORT") else 7860
+#     logger.info(f"Starting application on port {port}")
+#     uvicorn.run("app:app", host="0.0.0.0", port=port, reload=False)
