@@ -18,6 +18,9 @@ app.add_middleware(
 @app.get("/")
 async def root():
     return {"message": "Toxicity Detector API is running on Hugging Face Spaces"}
+@app.get("/test")
+async def test():
+    return {"result": "API endpoint working!"}
 
 # Chạy app nếu script được thực thi trực tiếp
 if __name__ == "__main__":
