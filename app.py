@@ -10,6 +10,8 @@ import logging
 from pathlib import Path
 import json
 import traceback
+import datetime
+from contextlib import asynccontextmanager
 
 import uvicorn
 from fastapi import FastAPI, HTTPException, Request, status, Depends
@@ -20,7 +22,7 @@ from fastapi.openapi.utils import get_openapi
 
 # Configure logging
 logging.basicConfig(
-    level=logging.DEBUG,  # Thay đổi level thành DEBUG để có thông tin chi tiết hơn
+    level=logging.DEBUG,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
 logger = logging.getLogger(__name__)
@@ -39,6 +41,32 @@ except ImportError:
     API_PREFIX = "/api"
     PROJECT_NAME = "Toxicity Detector API"
 
+# Define lifespan context manager (replaces on_event)
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """
+    Lifespan context manager for startup and shutdown events
+    """
+    # ===== Startup =====
+    logger.info("Starting up application")
+    
+    # Initialize database
+    try:
+        from backend.db.base import init_db
+        
+        logger.info("Initializing database...")
+        await init_db()
+        logger.info("Database initialized successfully")
+    except Exception as e:
+        logger.error(f"Database initialization error: {str(e)}")
+        logger.error(traceback.format_exc())
+    
+    # Yield control to the application
+    yield
+    
+    # ===== Shutdown =====
+    logger.info("Shutting down application")
+
 # Create FastAPI application instance
 app = FastAPI(
     title=PROJECT_NAME,
@@ -46,6 +74,7 @@ app = FastAPI(
     version="1.0.0",
     docs_url=None,  # Disable default docs url to use custom one
     redoc_url=None,  # Disable default redoc url to use custom one
+    lifespan=lifespan,  # Use lifespan context manager instead of on_event
 )
 
 # Configure CORS - cấu hình chi tiết hơn
@@ -93,20 +122,6 @@ async def log_requests(request: Request, call_next):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content={"detail": f"Internal server error: {str(e)}"}
         )
-
-# Initialize database on startup
-@app.on_event("startup")
-async def startup_db_client():
-    try:
-        # Import database initialization
-        from backend.db.base import init_db
-        
-        logger.info("Initializing database...")
-        await init_db()
-        logger.info("Database initialized successfully")
-    except Exception as e:
-        logger.error(f"Database initialization error: {str(e)}")
-        logger.error(traceback.format_exc())
 
 # Import and register API routes
 try:
@@ -195,8 +210,13 @@ async def debug_info():
         # Test database connection
         try:
             from backend.db.base import get_db
-            db = next(get_db())
+            db_generator = get_db()
+            db = next(db_generator)
             debug_data["database"] = "Connection successful"
+            try:
+                db_generator.close()
+            except:
+                pass
         except Exception as e:
             debug_data["database"] = f"Connection error: {str(e)}"
         
@@ -326,9 +346,10 @@ async def login_form():
     """
     return HTMLResponse(content=html_content)
 
-# Run application when executed directly
-if __name__ == "__main__":
-    import datetime
-    port = int(settings.PORT) if hasattr(settings, "PORT") else 7860
-    logger.info(f"Starting application on port {port}")
-    uvicorn.run("app:app", host="0.0.0.0", port=port, reload=False)
+# Note: DO NOT include the main block that starts the server
+# This is handled by Hugging Face Space directly through Procfile# Run application when executed directly
+# if __name__ == "__main__":
+#     import datetime
+#     port = int(settings.PORT) if hasattr(settings, "PORT") else 7860
+#     logger.info(f"Starting application on port {port}")
+#     uvicorn.run("app:app", host="0.0.0.0", port=port, reload=False)
