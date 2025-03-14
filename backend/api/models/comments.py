@@ -33,3 +33,4 @@ class Comment(Base):
     __table_args__ = (
         UniqueConstraint('source_platform', 'platform_comment_id', name='uix_platform_comment'),
     )
+    
