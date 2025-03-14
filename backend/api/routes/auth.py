@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Body, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+import logging
 
 from backend.db.base import get_db
 from backend.db.models.user import User
@@ -19,6 +20,7 @@ from backend.core.security import (
 from backend.config.settings import settings
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 @router.post("/login", response_model=Dict[str, Any])
 async def login_for_access_token(
@@ -29,8 +31,10 @@ async def login_for_access_token(
     """
     OAuth2 compatible token login, get an access token for future requests
     """
+    logger.info(f"Login attempt with username: {form_data.username}")
     user = await authenticate_user(db, form_data.username, form_data.password)
     if not user:
+        logger.warning(f"Failed login for username: {form_data.username}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
@@ -55,6 +59,7 @@ async def login_for_access_token(
     db.add(log_entry)
     await db.commit()
     
+    logger.info(f"Successful login for user: {user.username}")
     return {
         "access_token": access_token,
         "token_type": "bearer",
@@ -62,6 +67,76 @@ async def login_for_access_token(
         "username": user.username,
         "email": user.email,
         "role": user.role.name
+    }
+
+# Thêm endpoint mới để hỗ trợ đăng nhập bằng JSON cho extension
+@router.post("/login-json", response_model=Dict[str, Any])
+async def login_json(
+    request: Request,
+    login_data: Dict[str, str] = Body(...),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    JSON login endpoint for Chrome extension
+    """
+    username = login_data.get("username")
+    password = login_data.get("password")
+    
+    logger.info(f"JSON login attempt with username: {username}")
+    
+    if not username or not password:
+        logger.warning("Login attempt with missing credentials")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Username and password are required"
+        )
+    
+    user = await authenticate_user(db, username, password)
+    if not user:
+        logger.warning(f"Failed JSON login for username: {username}")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password"
+        )
+    
+    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": user.email}, expires_delta=access_token_expires
+    )
+    
+    # Log successful login
+    log_entry = Log(
+        user_id=user.id,
+        action="login-json",
+        endpoint="/api/auth/login-json",
+        ip_address=request.client.host,
+        user_agent=request.headers.get("user-agent", ""),
+        status_code=200,
+        details=f"Successful JSON login for user {user.username}"
+    )
+    db.add(log_entry)
+    await db.commit()
+    
+    logger.info(f"Successful JSON login for user: {user.username}")
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user_id": user.id,
+        "username": user.username,
+        "email": user.email,
+        "role": user.role.name
+    }
+
+# Thêm endpoint GET đơn giản để kiểm tra API auth
+@router.get("/status", response_model=Dict[str, Any])
+async def auth_status():
+    """
+    Simple endpoint to check if auth API is working
+    """
+    return {
+        "status": "online",
+        "auth_version": "1.0",
+        "endpoints": ["/login", "/login-json", "/register", "/me", "/change-password"]
     }
 
 @router.post("/register", response_model=Dict[str, Any])
