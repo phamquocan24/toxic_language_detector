@@ -23,8 +23,8 @@ RUN pip install --no-cache-dir --upgrade pip && \
 # Sao chép toàn bộ mã nguồn ứng dụng vào container
 COPY . .
 
-# Mở port 8000
-EXPOSE 8000
+# Mở port 7860 (port mặc định của Hugging Face Space)
+EXPOSE 7860
 
 # Chạy ứng dụng FastAPI bằng Uvicorn
-CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "7860"]
