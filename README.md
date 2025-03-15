@@ -3,8 +3,8 @@ title: Toxic Language Detector
 emoji: 🛡️
 colorFrom: red
 colorTo: blue
-sdk: gradio
-sdk_version: 3.50.2
+sdk: docker
+sdk_version: 3.10.2
 app_file: app.py
 pinned: false
 ---
