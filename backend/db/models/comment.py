@@ -26,8 +26,8 @@ class Comment(Base):
     user_id = Column(Integer, ForeignKey("users.id"))
     user = relationship("User", back_populates="comments")
     
-    # Additional metadata from the platform
-    metadata = Column(JSON)
+    # Additional comment_metadata from the platform
+    comment_metadata = Column(JSON)
     
     def set_vector(self, vector):
         """Convert numpy array to JSON string for storage"""
