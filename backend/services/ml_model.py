@@ -17,12 +17,31 @@ class MLModel:
     
     def load_model(self):
         """Load the pretrained model trained on Vietnamese social media data"""
-        if os.path.exists(self.model_path):
-            self.model = tf.keras.models.load_model(self.model_path)
-            print(f"Vietnamese toxicity model loaded from {self.model_path}")
-        else:
-            print(f"Model not found at {self.model_path}. Using dummy model.")
-            # Create a dummy model for testing
+        try:
+            if os.path.exists(self.model_path):
+                # Cố gắng tải mô hình bình thường
+                self.model = tf.keras.models.load_model(self.model_path)
+                print(f"Vietnamese toxicity model loaded from {self.model_path}")
+            else:
+                print(f"Model not found at {self.model_path}. Using dummy model.")
+                self.model = self._create_dummy_model()
+        except TypeError as e:
+            if "Unrecognized keyword arguments: ['batch_shape']" in str(e):
+                print("Detected compatibility issue with the model. Using custom loader...")
+                # Tùy chỉnh tải mô hình để xử lý lỗi tương thích
+                try:
+                    # Tải mô hình với custom_objects
+                    self.model = tf.keras.models.load_model(self.model_path, compile=False, 
+                                                            custom_objects={'InputLayer': self._fix_input_layer})
+                    print("Model loaded successfully with custom loader")
+                except Exception as custom_e:
+                    print(f"Custom loader failed: {custom_e}. Using dummy model.")
+                    self.model = self._create_dummy_model()
+            else:
+                print(f"Unknown error loading model: {e}. Using dummy model.")
+                self.model = self._create_dummy_model()
+        except Exception as e:
+            print(f"Error loading model: {e}. Using dummy model.")
             self.model = self._create_dummy_model()
         
         # In production, this should be loaded from a saved tokenizer trained on Vietnamese data
@@ -40,6 +59,13 @@ class MLModel:
         except Exception as e:
             print(f"Error loading tokenizer: {e}")
             self.tokenizer = Tokenizer(num_words=self.max_words, filters='!"#$%&()*+,-./:;<=>?@[\\]^_`{|}~\t\n')
+    
+    def _fix_input_layer(self, config):
+        """Fix compatibility issues with older InputLayer configurations"""
+        if 'batch_shape' in config:
+            batch_shape = config.pop('batch_shape')
+            config['batch_input_shape'] = batch_shape
+        return tf.keras.layers.InputLayer(**config)
     
     def _create_dummy_model(self):
         """Create a dummy model for testing purposes"""
