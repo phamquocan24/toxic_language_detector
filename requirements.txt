@@ -21,3 +21,4 @@ langdetect==1.0.9
 pyvi==0.1.1
 gradio==3.41.0
 huggingface-hub==0.19.3
+pydantic-settings>=2.0.0
