@@ -118,22 +118,22 @@ class ToxicDetectionModel:
     
     # Vectorize
     if not hasattr(self.vectorizer, 'vocabulary_'):
-        # Fit với một tập mẫu để đảm bảo có đủ tính năng
+        # Fit with sample texts to ensure enough features
         sample_texts = [text, "mẫu văn bản thêm vào", "thêm một số từ vựng phổ biến tiếng việt", 
                         "spam quảng cáo giảm giá", "ngôn từ thù ghét", "từ ngữ xúc phạm"]
         self.vectorizer.fit(sample_texts)
     
-    # Tạo vector đặc trưng
+    # Create feature vector
     features = self.vectorizer.transform([text]).toarray()
     
-    # Đảm bảo kích thước đúng là 10000
+    # Ensure correct dimension of 10000
     if features.shape[1] < 10000:
-        # Pad với zeros nếu vector nhỏ hơn kích thước mong đợi
+        # Pad with zeros if vector is smaller than expected
         padded_features = np.zeros((features.shape[0], 10000))
         padded_features[:, :features.shape[1]] = features
         features = padded_features
     elif features.shape[1] > 10000:
-        # Cắt bớt nếu vector lớn hơn kích thước mong đợi
+        # Truncate if vector is larger than expected
         features = features[:, :10000]
     
     return features
