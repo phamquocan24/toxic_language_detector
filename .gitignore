@@ -1,26 +1,58 @@
-# Security
-SECRET_KEY=3d2b5c1f9a7e8d6b5c2f9a8d7b4c1e0f3d2b5c1f9a7e8d6b5c2f9a8d7b4c1e0f
-ALGORITHM=HS256
-EXTENSION_API_KEY=IYHvZOJSoqSzLqGfEMPKbOgQDInKLFLKQmTXhlbIQnc
+# Environment variables
+.env
+.env.*
+*.env
 
-# Database
-DATABASE_URL=sqlite:///./toxicity_detector.db
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
 
-# ML Model
-MODEL_PATH=./model/best_model_LSTM.h5
-USE_LOCAL_MODEL=true
+# Database files
+*.db
+*.sqlite
+*.sqlite3
 
-# Hugging Face API (Optional)
-HUGGINGFACE_API_URL=https://api-inference.huggingface.co/models/
-HUGGINGFACE_API_KEY=your_huggingface_api_token
+# Logs
+logs/
+*.log
 
-# Social Media API Keys (Optional)
-FACEBOOK_ACCESS_TOKEN=2067739030331114|KKVWOLqd-QLq_0QhErQ8PnMNZpc
-TWITTER_BEARER_TOKEN=AAAAAAAAAAAAAAAAAAAAAJGGzwEAAAAAGsTzWn7j%2BagozJX13FsJbUOVCw0%3DMDE0u738AwkCTQEPIUJf1WZdXMv5FxbRvMBHKJYkE3h4XH3iLg
-YOUTUBE_API_KEY=AIzaSyCEFKJNt_leCo246CaMsSaqw7Yj39YijC4
+# Model files (nếu bạn muốn loại trừ, hãy bỏ comment dấu #)
+model/*.h5
+# model/*.pkl
 
-# Logging
-LOG_LEVEL=INFO
+# IDE specific files
+.idea/
+.vscode/
+*.swp
+*.swo
 
-# Hugging Face Spaces
-PORT=7860
+# OS specific files
+.DS_Store
+Thumbs.db
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Virtual environment
+.virtualenv/
+venv/
