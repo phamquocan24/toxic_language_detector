@@ -10,7 +10,7 @@ from pydantic import BaseModel
 from backend.api.routes import admin, auth, extension, prediction, toxic_detection
 from backend.core.middleware import LogMiddleware
 from backend.db.models.base import Base
-from backend.db.models.user import engine
+from backend.db.models import Base, engine
 from typing import List, Dict, Any, Optional
 import tensorflow as tf
 import numpy as np
