@@ -7,6 +7,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
+from api.routes import admin, auth, extension, prediction, toxic_detection
+from core.middleware import LogMiddleware
+from db.models.base import Base
+from db.models.user import engine
 from typing import List, Dict, Any, Optional
 import tensorflow as tf
 import numpy as np
