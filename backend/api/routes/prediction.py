@@ -2,11 +2,11 @@
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from sqlalchemy.orm import Session
 from typing import List
-from db.models import get_db, Comment, User
-from api.models.prediction import PredictionRequest, PredictionResponse, BatchPredictionRequest, BatchPredictionResponse
-from services.ml_model import MLModel
-from api.routes.auth import get_current_user
-from utils.vector_utils import extract_features
+from backend.db.models import get_db, Comment, User
+from backend.api.models.prediction import PredictionRequest, PredictionResponse, BatchPredictionRequest, BatchPredictionResponse
+from backend.services.ml_model import MLModel
+from backend.api.routes.auth import get_current_user
+from backend.utils.vector_utils import extract_features
 import numpy as np
 
 router = APIRouter()

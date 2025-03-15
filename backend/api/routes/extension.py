@@ -2,11 +2,11 @@
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from sqlalchemy.orm import Session
 from typing import List, Dict, Any
-from db.models import get_db, Comment
-from api.models.prediction import PredictionRequest, PredictionResponse
-from services.ml_model import MLModel
-from config.security import verify_api_key
-from utils.vector_utils import extract_features
+from backend.db.models import get_db, Comment
+from backend.api.models.prediction import PredictionRequest, PredictionResponse
+from backend.services.ml_model import MLModel
+from backend.config.security import verify_api_key
+from backend.utils.vector_utils import extract_features
 
 router = APIRouter()
 ml_model = MLModel()
