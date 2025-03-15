@@ -22,15 +22,15 @@ def _get_vectorizer():
 
 def preprocess_text(text):
     """
-    Preprocess text for vectorization
+    Preprocess Vietnamese text for vectorization
     
     Args:
-        text (str): Raw text
+        text (str): Raw Vietnamese text
         
     Returns:
         str: Preprocessed text
     """
-    # Convert to lowercase
+    # Convert to lowercase (preserving Vietnamese diacritical marks)
     text = text.lower()
     
     # Remove URLs
@@ -39,12 +39,21 @@ def preprocess_text(text):
     # Remove HTML tags
     text = re.sub(r'<.*?>', '', text)
     
-    # Remove special characters and numbers
-    text = re.sub(r'[^\w\s]', '', text)
+    # For Vietnamese text, we need to preserve diacritical marks
+    # Only remove punctuation that doesn't affect meaning
+    text = re.sub(r'[.,;:!?()"\'\[\]/\\]', ' ', text)
     text = re.sub(r'\d+', '', text)
     
     # Remove extra whitespace
     text = re.sub(r'\s+', ' ', text).strip()
+    
+    # Use Vietnamese-specific tokenization if available
+    try:
+        from underthesea import word_tokenize
+        text = word_tokenize(text, format="text")
+    except ImportError:
+        # Fallback if underthesea is not available
+        pass
     
     return text
 

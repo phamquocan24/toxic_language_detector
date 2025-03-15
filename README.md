@@ -1,157 +1,174 @@
----
-title: My Hugging Face Space
-emoji: 🚀
-colorFrom: blue
-colorTo: purple
-sdk: streamlit
-sdk_version: "1.25.0"
-app_file: app.py
-pinned: false
----
+# Toxic Language Detector
 
-Check out the configuration reference at [Hugging Face Spaces Config](https://huggingface.co/docs/hub/spaces-config-reference).
+A comprehensive system for detecting toxic language on social media platforms (Facebook, YouTube, Twitter), implemented as a browser extension with a FastAPI backend.
 
-# Social Media Toxicity Detector
+## Project Overview
 
-A browser extension that detects toxic, offensive, hate speech, and spam content on social media platforms using a machine learning model.
+This project aims to detect and analyze toxic language in social media comments using a machine learning model trained on a large dataset. The system classifies comments into four categories:
 
-## Features
-
-- Detection of toxic content on Facebook, Twitter, and YouTube
-- Classification into 4 categories: Clean (0), Offensive (1), Hate Speech (2), and Spam (3)
-- Real-time content scanning on social media platforms
-- Manual text analysis
-- Admin dashboard for content monitoring and analytics
-- User role-based access control
-- Comment log and history tracking
-
-## Project Structure
-
-The project is organized into two main components:
-
-1. **Backend API**: FastAPI-based REST API for model inference, user management, and data storage
-2. **Browser Extension**: Chrome extension for content detection and user interface
-
-## Backend Setup
-
-### Prerequisites
-
-- Python 3.9+
-- PostgreSQL with pgvector extension
-- Virtual environment (recommended)
-
-### Installation
-
-1. Clone the repository:
-```bash
-git clone https://github.com/yourusername/social-media-toxicity-detector.git
-cd social-media-toxicity-detector
-```
-
-2. Create and activate a virtual environment:
-```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-```
-
-3. Install dependencies:
-```bash
-pip install -r requirements.txt
-```
-
-4. Set up environment variables by creating a `.env` file:
-```
-# API Configuration
-SECRET_KEY=your-secret-key-here
-ACCESS_TOKEN_EXPIRE_MINUTES=30
-
-# Database Configuration
-POSTGRES_SERVER=localhost
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=postgres
-POSTGRES_DB=toxicity_detector
-POSTGRES_PORT=5432
-
-# ML Model Configuration
-MODEL_PATH=model/toxicity_detector.h5
-HUGGINGFACE_API_URL=https://api-inference.huggingface.co/models/your-model-endpoint
-HUGGINGFACE_API_TOKEN=your-huggingface-token
-
-# Social Media APIs
-FACEBOOK_API_KEY=your-facebook-api-key
-TWITTER_API_KEY=your-twitter-api-key
-YOUTUBE_API_KEY=your-youtube-api-key
-```
-
-5. Initialize the database:
-```bash
-alembic revision --autogenerate -m "Initial migration"
-alembic upgrade head
-```
-
-6. Start the API server:
-```bash
-uvicorn backend.main:app --reload
-```
-
-### API Documentation
-
-Once the server is running, you can access the API documentation at:
-- Swagger UI: http://localhost:8000/docs
-- ReDoc: http://localhost:8000/redoc
-
-## Extension Setup
-
-1. Navigate to the extension directory:
-```bash
-cd extension
-```
-
-2. Configure the API endpoint in `background.js`:
-```javascript
-const API_BASE_URL = 'http://localhost:8000/api'; // Change to your actual API endpoint
-```
-
-3. Install the extension in Chrome:
-   - Open Chrome and navigate to `chrome://extensions/`
-   - Enable "Developer mode"
-   - Click "Load unpacked" and select the `extension` directory
-
-## Usage
-
-1. After installing the extension, click on the extension icon in the toolbar
-2. Log in with your credentials
-3. Visit Facebook, Twitter, or YouTube to activate content scanning
-4. Use the extension popup to scan pages manually or analyze specific text
-5. Access the admin dashboard at `http://localhost:8000/admin` (requires admin login)
-
-## Model Training
-
-The toxicity detection model was trained using a dataset with 4 labels:
-- 0: Clean content
-- 1: Offensive content
+- 0: Clean (non-toxic)
+- 1: Offensive
 - 2: Hate speech
 - 3: Spam
 
-The model file (.h5) should be placed in the `model` directory or served via Hugging Face API.
+The project consists of two main components:
 
-## Database Schema
+1. **Backend API**: A FastAPI application that handles ML model inference, data storage, and provides endpoints for both the extension and admin users.
+2. **Browser Extension**: A Chrome extension that scans comments on supported social media platforms and highlights toxic content.
 
-The system uses PostgreSQL with pgvector extension for vector similarity search:
+## Backend Architecture
 
-- **Users**: User accounts with role-based permissions
-- **Roles**: User roles (admin, moderator, user)
-- **Comments**: Detected comments with classification results and vector embeddings
-- **Logs**: System activity logs
+### Core Components
 
-## Security Features
+- **FastAPI Application**: The main web framework that serves the API endpoints
+- **Machine Learning Model**: LSTM-based model for toxic language classification
+- **Database**: SQLAlchemy ORM with SQLite/PostgreSQL for data storage
+- **Authentication**: JWT-based token authentication for API access
 
-- JWT authentication
-- Role-based access control
+### Directory Structure
+
+```
+TOXIC-LANGUAGE-DETECTORV1/
+│── backend/
+│   ├── api/
+│   │   ├── models/        # Pydantic models for API requests/responses
+│   │   ├── routes/        # API endpoints
+│   ├── config/            # Configuration settings
+│   ├── core/              # Core functionality (auth, dependencies)
+│   ├── db/                # Database models and connection
+│   │   ├── models/        # SQLAlchemy models
+│   ├── services/          # Service layer (ML model, social media APIs)
+│   ├── utils/             # Utility functions
+│── model/                 # ML model files
+│── app.py                 # Main entry point
+│── requirements.txt       # Dependencies
+│── Dockerfile             # Container configuration
+```
+
+### Database Schema
+
+The database consists of the following main tables:
+
+1. **User**: Stores user information and authentication data
+2. **Role**: Defines user roles (admin, user)
+3. **Comment**: Stores analyzed comments with their predictions and vector representations
+4. **Log**: Records API access and system events
+
+### API Endpoints
+
+The backend provides two main sets of endpoints:
+
+1. **Extension Endpoints**:
+   - `/extension/detect`: Analyzes comment text from the browser extension
+
+2. **API Endpoints**:
+   - Authentication: `/auth/register`, `/auth/token`
+   - Admin: `/admin/users`, `/admin/comments`, `/admin/logs`
+   - Prediction: `/predict/single`, `/predict/batch`
+   - Analysis: `/detect/similar`, `/detect/statistics`
+
+## Browser Extension
+
+### Features
+
+- Real-time comment analysis on Facebook, YouTube, and Twitter
+- Visual indicators for toxic comments with different colors based on toxicity type
+- Option to blur highly toxic content with a reveal button
+- Configurable settings through a popup interface
+- Statistics tracking for scanned comments
+
+### Components
+
+- **Background Script**: Handles API communication and manages extension state
+- **Content Script**: Analyzes comments on supported websites
+- **Popup Interface**: User-friendly settings panel
+
+### Directory Structure
+
+```
+EXTENSION/
+│── icons/              # Extension icons
+│── popup/              # Popup interface files
+│   ├── popup.css
+│   ├── popup.html
+│   ├── popup.js
+│── background.js       # Background script
+│── content.js          # Content script for analyzing comments
+│── manifest.json       # Extension configuration
+│── styles.css          # CSS for content modifications
+```
+
+## Setup and Deployment
+
+### Backend Setup
+
+1. Clone the repository
+2. Install dependencies: `pip install -r requirements.txt`
+3. Set up environment variables:
+   ```
+   export SECRET_KEY="your-secret-key"
+   export DATABASE_URL="sqlite:///./toxic_detector.db"
+   export EXTENSION_API_KEY="your-extension-api-key"
+   ```
+4. Run the application: `uvicorn app:app --reload`
+
+### Hugging Face Space Deployment
+
+1. Create a new Space on Hugging Face
+2. Upload the project files
+3. Configure the environment variables
+4. Set the Space to use FastAPI template
+
+### Extension Setup
+
+1. Open Chrome and navigate to `chrome://extensions/`
+2. Enable Developer Mode
+3. Click "Load unpacked" and select the EXTENSION directory
+4. Configure the extension API endpoint in the popup settings
+
+## Model Training
+
+The toxic language detection model was trained on a large dataset with four classification labels. The model architecture is based on LSTM (Long Short-Term Memory) networks, which are effective for sequence classification tasks like text analysis.
+
+### Model Architecture
+
+- Embedding layer
+- LSTM layer
+- Dense output layer with softmax activation
+- Trained with categorical cross-entropy loss
+
+## Data Flow
+
+1. User visits a social media platform
+2. Extension scans comments on the page
+3. Comments are sent to the backend API
+4. API processes comments using the ML model
+5. Results are returned to the extension
+6. Extension highlights toxic comments
+7. Comment data is stored in the database for analysis
+
+## Security Considerations
+
+- JWT token authentication for API endpoints
+- API key authentication for extension
 - Password hashing with bcrypt
-- Request logging
-- Input validation and sanitization
+- CORS protection
+- Request logging for monitoring
+
+## Future Improvements
+
+- Add more social media platforms
+- Implement user feedback mechanism to improve model
+- Add multi-language support
+- Develop a dashboard for analytics
+- Implement more advanced NLP techniques
 
 ## License
 
-[MIT License](LICENSE)
+This project is for research purposes only.
+
+## Acknowledgements
+
+- TensorFlow team for ML framework
+- FastAPI for backend framework
+- Chrome Extensions API
