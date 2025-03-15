@@ -1,9 +1,9 @@
 # db/models/__init__.py
-from .base import Base, engine, SessionLocal
-from .user import User
-from .role import Role
-from .comment import Comment
-from .log import Log
+from backend.db.models.base import Base, engine, SessionLocal
+from backend.db.models.user import User
+from backend.db.models.role import Role
+from backend.db.models.comment import Comment
+from backend.db.models.log import Log
 
 def get_db():
     db = SessionLocal()
