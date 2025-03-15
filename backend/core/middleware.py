@@ -1,7 +1,7 @@
 # core/middleware.py
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
-from db.models import Log, get_db
+from backend.db.models import Log, get_db
 import json
 import time
 

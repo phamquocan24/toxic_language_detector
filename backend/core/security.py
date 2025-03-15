@@ -4,9 +4,9 @@ from fastapi.security import OAuth2PasswordBearer, APIKeyHeader
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from datetime import datetime, timedelta
-from config.settings import settings
+from backend.config.settings import settings
 from typing import Optional
-from db.models import User
+from backend.db.models import User
 
 # Password context for hashing
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
