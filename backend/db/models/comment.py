@@ -2,7 +2,7 @@
 from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Text, JSON
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-from .base import Base
+from backend.db.models.base import Base
 import numpy as np
 import json
 

@@ -2,7 +2,7 @@
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text, JSON
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-from .base import Base
+from backend.db.models.base import Base
 
 class Log(Base):
     __tablename__ = "logs"

@@ -5,10 +5,10 @@ from sqlalchemy.orm import Session
 from typing import List
 from datetime import datetime, timedelta
 from jose import JWTError, jwt
-from db.models import get_db, User, Role
-from api.models.prediction import UserCreate, UserResponse, TokenResponse
-from core.security import get_password_hash, verify_password
-from config.settings import settings
+from backend.db.models import get_db, User, Role
+from backend.api.models.prediction import UserCreate, UserResponse, TokenResponse
+from backend.core.security import get_password_hash, verify_password
+from backend.config.settings import settings
 
 router = APIRouter()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")

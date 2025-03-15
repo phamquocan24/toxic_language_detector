@@ -2,7 +2,7 @@
 from passlib.context import CryptContext
 from fastapi import Depends, HTTPException, status
 from fastapi.security import APIKeyHeader
-from config.settings import settings
+from backend.config.settings import settings
 
 # Password hashing
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
