@@ -2,7 +2,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
-from db.models import get_db, User, Role, Log, Comment
+from backend.db.models import get_db, User, Role, Log, Comment
 from api.models.prediction import UserResponse, LogResponse, CommentResponse
 from api.routes.auth import get_admin_user
 
