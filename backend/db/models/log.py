@@ -20,5 +20,5 @@ class Log(Base):
     # If request was authenticated, store user info
     user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     
-    # Additional metadata
-    metadata = Column(JSON, nullable=True)
+    # Additional log_metadata
+    log_metadata = Column(JSON, nullable=True)
