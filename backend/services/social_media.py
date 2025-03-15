@@ -1,147 +1,234 @@
-import httpx
-from typing import Dict, Any, List, Optional
-import json
-from datetime import datetime, timedelta
-
-from backend.config.settings import settings
+# services/social_media.py
+import requests
+from typing import Dict, Any, List
+import os
 
 class FacebookAPI:
-    """Service for interacting with Facebook Graph API"""
-    
     def __init__(self):
-        self.base_url = "https://graph.facebook.com/v16.0"
-        self.api_key = settings.FACEBOOK_API_KEY
+        self.api_version = "v18.0"
+        self.api_url = f"https://graph.facebook.com/{self.api_version}"
+        self.access_token = os.getenv("FACEBOOK_ACCESS_TOKEN", "")
     
-    async def get_page_posts(self, page_id: str, limit: int = 10) -> Dict[str, Any]:
-        """Get posts from a Facebook page"""
-        url = f"{self.base_url}/{page_id}/posts"
+    def get_post_comments(self, post_id: str, limit: int = 100) -> List[Dict[str, Any]]:
+        """
+        Get comments for a Facebook post
+        
+        Args:
+            post_id (str): The Facebook post ID
+            limit (int): Maximum number of comments to retrieve
+            
+        Returns:
+            List[Dict[str, Any]]: List of comments
+        """
+        endpoint = f"{self.api_url}/{post_id}/comments"
         params = {
-            "access_token": self.api_key,
+            "access_token": self.access_token,
             "limit": limit,
-            "fields": "id,message,created_time,comments.limit(25){id,message,created_time}"
+            "fields": "id,message,created_time,from"
         }
         
-        async with httpx.AsyncClient() as client:
-            response = await client.get(url, params=params)
-            if response.status_code != 200:
-                return {"error": f"Failed to fetch Facebook posts: {response.text}"}
-            
-            return response.json()
+        response = requests.get(endpoint, params=params)
+        data = response.json()
+        
+        if "data" in data:
+            return data["data"]
+        
+        return []
     
-    async def get_post_comments(self, post_id: str, limit: int = 25) -> Dict[str, Any]:
-        """Get comments from a Facebook post"""
-        url = f"{self.base_url}/{post_id}/comments"
+    def get_page_posts(self, page_id: str, limit: int = 25) -> List[Dict[str, Any]]:
+        """
+        Get posts from a Facebook page
+        
+        Args:
+            page_id (str): The Facebook page ID
+            limit (int): Maximum number of posts to retrieve
+            
+        Returns:
+            List[Dict[str, Any]]: List of posts
+        """
+        endpoint = f"{self.api_url}/{page_id}/posts"
         params = {
-            "access_token": self.api_key,
+            "access_token": self.access_token,
             "limit": limit,
-            "fields": "id,message,created_time"
+            "fields": "id,message,created_time,comments.limit(0).summary(true)"
         }
         
-        async with httpx.AsyncClient() as client:
-            response = await client.get(url, params=params)
-            if response.status_code != 200:
-                return {"error": f"Failed to fetch Facebook comments: {response.text}"}
-            
-            return response.json()
+        response = requests.get(endpoint, params=params)
+        data = response.json()
+        
+        if "data" in data:
+            return data["data"]
+        
+        return []
+
 
 class TwitterAPI:
-    """Service for interacting with Twitter API"""
-    
     def __init__(self):
-        self.base_url = "https://api.twitter.com/2"
-        self.api_key = settings.TWITTER_API_KEY
+        self.api_url = "https://api.twitter.com/2"
+        self.bearer_token = os.getenv("TWITTER_BEARER_TOKEN", "")
+        self.headers = {
+            "Authorization": f"Bearer {self.bearer_token}",
+            "Content-Type": "application/json"
+        }
     
-    async def get_user_tweets(self, username: str, limit: int = 10) -> Dict[str, Any]:
-        """Get tweets from a Twitter user"""
-        # First get the user ID from username
-        user_url = f"{self.base_url}/users/by/username/{username}"
-        headers = {"Authorization": f"Bearer {self.api_key}"}
+    def get_tweet_replies(self, tweet_id: str, max_results: int = 100) -> List[Dict[str, Any]]:
+        """
+        Get replies to a tweet
         
-        async with httpx.AsyncClient() as client:
-            user_response = await client.get(user_url, headers=headers)
-            if user_response.status_code != 200:
-                return {"error": f"Failed to fetch Twitter user: {user_response.text}"}
+        Args:
+            tweet_id (str): The Tweet ID
+            max_results (int): Maximum number of results to retrieve
             
-            user_data = user_response.json()
-            user_id = user_data.get("data", {}).get("id")
-            
-            if not user_id:
-                return {"error": "User ID not found"}
-            
-            # Then get the user's tweets
-            tweets_url = f"{self.base_url}/users/{user_id}/tweets"
-            params = {
-                "max_results": limit,
-                "tweet.fields": "created_at,public_metrics",
-                "expansions": "referenced_tweets.id"
-            }
-            
-            tweets_response = await client.get(tweets_url, headers=headers, params=params)
-            if tweets_response.status_code != 200:
-                return {"error": f"Failed to fetch Twitter tweets: {tweets_response.text}"}
-            
-            return tweets_response.json()
-    
-    async def get_tweet_replies(self, tweet_id: str, limit: int = 25) -> Dict[str, Any]:
-        """Get replies to a tweet"""
-        url = f"{self.base_url}/tweets/search/recent"
-        headers = {"Authorization": f"Bearer {self.api_key}"}
+        Returns:
+            List[Dict[str, Any]]: List of replies
+        """
+        # Get conversation ID for the tweet
+        tweet_endpoint = f"{self.api_url}/tweets/{tweet_id}"
         params = {
-            "query": f"conversation_id:{tweet_id}",
-            "max_results": limit,
-            "tweet.fields": "created_at,in_reply_to_user_id,author_id"
+            "tweet.fields": "conversation_id"
         }
         
-        async with httpx.AsyncClient() as client:
-            response = await client.get(url, headers=headers, params=params)
-            if response.status_code != 200:
-                return {"error": f"Failed to fetch tweet replies: {response.text}"}
+        response = requests.get(tweet_endpoint, headers=self.headers, params=params)
+        tweet_data = response.json()
+        
+        if "data" not in tweet_data:
+            return []
+        
+        conversation_id = tweet_data["data"].get("conversation_id", tweet_id)
+        
+        # Get replies in the conversation
+        search_endpoint = f"{self.api_url}/tweets/search/recent"
+        params = {
+            "query": f"conversation_id:{conversation_id}",
+            "max_results": max_results,
+            "tweet.fields": "created_at,author_id,in_reply_to_user_id"
+        }
+        
+        response = requests.get(search_endpoint, headers=self.headers, params=params)
+        data = response.json()
+        
+        if "data" in data:
+            return data["data"]
+        
+        return []
+    
+    def get_user_timeline(self, user_id: str, max_results: int = 100) -> List[Dict[str, Any]]:
+        """
+        Get tweets from a user's timeline
+        
+        Args:
+            user_id (str): The Twitter user ID
+            max_results (int): Maximum number of tweets to retrieve
             
-            return response.json()
+        Returns:
+            List[Dict[str, Any]]: List of tweets
+        """
+        endpoint = f"{self.api_url}/users/{user_id}/tweets"
+        params = {
+            "max_results": max_results,
+            "tweet.fields": "created_at,public_metrics"
+        }
+        
+        response = requests.get(endpoint, headers=self.headers, params=params)
+        data = response.json()
+        
+        if "data" in data:
+            return data["data"]
+        
+        return []
+
 
 class YouTubeAPI:
-    """Service for interacting with YouTube API"""
-    
     def __init__(self):
-        self.base_url = "https://www.googleapis.com/youtube/v3"
-        self.api_key = settings.YOUTUBE_API_KEY
+        self.api_key = os.getenv("YOUTUBE_API_KEY", "")
+        self.api_url = "https://www.googleapis.com/youtube/v3"
     
-    async def get_video_comments(self, video_id: str, limit: int = 25) -> Dict[str, Any]:
-        """Get comments from a YouTube video"""
-        url = f"{self.base_url}/commentThreads"
+    def get_video_comments(self, video_id: str, max_results: int = 100) -> List[Dict[str, Any]]:
+        """
+        Get comments for a YouTube video
+        
+        Args:
+            video_id (str): The YouTube video ID
+            max_results (int): Maximum number of comments to retrieve
+            
+        Returns:
+            List[Dict[str, Any]]: List of comments
+        """
+        endpoint = f"{self.api_url}/commentThreads"
         params = {
             "key": self.api_key,
+            "part": "snippet",
             "videoId": video_id,
-            "part": "snippet",
-            "maxResults": limit
+            "maxResults": min(max_results, 100)  # YouTube API limit is 100 per request
         }
         
-        async with httpx.AsyncClient() as client:
-            response = await client.get(url, params=params)
-            if response.status_code != 200:
-                return {"error": f"Failed to fetch YouTube comments: {response.text}"}
+        comments = []
+        next_page_token = None
+        
+        while len(comments) < max_results:
+            if next_page_token:
+                params["pageToken"] = next_page_token
             
-            return response.json()
+            response = requests.get(endpoint, params=params)
+            data = response.json()
+            
+            if "items" not in data:
+                break
+            
+            for item in data["items"]:
+                if "snippet" in item and "topLevelComment" in item["snippet"]:
+                    comment = {
+                        "id": item["id"],
+                        "text": item["snippet"]["topLevelComment"]["snippet"]["textDisplay"],
+                        "author": item["snippet"]["topLevelComment"]["snippet"]["authorDisplayName"],
+                        "published_at": item["snippet"]["topLevelComment"]["snippet"]["publishedAt"],
+                        "like_count": item["snippet"]["topLevelComment"]["snippet"]["likeCount"]
+                    }
+                    comments.append(comment)
+                    
+                    if len(comments) >= max_results:
+                        break
+            
+            next_page_token = data.get("nextPageToken")
+            if not next_page_token:
+                break
+        
+        return comments
     
-    async def search_videos(self, query: str, limit: int = 10) -> Dict[str, Any]:
-        """Search for YouTube videos"""
-        url = f"{self.base_url}/search"
+    def search_videos(self, query: str, max_results: int = 25) -> List[Dict[str, Any]]:
+        """
+        Search for YouTube videos
+        
+        Args:
+            query (str): The search query
+            max_results (int): Maximum number of videos to retrieve
+            
+        Returns:
+            List[Dict[str, Any]]: List of videos
+        """
+        endpoint = f"{self.api_url}/search"
         params = {
             "key": self.api_key,
-            "q": query,
             "part": "snippet",
+            "q": query,
             "type": "video",
-            "maxResults": limit
+            "maxResults": min(max_results, 50)  # YouTube API limit is 50 per request
         }
         
-        async with httpx.AsyncClient() as client:
-            response = await client.get(url, params=params)
-            if response.status_code != 200:
-                return {"error": f"Failed to search YouTube videos: {response.text}"}
-            
-            return response.json()
-
-# Singleton instances
-facebook_api = FacebookAPI()
-twitter_api = TwitterAPI()
-youtube_api = YouTubeAPI()
+        response = requests.get(endpoint, params=params)
+        data = response.json()
+        
+        if "items" in data:
+            videos = []
+            for item in data["items"]:
+                video = {
+                    "id": item["id"]["videoId"],
+                    "title": item["snippet"]["title"],
+                    "description": item["snippet"]["description"],
+                    "published_at": item["snippet"]["publishedAt"],
+                    "thumbnail": item["snippet"]["thumbnails"]["high"]["url"]
+                }
+                videos.append(video)
+            return videos
+        
+        return []
