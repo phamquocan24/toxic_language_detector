@@ -1,7 +1,7 @@
 # db/models/role.py
 from sqlalchemy import Column, Integer, String
 from sqlalchemy.orm import relationship
-from .base import Base
+from backend.db.models.base import Base
 
 class Role(Base):
     __tablename__ = "roles"
