@@ -1,6 +1,7 @@
 # Security
-SECRET_KEY=your_very_secret_key_here
+SECRET_KEY=3d2b5c1f9a7e8d6b5c2f9a8d7b4c1e0f3d2b5c1f9a7e8d6b5c2f9a8d7b4c1e0f
 ALGORITHM=HS256
+EXTENSION_API_KEY=IYHvZOJSoqSzLqGfEMPKbOgQDInKLFLKQmTXhlbIQnc
 
 # Database
 DATABASE_URL=sqlite:///./toxicity_detector.db
@@ -10,13 +11,13 @@ MODEL_PATH=./model/best_model_LSTM.h5
 USE_LOCAL_MODEL=true
 
 # Hugging Face API (Optional)
-HUGGINGFACE_API_URL=https://an24-toxic-language-detector.hf.space/api/predict
-HUGGINGFACE_API_TOKEN=your_huggingface_api_token
+#HUGGINGFACE_API_URL=https://api-inference.huggingface.co/models/
+HUGGINGFACE_API_KEY=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
 
 # Social Media API Keys (Optional)
-FACEBOOK_API_KEY=
-TWITTER_API_KEY=
-YOUTUBE_API_KEY=
+FACEBOOK_ACCESS_TOKEN=2067739030331114|KKVWOLqd-QLq_0QhErQ8PnMNZpc
+TWITTER_BEARER_TOKEN=AAAAAAAAAAAAAAAAAAAAAJGGzwEAAAAAGsTzWn7j%2BagozJX13FsJbUOVCw0%3DMDE0u738AwkCTQEPIUJf1WZdXMv5FxbRvMBHKJYkE3h4XH3iLg
+YOUTUBE_API_KEY=AIzaSyCEFKJNt_leCo246CaMsSaqw7Yj39YijC4
 
 # Logging
 LOG_LEVEL=INFO
