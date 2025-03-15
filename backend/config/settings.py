@@ -1,6 +1,6 @@
 # config/settings.py
 import os
-from pydantic__settings import BaseSettings
+from pydantic_settings import BaseSettings
 from typing import List
 
 class Settings(BaseSettings):
