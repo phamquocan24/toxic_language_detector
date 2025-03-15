@@ -1,0 +1,25 @@
+# Security
+SECRET_KEY=your_very_secret_key_here
+ALGORITHM=HS256
+
+# Database
+DATABASE_URL=sqlite:///./toxicity_detector.db
+
+# ML Model
+MODEL_PATH=./model/best_model_LSTM.h5
+USE_LOCAL_MODEL=true
+
+# Hugging Face API (Optional)
+HUGGINGFACE_API_URL=https://an24-toxic-language-detector.hf.space/api/predict
+HUGGINGFACE_API_TOKEN=your_huggingface_api_token
+
+# Social Media API Keys (Optional)
+FACEBOOK_API_KEY=
+TWITTER_API_KEY=
+YOUTUBE_API_KEY=
+
+# Logging
+LOG_LEVEL=INFO
+
+# Hugging Face Spaces
+PORT=7860
