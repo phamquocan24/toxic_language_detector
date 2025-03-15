@@ -99,44 +99,44 @@ class ToxicDetectionModel:
         return model
     
     def preprocess_text(self, text):
-    # Clean text while preserving Vietnamese diacritical marks
-    text = text.lower()
-    text = re.sub(r'https?://\S+|www\.\S+', '', text)  # Remove URLs
-    text = re.sub(r'<.*?>', '', text)  # Remove HTML tags
-    
-    # For Vietnamese, preserve diacritical marks and only remove punctuation
-    text = re.sub(r'[.,;:!?()"\'\[\]/\\]', ' ', text)
-    text = re.sub(r'\s+', ' ', text).strip()  # Remove extra whitespace
-    
-    # Use Vietnamese tokenization if available
-    if self.has_vietnamese_nlp:
-        try:
-            from underthesea import word_tokenize
-            text = word_tokenize(text, format="text")
-        except Exception as e:
-            print(f"Error in Vietnamese tokenization: {e}")
-    
-    # Vectorize
-    if not hasattr(self.vectorizer, 'vocabulary_'):
-        # Fit với một tập mẫu để đảm bảo có đủ tính năng
-        sample_texts = [text, "mẫu văn bản thêm vào", "thêm một số từ vựng phổ biến tiếng việt", 
-                        "spam quảng cáo giảm giá", "ngôn từ thù ghét", "từ ngữ xúc phạm"]
-        self.vectorizer.fit(sample_texts)
-    
-    # Tạo vector đặc trưng
-    features = self.vectorizer.transform([text]).toarray()
-    
-    # Đảm bảo kích thước đúng là 10000
-    if features.shape[1] < 10000:
-        # Pad với zeros nếu vector nhỏ hơn kích thước mong đợi
-        padded_features = np.zeros((features.shape[0], 10000))
-        padded_features[:, :features.shape[1]] = features
-        features = padded_features
-    elif features.shape[1] > 10000:
-        # Cắt bớt nếu vector lớn hơn kích thước mong đợi
-        features = features[:, :10000]
-    
-    return features
+        # Clean text while preserving Vietnamese diacritical marks
+        text = text.lower()
+        text = re.sub(r'https?://\S+|www\.\S+', '', text)  # Remove URLs
+        text = re.sub(r'<.*?>', '', text)  # Remove HTML tags
+        
+        # For Vietnamese, preserve diacritical marks and only remove punctuation
+        text = re.sub(r'[.,;:!?()"\'\[\]/\\]', ' ', text)
+        text = re.sub(r'\s+', ' ', text).strip()  # Remove extra whitespace
+        
+        # Use Vietnamese tokenization if available
+        if self.has_vietnamese_nlp:
+            try:
+                from underthesea import word_tokenize
+                text = word_tokenize(text, format="text")
+            except Exception as e:
+                print(f"Error in Vietnamese tokenization: {e}")
+        
+        # Vectorize
+        if not hasattr(self.vectorizer, 'vocabulary_'):
+            # Fit với một tập mẫu để đảm bảo có đủ tính năng
+            sample_texts = [text, "mẫu văn bản thêm vào", "thêm một số từ vựng phổ biến tiếng việt", 
+                          "spam quảng cáo giảm giá", "ngôn từ thù ghét", "từ ngữ xúc phạm"]
+            self.vectorizer.fit(sample_texts)
+        
+        # Tạo vector đặc trưng
+        features = self.vectorizer.transform([text]).toarray()
+        
+        # Đảm bảo kích thước đúng là 10000
+        if features.shape[1] < 10000:
+            # Pad với zeros nếu vector nhỏ hơn kích thước mong đợi
+            padded_features = np.zeros((features.shape[0], 10000))
+            padded_features[:, :features.shape[1]] = features
+            features = padded_features
+        elif features.shape[1] > 10000:
+            # Cắt bớt nếu vector lớn hơn kích thước mong đợi
+            features = features[:, :10000]
+        
+        return features
     
     def predict(self, text):
         # Preprocess text
