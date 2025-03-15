@@ -3,12 +3,11 @@ title: Toxic Language Detector
 emoji: 🛡️
 colorFrom: red
 colorTo: blue
-sdk: docker
-sdk_version: 3.10.2
+sdk: gradio
+sdk_version: 4.19.2
 app_file: app.py
 pinned: false
 ---
-
 # Toxic Language Detector
 
 A comprehensive system for detecting toxic language on social media platforms (Facebook, YouTube, Twitter), implemented as a browser extension with a FastAPI backend.
