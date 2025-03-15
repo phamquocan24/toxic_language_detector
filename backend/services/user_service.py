@@ -1,7 +1,7 @@
 # services/user_service.py
 from sqlalchemy.orm import Session
-from db.models import User, Role
-from core.security import get_password_hash, verify_password
+from backend.db.models import User, Role
+from backend.core.security import get_password_hash, verify_password
 from typing import Optional, List
 
 class UserService:
