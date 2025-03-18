@@ -100,47 +100,47 @@ class MLModel:
         return padded_sequences
     
     def predict(self, text):
-    """Predict the class of the Vietnamese text with enhanced spam detection"""
-    # Preprocess text
-    preprocessed_text = self.preprocess_text(text)
-    
-    # Get additional spam features
-    _, spam_features = preprocess_for_spam_detection(text)
-    
-    # Make prediction with the model
-    prediction = self.model.predict(preprocessed_text)[0]
-    
-    # Get class and confidence
-    predicted_class = np.argmax(prediction)
-    confidence = float(prediction[predicted_class])
-    
-    # Apply heuristic rules for spam detection enhancement
-    # If the model isn't confident but we have strong spam indicators
-    if predicted_class != 3 and confidence < 0.8:  # If not predicted as spam with high confidence
-        spam_score = 0
+        """Predict the class of the Vietnamese text with enhanced spam detection"""
+        # Preprocess text
+        preprocessed_text = self.preprocess_text(text)
         
-        # Add score based on spam features
-        if spam_features['has_url']:
-            spam_score += 0.2
+        # Get additional spam features
+        _, spam_features = preprocess_for_spam_detection(text)
         
-        if spam_features['has_suspicious_url']:
-            spam_score += 0.3
+        # Make prediction with the model
+        prediction = self.model.predict(preprocessed_text)[0]
         
-        if spam_features['url_count'] > 1:
-            spam_score += 0.1 * spam_features['url_count']
+        # Get class and confidence
+        predicted_class = np.argmax(prediction)
+        confidence = float(prediction[predicted_class])
         
-        if spam_features['spam_keyword_count'] > 0:
-            spam_score += 0.15 * spam_features['spam_keyword_count']
-        
-        if spam_features['has_excessive_punctuation']:
-            spam_score += 0.1
+        # Apply heuristic rules for spam detection enhancement
+        # If the model isn't confident but we have strong spam indicators
+        if predicted_class != 3 and confidence < 0.8:  # If not predicted as spam with high confidence
+            spam_score = 0
             
-        if spam_features['has_all_caps_words']:
-            spam_score += 0.1
+            # Add score based on spam features
+            if spam_features['has_url']:
+                spam_score += 0.2
+            
+            if spam_features['has_suspicious_url']:
+                spam_score += 0.3
+            
+            if spam_features['url_count'] > 1:
+                spam_score += 0.1 * spam_features['url_count']
+            
+            if spam_features['spam_keyword_count'] > 0:
+                spam_score += 0.15 * spam_features['spam_keyword_count']
+            
+            if spam_features['has_excessive_punctuation']:
+                spam_score += 0.1
+                
+            if spam_features['has_all_caps_words']:
+                spam_score += 0.1
+            
+            # Override prediction if spam score is high enough
+            if spam_score > 0.5:
+                predicted_class = 3  # Spam
+                confidence = max(confidence, spam_score)
         
-        # Override prediction if spam score is high enough
-        if spam_score > 0.5:
-            predicted_class = 3  # Spam
-            confidence = max(confidence, spam_score)
-    
-    return int(predicted_class), confidence
+        return int(predicted_class), confidence
