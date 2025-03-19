@@ -29,7 +29,7 @@ class Settings(BaseSettings):
     ]
     
     # ML Model settings
-    MODEL_PATH: str = os.getenv("MODEL_PATH", "model/best_model_LSTM.h5")
+    MODEL_PATH: str = os.getenv("MODEL_PATH", "model/model.safetensors")
     
     # Hugging Face settings
     HUGGINGFACE_API_URL: str = os.getenv("HUGGINGFACE_API_URL", "https://api-inference.huggingface.co/models/")
