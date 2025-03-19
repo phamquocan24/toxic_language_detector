@@ -5,6 +5,7 @@ from tensorflow.keras.preprocessing.text import Tokenizer
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 import re
 import os
+from .model_adapter import ModelAdapter
 
 class MLModel:
     def __init__(self, model_path="model/best_model_LSTM.h5", max_length=100, max_words=20000):
@@ -19,35 +20,25 @@ class MLModel:
         """Load the pretrained model trained on Vietnamese social media data"""
         try:
             if os.path.exists(self.model_path):
-                # Cố gắng tải mô hình bình thường
-                self.model = tf.keras.models.load_model(self.model_path)
+                # Sử dụng ModelAdapter để tải model từ bất kỳ định dạng nào
+                self.model = ModelAdapter.load_model(self.model_path)
                 print(f"Vietnamese toxicity model loaded from {self.model_path}")
             else:
                 print(f"Model not found at {self.model_path}. Using dummy model.")
-                self.model = self._create_dummy_model()
-        except TypeError as e:
-            if "Unrecognized keyword arguments: ['batch_shape']" in str(e):
-                print("Detected compatibility issue with the model. Using custom loader...")
-                # Tùy chỉnh tải mô hình để xử lý lỗi tương thích
-                try:
-                    # Tải mô hình với custom_objects
-                    self.model = tf.keras.models.load_model(self.model_path, compile=False, 
-                                                            custom_objects={'InputLayer': self._fix_input_layer})
-                    print("Model loaded successfully with custom loader")
-                except Exception as custom_e:
-                    print(f"Custom loader failed: {custom_e}. Using dummy model.")
-                    self.model = self._create_dummy_model()
-            else:
-                print(f"Unknown error loading model: {e}. Using dummy model.")
                 self.model = self._create_dummy_model()
         except Exception as e:
             print(f"Error loading model: {e}. Using dummy model.")
             self.model = self._create_dummy_model()
         
-        # In production, this should be loaded from a saved tokenizer trained on Vietnamese data
-        # For Vietnamese text, we need a specialized tokenizer or use a pre-tokenized approach
+        # Tiếp tục với phần tokenizer như cũ
         try:
             tokenizer_path = "model/vietnamese_tokenizer.pkl"
+            # Thêm đoạn này để tìm tokenizer phù hợp với model.safetensors
+            if self.model_path.endswith('.safetensors'):
+                safetensors_tokenizer = self.model_path.replace('.safetensors', '_tokenizer.pkl')
+                if os.path.exists(safetensors_tokenizer):
+                    tokenizer_path = safetensors_tokenizer
+                    
             if os.path.exists(tokenizer_path):
                 import pickle
                 with open(tokenizer_path, 'rb') as handle:
