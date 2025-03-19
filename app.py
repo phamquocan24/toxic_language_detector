@@ -12,6 +12,11 @@ try:
     from backend.core.middleware import LogMiddleware
     from backend.db.models.base import Base
     from backend.db.models import Base, engine
+    # Thêm import model_adapter nếu có
+    try:
+        from backend.services.model_adapter import ModelAdapter
+    except ImportError:
+        print("ModelAdapter not found. Will use default model loading.")
 except ImportError:
     print("Warning: Backend modules not found. Running in standalone mode.")
 
@@ -20,18 +25,24 @@ import tensorflow as tf
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 import re
+import logging
+
+# Thiết lập logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 # Kiểm tra và tạo model tương thích nếu chưa có
 MODEL_DIR = "model"
 COMPATIBLE_MODEL_PATH = os.path.join(MODEL_DIR, "compatible_model.h5")
 ORIGINAL_MODEL_PATH = os.path.join(MODEL_DIR, "best_model_LSTM.h5")
+SAFETENSORS_MODEL_PATH = os.path.join(MODEL_DIR, "model.safetensors")  # Thêm đường dẫn model safetensors
 
 # Tạo thư mục model nếu chưa tồn tại
 os.makedirs(MODEL_DIR, exist_ok=True)
 
-# Tạo model tương thích nếu chưa có
-if not os.path.exists(COMPATIBLE_MODEL_PATH):
-    print("Model tương thích chưa tồn tại, đang tạo model mới...")
+# Kiểm tra model safetensors trước, sử dụng nếu có
+if not os.path.exists(SAFETENSORS_MODEL_PATH) and not os.path.exists(COMPATIBLE_MODEL_PATH):
+    logger.info("Không tìm thấy model safetensors và model tương thích, đang tạo model mới...")
     try:
         # Tạo model tương thích đơn giản
         model = tf.keras.Sequential([
@@ -51,10 +62,10 @@ if not os.path.exists(COMPATIBLE_MODEL_PATH):
         
         # Lưu model
         model.save(COMPATIBLE_MODEL_PATH)
-        print(f"Model tương thích đã được tạo thành công và lưu tại {COMPATIBLE_MODEL_PATH}")
+        logger.info(f"Model tương thích đã được tạo thành công và lưu tại {COMPATIBLE_MODEL_PATH}")
     except Exception as e:
-        print(f"Lỗi khi tạo model tương thích: {e}")
-        print("API sẽ sử dụng model dự phòng")
+        logger.error(f"Lỗi khi tạo model tương thích: {e}")
+        logger.warning("API sẽ sử dụng model dự phòng")
 
 # Define our FastAPI application
 app = FastAPI(
@@ -94,7 +105,7 @@ class PredictionResponse(BaseModel):
 # Hàm tạo model tương thích nếu không thể tải model ban đầu
 def create_compatible_model():
     """Tạo một model tương thích với cấu trúc đầu vào 10000 chiều"""
-    print("Tạo model dự phòng với đầu vào 10000 chiều...")
+    logger.info("Tạo model dự phòng với đầu vào 10000 chiều...")
     inputs = tf.keras.Input(shape=(10000,))
     x = tf.keras.layers.Dense(128, activation='relu')(inputs)
     x = tf.keras.layers.Dropout(0.3)(x)
@@ -108,23 +119,107 @@ class ToxicDetectionModel:
     def __init__(self):
         # Load or create model trained on Vietnamese social media data
         try:
-            # Thử tải model tương thích trước
-            model_path = COMPATIBLE_MODEL_PATH
-            if not os.path.exists(model_path):
-                model_path = ORIGINAL_MODEL_PATH
-                
-            print(f"Đang tải model từ {model_path}...")
-            self.model = tf.keras.models.load_model(model_path, compile=False)
-            self.model.compile(
-                optimizer='adam',
-                loss='categorical_crossentropy',
-                metrics=['accuracy']
-            )
-            print("Vietnamese toxicity model loaded successfully")
+            # Kiểm tra xem có safetensors model không
+            self.using_safetensors = False
+            
+            if os.path.exists(SAFETENSORS_MODEL_PATH):
+                logger.info(f"Tìm thấy model safetensors tại {SAFETENSORS_MODEL_PATH}, đang tải...")
+                try:
+                    # Thử tải với ModelAdapter nếu có
+                    try:
+                        from backend.services.model_adapter import ModelAdapter
+                        model_adapter = ModelAdapter()
+                        self.model = model_adapter.load_model(SAFETENSORS_MODEL_PATH)
+                        self.using_safetensors = True
+                        logger.info("Đã tải thành công model safetensors")
+                    except ImportError:
+                        # Thử tải trực tiếp với safetensors
+                        try:
+                            from safetensors.tensorflow import load_file
+                            logger.info("Thư viện safetensors có sẵn, đang tải model...")
+                            
+                            # Tạo class đơn giản để tải model
+                            class SimpleSafetensorsLoader:
+                                @staticmethod
+                                def load_model(model_path):
+                                    # Tạo model với kiến trúc tương thích
+                                    inputs = tf.keras.Input(shape=(100,))
+                                    x = tf.keras.layers.Embedding(input_dim=20000, output_dim=128)(inputs)
+                                    x = tf.keras.layers.LSTM(128)(x)
+                                    x = tf.keras.layers.Dense(64, activation='relu')(x)
+                                    x = tf.keras.layers.Dropout(0.2)(x)
+                                    outputs = tf.keras.layers.Dense(4, activation='softmax')(x)
+                                    model = tf.keras.Model(inputs=inputs, outputs=outputs)
+                                    
+                                    # Tải weights từ safetensors
+                                    weights_dict = load_file(model_path)
+                                    
+                                    # Áp dụng weights (triển khai đơn giản)
+                                    for layer in model.layers:
+                                        layer_name = layer.name
+                                        weights = layer.get_weights()
+                                        
+                                        if not weights:
+                                            continue
+                                            
+                                        new_weights = []
+                                        for i, w in enumerate(weights):
+                                            weight_type = "kernel" if i == 0 else "bias"
+                                            key = f"{layer_name}.{weight_type}"
+                                            
+                                            if key in weights_dict and weights_dict[key].shape == w.shape:
+                                                new_weights.append(weights_dict[key])
+                                            else:
+                                                new_weights.append(w)
+                                                
+                                        if len(new_weights) == len(weights):
+                                            try:
+                                                layer.set_weights(new_weights)
+                                            except Exception as e:
+                                                logger.error(f"Lỗi khi áp dụng weights: {e}")
+                                    
+                                    # Compile model
+                                    model.compile(
+                                        optimizer='adam',
+                                        loss='categorical_crossentropy',
+                                        metrics=['accuracy']
+                                    )
+                                    
+                                    return model
+                            
+                            # Tải model với loader đơn giản
+                            self.model = SimpleSafetensorsLoader.load_model(SAFETENSORS_MODEL_PATH)
+                            self.using_safetensors = True
+                            logger.info("Đã tải model safetensors với loader tự tạo")
+                        except ImportError:
+                            logger.warning("Không tìm thấy thư viện safetensors. Sẽ sử dụng model .h5...")
+                            self.using_safetensors = False
+                except Exception as e:
+                    logger.error(f"Lỗi khi tải model safetensors: {e}")
+                    logger.warning("Sẽ sử dụng model .h5...")
+                    self.using_safetensors = False
+            
+            # Nếu không sử dụng được safetensors, thử tải model .h5
+            if not self.using_safetensors:
+                # Thử tải model tương thích trước
+                model_path = COMPATIBLE_MODEL_PATH
+                if not os.path.exists(model_path):
+                    model_path = ORIGINAL_MODEL_PATH
+                    
+                logger.info(f"Đang tải model h5 từ {model_path}...")
+                self.model = tf.keras.models.load_model(model_path, compile=False)
+                self.model.compile(
+                    optimizer='adam',
+                    loss='categorical_crossentropy',
+                    metrics=['accuracy']
+                )
+                logger.info("Vietnamese toxicity model loaded successfully")
+            
             self.using_dummy_model = False
+            
         except Exception as e:
-            print(f"Error loading model: {e}")
-            print("Creating a dummy model for demonstration")
+            logger.error(f"Error loading model: {e}")
+            logger.warning("Creating a dummy model for demonstration")
             self.model = create_compatible_model()
             self.using_dummy_model = True
         
@@ -151,12 +246,12 @@ class ToxicDetectionModel:
             if importlib.util.find_spec("underthesea"):
                 from underthesea import word_tokenize
                 self.has_vietnamese_nlp = True
-                print("Vietnamese NLP library loaded successfully")
+                logger.info("Vietnamese NLP library loaded successfully")
             else:
                 self.has_vietnamese_nlp = False
-                print("Vietnamese NLP library not found, using basic tokenization")
+                logger.info("Vietnamese NLP library not found, using basic tokenization")
         except Exception as e:
-            print(f"Error loading Vietnamese NLP library: {e}")
+            logger.error(f"Error loading Vietnamese NLP library: {e}")
             self.has_vietnamese_nlp = False
     
     def preprocess_text(self, text):
@@ -182,7 +277,7 @@ class ToxicDetectionModel:
                 from underthesea import word_tokenize
                 text = word_tokenize(text, format="text")
             except Exception as e:
-                print(f"Error in Vietnamese tokenization: {e}")
+                logger.error(f"Error in Vietnamese tokenization: {e}")
         
         # Vectorize
         if not hasattr(self.vectorizer, 'vocabulary_'):
@@ -239,7 +334,7 @@ class ToxicDetectionModel:
             
             return int(predicted_class), confidence, self.label_mapping[int(predicted_class)]
         except Exception as e:
-            print(f"Error in prediction: {e}")
+            logger.error(f"Error in prediction: {e}")
             # Fallback to rule-based prediction for stability
             if "giảm giá" in text.lower() and "http" in text.lower():
                 return 3, 0.9, self.label_mapping[3]  # Spam
@@ -300,7 +395,7 @@ async def detect_toxic_language(
             "prediction_text": prediction_text
         }
     except Exception as e:
-        print(f"API Error: {str(e)}")
+        logger.error(f"API Error: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error processing request: {str(e)}"
