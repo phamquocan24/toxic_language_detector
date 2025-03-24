@@ -29,7 +29,7 @@ class Settings(BaseSettings):
     ]
     
     # ML Model settings
-    MODEL_PATH: str = os.getenv("MODEL_PATH", "model/bert1800bert1800.safetensors")
+    MODEL_PATH: str = os.getenv("MODEL_PATH", "model/phobert1000.safetensors")
     
     # Hugging Face settings
     HUGGINGFACE_API_URL: str = os.getenv("HUGGINGFACE_API_URL", "https://api-inference.huggingface.co/models/")
