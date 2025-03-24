@@ -35,7 +35,7 @@ logger = logging.getLogger(__name__)
 MODEL_DIR = "model"
 COMPATIBLE_MODEL_PATH = os.path.join(MODEL_DIR, "compatible_model.h5")
 ORIGINAL_MODEL_PATH = os.path.join(MODEL_DIR, "best_model_LSTM.h5")
-SAFETENSORS_MODEL_PATH = os.path.join(MODEL_DIR, "phobert1000.safetensors")  # Thêm đường dẫn model safetensors
+SAFETENSORS_MODEL_PATH = os.path.join(MODEL_DIR, "bertbert.safetensors")  # Thêm đường dẫn model safetensors
 
 # Tạo thư mục model nếu chưa tồn tại
 os.makedirs(MODEL_DIR, exist_ok=True)
