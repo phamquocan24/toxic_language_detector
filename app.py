@@ -46,7 +46,7 @@ if not os.path.exists(SAFETENSORS_MODEL_PATH) and not os.path.exists(COMPATIBLE_
     try:
         # Tạo model tương thích đơn giản
         model = tf.keras.Sequential([
-            tf.keras.layers.Input(shape=(100,), dtype='float32'),
+            tf.keras.layers.Input(shape=(100000,), dtype='float32'),
             tf.keras.layers.Embedding(10000, 128, input_length=100),
             tf.keras.layers.LSTM(64, dropout=0.2),
             tf.keras.layers.Dense(64, activation='relu'),
