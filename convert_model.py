@@ -70,7 +70,7 @@ def convert_model(input_model_path, output_model_path):
         
         # Tạo model LSTM đơn giản
         model = tf.keras.Sequential([
-            tf.keras.layers.Input(shape=(100,), dtype='float32'),
+            tf.keras.layers.Input(shape=(10000,), dtype='float32'),
             tf.keras.layers.Embedding(10000, 128, input_length=100),
             tf.keras.layers.LSTM(64, dropout=0.2),
             tf.keras.layers.Dense(64, activation='relu'),

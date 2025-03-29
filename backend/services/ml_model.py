@@ -8,7 +8,7 @@ import os
 from .model_adapter import ModelAdapter
 
 class MLModel:
-    def __init__(self, model_path="model/best_model_LSTM.h5", max_length=100, max_words=20000):
+    def __init__(self, model_path="model/best_model_LSTM.h5", max_length=10000, max_words=20000):
         self.model_path = model_path
         self.max_length = max_length
         self.max_words = max_words

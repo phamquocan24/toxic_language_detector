@@ -46,7 +46,7 @@ if not os.path.exists(SAFETENSORS_MODEL_PATH) and not os.path.exists(COMPATIBLE_
     try:
         # Tạo model tương thích đơn giản
         model = tf.keras.Sequential([
-            tf.keras.layers.Input(shape=(100000,), dtype='float32'),
+            tf.keras.layers.Input(shape=(100,), dtype='float32'),
             tf.keras.layers.Embedding(10000, 128, input_length=100),
             tf.keras.layers.LSTM(64, dropout=0.2),
             tf.keras.layers.Dense(64, activation='relu'),
@@ -143,7 +143,7 @@ class ToxicDetectionModel:
                                 @staticmethod
                                 def load_model(model_path):
                                     # Tạo model với kiến trúc tương thích
-                                    inputs = tf.keras.Input(shape=(10000,))
+                                    inputs = tf.keras.Input(shape=(100,))
                                     x = tf.keras.layers.Embedding(input_dim=20000, output_dim=128)(inputs)
                                     x = tf.keras.layers.LSTM(128)(x)
                                     x = tf.keras.layers.Dense(64, activation='relu')(x)
