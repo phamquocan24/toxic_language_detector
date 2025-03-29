@@ -32,10 +32,10 @@ class MLModel:
         
         # Tiếp tục với phần tokenizer như cũ
         try:
-            tokenizer_path = "model/tokenizer.pickle"
+            tokenizer_path = "model/vietnamese_tokenizer.pkl"
             # Thêm đoạn này để tìm tokenizer phù hợp với model.safetensors
             if self.model_path.endswith('.safetensors'):
-                safetensors_tokenizer = self.model_path.replace('.safetensors', '.pickle')
+                safetensors_tokenizer = self.model_path.replace('.safetensors', '_tokenizer.pkl')
                 if os.path.exists(safetensors_tokenizer):
                     tokenizer_path = safetensors_tokenizer
                     
