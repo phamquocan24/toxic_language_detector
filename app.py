@@ -143,7 +143,7 @@ class ToxicDetectionModel:
                                 @staticmethod
                                 def load_model(model_path):
                                     # Tạo model với kiến trúc tương thích
-                                    inputs = tf.keras.Input(shape=(100,))
+                                    inputs = tf.keras.Input(shape=(10000,))
                                     x = tf.keras.layers.Embedding(input_dim=20000, output_dim=128)(inputs)
                                     x = tf.keras.layers.LSTM(128)(x)
                                     x = tf.keras.layers.Dense(64, activation='relu')(x)
