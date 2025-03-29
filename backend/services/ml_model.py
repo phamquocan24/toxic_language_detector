@@ -8,7 +8,7 @@ import os
 from .model_adapter import ModelAdapter
 
 class MLModel:
-    def __init__(self, model_path="model/best_model_LSTM.h5", max_length=10000, max_words=20000):
+    def __init__(self, model_path="model/best_model_LSTM.h5", max_length=100, max_words=20000):
         self.model_path = model_path
         self.max_length = max_length
         self.max_words = max_words
@@ -32,10 +32,10 @@ class MLModel:
         
         # Tiếp tục với phần tokenizer như cũ
         try:
-            tokenizer_path = "model/vietnamese_tokenizer.pkl"
+            tokenizer_path = "model/tokenizer.pickle"
             # Thêm đoạn này để tìm tokenizer phù hợp với model.safetensors
             if self.model_path.endswith('.safetensors'):
-                safetensors_tokenizer = self.model_path.replace('.safetensors', '_tokenizer.pkl')
+                safetensors_tokenizer = self.model_path.replace('.safetensors', '.pickle')
                 if os.path.exists(safetensors_tokenizer):
                     tokenizer_path = safetensors_tokenizer
                     
