@@ -10,8 +10,6 @@ import numpy as np
 import logging
 import time
 import tensorflow as tf
-
-# Đảm bảo import đúng
 tf.experimental.numpy.experimental_enable_numpy_behavior()
 
 logger = logging.getLogger(__name__)
@@ -38,8 +36,7 @@ def load_compressed_model(model_path):
             compressed_dict = {}
             
             for name in tensor_names:
-                # Chuyển đổi EagerTensor sang NumPy array
-                compressed_dict[name] = f.get_tensor(name).numpy() if hasattr(f.get_tensor(name), 'numpy') else f.get_tensor(name)
+                compressed_dict[name] = f.get_tensor(name)
         
         # Phục hồi các trọng số gốc
         original_weights = {}
@@ -60,15 +57,9 @@ def load_compressed_model(model_path):
                 compressed_data = compressed_dict[f"{base_name}_data"]
                 components = compressed_dict[f"{base_name}_components"]
                 mean = compressed_dict[f"{base_name}_mean"]
+                original_shape = tuple(compressed_dict[f"{base_name}_shape"].tolist())
+                perform_transpose = compressed_dict.get(f"{base_name}_transpose", np.array([False]))[0]
                 
-                # Xử lý shape an toàn
-                original_shape_tensor = compressed_dict[f"{base_name}_shape"]
-                original_shape = tuple(original_shape_tensor.tolist()) if hasattr(original_shape_tensor, 'tolist') else tuple(original_shape_tensor)
-                
-                # Kiểm tra transpose an toàn
-                perform_transpose = compressed_dict.get(f"{base_name}_transpose", np.array([False]))
-                perform_transpose = perform_transpose[0] if hasattr(perform_transpose, '__getitem__') else perform_transpose
-
                 # Phục hồi dữ liệu gần đúng
                 reconstructed = np.dot(compressed_data, components) + mean
                 
@@ -93,7 +84,11 @@ def load_compressed_model(model_path):
         # Thêm các tensor không nén
         for name in compressed_dict.keys():
             # Kiểm tra xem đây có phải là tensor đã nén hoặc metadata không
-            is_compressed_data = any(name.endswith(suffix) for suffix in compression_suffixes)
+            is_compressed_data = False
+            for suffix in compression_suffixes:
+                if name.endswith(suffix):
+                    is_compressed_data = True
+                    break
             
             # Nếu không phải là tensor đã nén hoặc metadata, thêm vào kết quả
             if not is_compressed_data:
@@ -121,6 +116,8 @@ def load_model_weights(model, weights_dict):
         model: Model đã được áp dụng trọng số
     """
     try:
+        import tensorflow as tf
+        
         logger.info("Đang áp dụng trọng số vào model")
         start_time = time.time()
         
