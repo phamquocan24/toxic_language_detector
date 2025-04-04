@@ -9,6 +9,8 @@ import os
 import numpy as np
 import logging
 import time
+import tensorflow as tf
+tf.experimental.numpy.experimental_enable_numpy_behavior()
 
 logger = logging.getLogger(__name__)
 
