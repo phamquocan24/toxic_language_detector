@@ -1,0 +1,219 @@
+<!-- user_dashboard.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Toxic Language Detector - User Dashboard</title>
+  <link rel="stylesheet" href="styles/dashboard.css">
+  <link rel="stylesheet" href="styles/charts.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="dashboard-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <img src="../icons/iris_scan.png" alt="Logo" class="sidebar-logo">
+        <h1>Toxic Detector</h1>
+      </div>
+      
+      <nav class="sidebar-nav">
+        <ul>
+          <li class="active"><a href="#overview"><span class="icon">📊</span> Tổng quan</a></li>
+          <li><a href="#history"><span class="icon">📜</span> Lịch sử phát hiện</a></li>
+          <li><a href="#platforms"><span class="icon">🌐</span> Theo nền tảng</a></li>
+          <li><a href="#settings"><span class="icon">⚙️</span> Cài đặt</a></li>
+        </ul>
+      </nav>
+      
+      <div class="sidebar-footer">
+        <div class="user-info">
+          <div class="user-avatar">👤</div>
+          <div class="user-details">
+            <div class="user-name">Nguyễn Văn A</div>
+            <div class="user-role">Người dùng</div>
+          </div>
+        </div>
+        <button id="logout-btn" class="logout-button">Đăng xuất</button>
+      </div>
+    </aside>
+    
+    <!-- Main Content -->
+    <main class="main-content">
+      <header class="content-header">
+        <h2>Dashboard</h2>
+        <div class="header-actions">
+          <div class="date-filter">
+            <label for="date-range">Thời gian:</label>
+            <select id="date-range">
+              <option value="today">Hôm nay</option>
+              <option value="week" selected>7 ngày qua</option>
+              <option value="month">30 ngày qua</option>
+              <option value="custom">Tùy chỉnh</option>
+            </select>
+          </div>
+          <button id="refresh-btn" class="refresh-button">Làm mới</button>
+        </div>
+      </header>
+      
+      <!-- Overview Section -->
+      <section id="overview" class="dashboard-section active">
+        <div class="stats-cards">
+          <div class="stat-card">
+            <div class="stat-icon clean">🟢</div>
+            <div class="stat-details">
+              <div class="stat-value">458</div>
+              <div class="stat-label">Bình thường</div>
+            </div>
+            <div class="stat-change positive">+12%</div>
+          </div>
+          
+          <div class="stat-card">
+            <div class="stat-icon offensive">🟠</div>
+            <div class="stat-details">
+              <div class="stat-value">32</div>
+              <div class="stat-label">Xúc phạm</div>
+            </div>
+            <div class="stat-change negative">-5%</div>
+          </div>
+          
+          <div class="stat-card">
+            <div class="stat-icon hate">🔴</div>
+            <div class="stat-details">
+              <div class="stat-value">7</div>
+              <div class="stat-label">Thù ghét</div>
+            </div>
+            <div class="stat-change negative">-23%</div>
+          </div>
+          
+          <div class="stat-card">
+            <div class="stat-icon spam">🟣</div>
+            <div class="stat-details">
+              <div class="stat-value">41</div>
+              <div class="stat-label">Spam</div>
+            </div>
+            <div class="stat-change negative">-8%</div>
+          </div>
+        </div>
+        
+        <div class="charts-container">
+          <div class="chart-card">
+            <div class="chart-header">
+              <h3>Phân tích theo thời gian</h3>
+              <div class="chart-actions">
+                <button class="chart-action" data-type="line" data-active="true">Đường</button>
+                <button class="chart-action" data-type="bar">Cột</button>
+              </div>
+            </div>
+            <div class="chart-body">
+              <canvas id="timeline-chart"></canvas>
+            </div>
+          </div>
+          
+          <div class="chart-card">
+            <div class="chart-header">
+              <h3>Phân bố các loại</h3>
+            </div>
+            <div class="chart-body">
+              <canvas id="distribution-chart"></canvas>
+            </div>
+          </div>
+        </div>
+        
+        <div class="recent-detections">
+          <div class="section-header">
+            <h3>Phát hiện gần đây</h3>
+            <a href="#history" class="view-all">Xem tất cả</a>
+          </div>
+          
+          <div class="detection-list">
+            <div class="detection-item">
+              <div class="detection-platform"><img src="../icons/facebook.png" alt="Facebook"></div>
+              <div class="detection-content">
+                <div class="detection-text">Bài viết thật tuyệt, cảm ơn bạn đã chia sẻ!</div>
+                <div class="detection-meta">12:45 - 15/03/2025</div>
+              </div>
+              <div class="detection-result clean">Bình thường</div>
+            </div>
+            
+            <div class="detection-item">
+              <div class="detection-platform"><img src="../icons/youtube.png" alt="YouTube"></div>
+              <div class="detection-content">
+                <div class="detection-text">Video dở tệ, thật là lãng phí thời gian!</div>
+                <div class="detection-meta">09:23 - 15/03/2025</div>
+              </div>
+              <div class="detection-result offensive">Xúc phạm</div>
+            </div>
+            
+            <div class="detection-item">
+              <div class="detection-platform"><img src="../icons/twitter.png" alt="Twitter"></div>
+              <div class="detection-content">
+                <div class="detection-text">Giảm giá 90% tất cả sản phẩm, mua ngay! http://example.com</div>
+                <div class="detection-meta">08:15 - 15/03/2025</div>
+              </div>
+              <div class="detection-result spam">Spam</div>
+            </div>
+          </div>
+        </div>
+      </section>
+      
+      <!-- History Section -->
+      <section id="history" class="dashboard-section">
+        <div class="section-header with-actions">
+          <h3>Lịch sử phát hiện</h3>
+          <div class="section-actions">
+            <div class="search-box">
+              <input type="text" placeholder="Tìm kiếm...">
+              <button class="search-button">🔍</button>
+            </div>
+            <div class="filter-dropdown">
+              <button class="filter-button">Lọc <span class="arrow-down">▼</span></button>
+              <div class="filter-menu">
+                <label><input type="checkbox" checked> Bình thường</label>
+                <label><input type="checkbox" checked> Xúc phạm</label>
+                <label><input type="checkbox" checked> Thù ghét</label>
+                <label><input type="checkbox" checked> Spam</label>
+                <div class="filter-divider"></div>
+                <label><input type="checkbox" checked> Facebook</label>
+                <label><input type="checkbox" checked> YouTube</label>
+                <label><input type="checkbox" checked> Twitter</label>
+              </div>
+            </div>
+            <button class="export-button">Xuất dữ liệu</button>
+          </div>
+        </div>
+        
+        <div class="data-table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Thời gian</th>
+                <th>Nền tảng</th>
+                <th>Nội dung</th>
+                <th>Phân loại</th>
+                <th>Độ tin cậy</th>
+                <th>Hành động</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Table content will be populated by JavaScript -->
+            </tbody>
+          </table>
+          
+          <div class="pagination">
+            <button class="pagination-button" disabled>←</button>
+            <span class="pagination-info">Trang 1 / 5</span>
+            <button class="pagination-button">→</button>
+          </div>
+        </div>
+      </section>
+      
+      <!-- Other sections will be added here -->
+    </main>
+  </div>
+  
+  <script src="scripts/user_dashboard.js"></script>
+  <script src="scripts/charts.js"></script>
+</body>
+</html>

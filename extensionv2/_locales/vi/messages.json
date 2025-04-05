@@ -1,0 +1,230 @@
+{
+    "appName": {
+      "message": "Phát hiện Ngôn từ Độc hại",
+      "description": "Tên của extension"
+    },
+    "appDesc": {
+      "message": "Phát hiện ngôn từ độc hại trên các nền tảng mạng xã hội",
+      "description": "Mô tả của extension"
+    },
+    "login": {
+      "message": "Đăng nhập",
+      "description": "Nút đăng nhập"
+    },
+    "register": {
+      "message": "Đăng ký",
+      "description": "Nút đăng ký"
+    },
+    "username": {
+      "message": "Tên đăng nhập",
+      "description": "Nhãn trường tên đăng nhập"
+    },
+    "password": {
+      "message": "Mật khẩu",
+      "description": "Nhãn trường mật khẩu"
+    },
+    "email": {
+      "message": "Email",
+      "description": "Nhãn trường email"
+    },
+    "confirmPassword": {
+      "message": "Xác nhận mật khẩu",
+      "description": "Nhãn trường xác nhận mật khẩu"
+    },
+    "rememberMe": {
+      "message": "Ghi nhớ đăng nhập",
+      "description": "Nhãn hộp chọn ghi nhớ đăng nhập"
+    },
+    "logout": {
+      "message": "Đăng xuất",
+      "description": "Nút đăng xuất"
+    },
+    "dashboard": {
+      "message": "Bảng điều khiển",
+      "description": "Tiêu đề trang bảng điều khiển"
+    },
+    "overview": {
+      "message": "Tổng quan",
+      "description": "Tiêu đề phần tổng quan"
+    },
+    "history": {
+      "message": "Lịch sử phát hiện",
+      "description": "Tiêu đề phần lịch sử"
+    },
+    "platforms": {
+      "message": "Nền tảng",
+      "description": "Tiêu đề phần nền tảng"
+    },
+    "settings": {
+      "message": "Cài đặt",
+      "description": "Tiêu đề phần cài đặt"
+    },
+    "statistics": {
+      "message": "Thống kê",
+      "description": "Tiêu đề phần thống kê"
+    },
+    "scanned": {
+      "message": "Đã quét",
+      "description": "Nhãn số lượng đã quét"
+    },
+    "toxic": {
+      "message": "Độc hại",
+      "description": "Nhãn số lượng độc hại"
+    },
+    "clean": {
+      "message": "Bình thường",
+      "description": "Nhãn số lượng bình thường"
+    },
+    "resetStatistics": {
+      "message": "Đặt lại thống kê",
+      "description": "Nút đặt lại thống kê"
+    },
+    "enableExtension": {
+      "message": "Kích hoạt tiện ích",
+      "description": "Nhãn công tắc kích hoạt tiện ích"
+    },
+    "sensitivityThreshold": {
+      "message": "Ngưỡng nhạy cảm",
+      "description": "Nhãn ngưỡng nhạy cảm"
+    },
+    "highlightToxicContent": {
+      "message": "Đánh dấu nội dung độc hại",
+      "description": "Nhãn công tắc đánh dấu nội dung độc hại"
+    },
+    "enableOnPlatforms": {
+      "message": "Kích hoạt trên nền tảng",
+      "description": "Tiêu đề phần kích hoạt trên nền tảng"
+    },
+    "facebook": {
+      "message": "Facebook",
+      "description": "Tên nền tảng Facebook"
+    },
+    "youtube": {
+      "message": "YouTube",
+      "description": "Tên nền tảng YouTube"
+    },
+    "twitter": {
+      "message": "Twitter",
+      "description": "Tên nền tảng Twitter"
+    },
+    "cleanLabel": {
+      "message": "Bình thường",
+      "description": "Nhãn nội dung bình thường"
+    },
+    "offensiveLabel": {
+      "message": "Xúc phạm",
+      "description": "Nhãn nội dung xúc phạm"
+    },
+    "hateLabel": {
+      "message": "Thù ghét",
+      "description": "Nhãn nội dung thù ghét"
+    },
+    "spamLabel": {
+      "message": "Spam",
+      "description": "Nhãn nội dung spam"
+    },
+    "revealContent": {
+      "message": "Hiện nội dung",
+      "description": "Nút hiện nội dung"
+    },
+    "timeFilter": {
+      "message": "Thời gian",
+      "description": "Nhãn bộ lọc thời gian"
+    },
+    "today": {
+      "message": "Hôm nay",
+      "description": "Tùy chọn lọc hôm nay"
+    },
+    "last7days": {
+      "message": "7 ngày qua",
+      "description": "Tùy chọn lọc 7 ngày qua"
+    },
+    "last30days": {
+      "message": "30 ngày qua",
+      "description": "Tùy chọn lọc 30 ngày qua"
+    },
+    "custom": {
+      "message": "Tùy chỉnh",
+      "description": "Tùy chọn lọc tùy chỉnh"
+    },
+    "refresh": {
+      "message": "Làm mới",
+      "description": "Nút làm mới"
+    },
+    "exportData": {
+      "message": "Xuất dữ liệu",
+      "description": "Nút xuất dữ liệu"
+    },
+    "search": {
+      "message": "Tìm kiếm...",
+      "description": "Placeholder tìm kiếm"
+    },
+    "filter": {
+      "message": "Lọc",
+      "description": "Nút lọc"
+    },
+    "time": {
+      "message": "Thời gian",
+      "description": "Tiêu đề cột thời gian"
+    },
+    "platform": {
+      "message": "Nền tảng",
+      "description": "Tiêu đề cột nền tảng"
+    },
+    "content": {
+      "message": "Nội dung",
+      "description": "Tiêu đề cột nội dung"
+    },
+    "classification": {
+      "message": "Phân loại",
+      "description": "Tiêu đề cột phân loại"
+    },
+    "confidence": {
+      "message": "Độ tin cậy",
+      "description": "Tiêu đề cột độ tin cậy"
+    },
+    "actions": {
+      "message": "Hành động",
+      "description": "Tiêu đề cột hành động"
+    },
+    "confirmLogout": {
+      "message": "Bạn có chắc chắn muốn đăng xuất?",
+      "description": "Thông báo xác nhận đăng xuất"
+    },
+    "yes": {
+      "message": "Có",
+      "description": "Nút có"
+    },
+    "no": {
+      "message": "Không",
+      "description": "Nút không"
+    },
+    "cancel": {
+      "message": "Hủy",
+      "description": "Nút hủy"
+    },
+    "confirm": {
+      "message": "Xác nhận",
+      "description": "Nút xác nhận"
+    },
+    "save": {
+      "message": "Lưu",
+      "description": "Nút lưu"
+    },
+    "loginFailed": {
+      "message": "Đăng nhập thất bại",
+      "description": "Thông báo lỗi khi đăng nhập thất bại"
+    },
+    "registrationFailed": {
+      "message": "Đăng ký thất bại",
+      "description": "Thông báo lỗi khi đăng ký thất bại"
+    },
+    "passwordMismatch": {
+      "message": "Mật khẩu không khớp",
+      "description": "Lỗi khi mật khẩu không khớp"
+    },
+    "registrationSuccess": {
+      "message": "Đăng ký thành công! Vui lòng đăng nhập.",
+      "description": "Thông báo sau khi đăng ký thành công"
+    }
+  }

@@ -1,0 +1,145 @@
+/* styles/auth.css */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+  
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f5f5f5;
+    min-width: 320px;
+    min-height: 450px;
+  }
+  
+  .auth-container {
+    width: 100%;
+    max-width: 350px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+  
+  .auth-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+  
+  .auth-logo {
+    width: 36px;
+    height: 36px;
+    margin-right: 12px;
+  }
+  
+  .auth-header h1 {
+    font-size: 20px;
+    color: #333;
+  }
+  
+  .auth-tabs {
+    display: flex;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #ddd;
+  }
+  
+  .auth-tab {
+    flex: 1;
+    padding: 10px;
+    text-align: center;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    color: #666;
+    transition: all 0.3s;
+  }
+  
+  .auth-tab.active {
+    color: #2196F3;
+    border-bottom: 2px solid #2196F3;
+    font-weight: 600;
+  }
+  
+  .auth-form-container {
+    position: relative;
+  }
+  
+  .auth-form {
+    display: none;
+    opacity: 0;
+    transition: opacity 0.3s;
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .auth-form.active {
+    display: block;
+    opacity: 1;
+  }
+  
+  .form-group {
+    margin-bottom: 16px;
+  }
+  
+  .form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 14px;
+    color: #555;
+  }
+  
+  .form-group input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    transition: border-color 0.3s;
+  }
+  
+  .form-group input:focus {
+    outline: none;
+    border-color: #2196F3;
+  }
+  
+  .remember-me {
+    display: flex;
+    align-items: center;
+  }
+  
+  .remember-me label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+  }
+  
+  .remember-me input {
+    width: auto;
+    margin-right: 8px;
+  }
+  
+  .error-message {
+    color: #e53935;
+    font-size: 12px;
+    margin: 8px 0;
+    min-height: 1em;
+  }
+  
+  .auth-button {
+    width: 100%;
+    padding: 12px;
+    background-color: #2196F3;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  .auth-button:hover {
+    background-color: #1976D2;
+  }

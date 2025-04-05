@@ -1,0 +1,230 @@
+{
+    "appName": {
+      "message": "Toxic Language Detector",
+      "description": "The name of the extension"
+    },
+    "appDesc": {
+      "message": "Detect toxic language on social media platforms",
+      "description": "The description of the extension"
+    },
+    "login": {
+      "message": "Login",
+      "description": "Login button text"
+    },
+    "register": {
+      "message": "Register",
+      "description": "Register button text"
+    },
+    "username": {
+      "message": "Username",
+      "description": "Username field label"
+    },
+    "password": {
+      "message": "Password",
+      "description": "Password field label"
+    },
+    "email": {
+      "message": "Email",
+      "description": "Email field label"
+    },
+    "confirmPassword": {
+      "message": "Confirm Password",
+      "description": "Confirm password field label"
+    },
+    "rememberMe": {
+      "message": "Remember me",
+      "description": "Remember me checkbox label"
+    },
+    "logout": {
+      "message": "Logout",
+      "description": "Logout button text"
+    },
+    "dashboard": {
+      "message": "Dashboard",
+      "description": "Dashboard page title"
+    },
+    "overview": {
+      "message": "Overview",
+      "description": "Overview section title"
+    },
+    "history": {
+      "message": "Detection History",
+      "description": "History section title"
+    },
+    "platforms": {
+      "message": "Platforms",
+      "description": "Platforms section title"
+    },
+    "settings": {
+      "message": "Settings",
+      "description": "Settings section title"
+    },
+    "statistics": {
+      "message": "Statistics",
+      "description": "Statistics section title"
+    },
+    "scanned": {
+      "message": "Scanned",
+      "description": "Scanned count label"
+    },
+    "toxic": {
+      "message": "Toxic",
+      "description": "Toxic count label"
+    },
+    "clean": {
+      "message": "Clean",
+      "description": "Clean count label"
+    },
+    "resetStatistics": {
+      "message": "Reset Statistics",
+      "description": "Reset statistics button text"
+    },
+    "enableExtension": {
+      "message": "Enable Extension",
+      "description": "Enable extension toggle label"
+    },
+    "sensitivityThreshold": {
+      "message": "Sensitivity Threshold",
+      "description": "Sensitivity threshold label"
+    },
+    "highlightToxicContent": {
+      "message": "Highlight Toxic Content",
+      "description": "Highlight toxic content toggle label"
+    },
+    "enableOnPlatforms": {
+      "message": "Enable on Platforms",
+      "description": "Enable on platforms section title"
+    },
+    "facebook": {
+      "message": "Facebook",
+      "description": "Facebook platform name"
+    },
+    "youtube": {
+      "message": "YouTube",
+      "description": "YouTube platform name"
+    },
+    "twitter": {
+      "message": "Twitter",
+      "description": "Twitter platform name"
+    },
+    "cleanLabel": {
+      "message": "Clean",
+      "description": "Clean content label"
+    },
+    "offensiveLabel": {
+      "message": "Offensive",
+      "description": "Offensive content label"
+    },
+    "hateLabel": {
+      "message": "Hate Speech",
+      "description": "Hate speech content label"
+    },
+    "spamLabel": {
+      "message": "Spam",
+      "description": "Spam content label"
+    },
+    "revealContent": {
+      "message": "Reveal Content",
+      "description": "Reveal content button text"
+    },
+    "timeFilter": {
+      "message": "Time Period",
+      "description": "Time filter label"
+    },
+    "today": {
+      "message": "Today",
+      "description": "Today filter option"
+    },
+    "last7days": {
+      "message": "Last 7 days",
+      "description": "Last 7 days filter option"
+    },
+    "last30days": {
+      "message": "Last 30 days",
+      "description": "Last 30 days filter option"
+    },
+    "custom": {
+      "message": "Custom",
+      "description": "Custom filter option"
+    },
+    "refresh": {
+      "message": "Refresh",
+      "description": "Refresh button text"
+    },
+    "exportData": {
+      "message": "Export Data",
+      "description": "Export data button text"
+    },
+    "search": {
+      "message": "Search...",
+      "description": "Search placeholder"
+    },
+    "filter": {
+      "message": "Filter",
+      "description": "Filter button text"
+    },
+    "time": {
+      "message": "Time",
+      "description": "Time column header"
+    },
+    "platform": {
+      "message": "Platform",
+      "description": "Platform column header"
+    },
+    "content": {
+      "message": "Content",
+      "description": "Content column header"
+    },
+    "classification": {
+      "message": "Classification",
+      "description": "Classification column header"
+    },
+    "confidence": {
+      "message": "Confidence",
+      "description": "Confidence column header"
+    },
+    "actions": {
+      "message": "Actions",
+      "description": "Actions column header"
+    },
+    "confirmLogout": {
+      "message": "Are you sure you want to log out?",
+      "description": "Logout confirmation message"
+    },
+    "yes": {
+      "message": "Yes",
+      "description": "Yes button text"
+    },
+    "no": {
+      "message": "No",
+      "description": "No button text"
+    },
+    "cancel": {
+      "message": "Cancel",
+      "description": "Cancel button text"
+    },
+    "confirm": {
+      "message": "Confirm",
+      "description": "Confirm button text"
+    },
+    "save": {
+      "message": "Save",
+      "description": "Save button text"
+    },
+    "loginFailed": {
+      "message": "Login failed",
+      "description": "Error message for failed login"
+    },
+    "registrationFailed": {
+      "message": "Registration failed",
+      "description": "Error message for failed registration"
+    },
+    "passwordMismatch": {
+      "message": "Passwords do not match",
+      "description": "Error when passwords don't match"
+    },
+    "registrationSuccess": {
+      "message": "Registration successful! Please login.",
+      "description": "Message after successful registration"
+    }
+  }

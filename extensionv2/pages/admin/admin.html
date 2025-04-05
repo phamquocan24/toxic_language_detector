@@ -1,0 +1,632 @@
+<!-- admin_dashboard.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Toxic Language Detector - Admin Dashboard</title>
+  <link rel="stylesheet" href="styles/dashboard.css">
+  <link rel="stylesheet" href="styles/charts.css">
+  <link rel="stylesheet" href="styles/admin.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="dashboard-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <img src="../icons/iris_scan.png" alt="Logo" class="sidebar-logo">
+        <h1>Admin Panel</h1>
+      </div>
+      
+      <nav class="sidebar-nav">
+        <ul>
+          <li class="active"><a href="#dashboard"><span class="icon">📊</span> Tổng quan</a></li>
+          <li><a href="#analytics"><span class="icon">📈</span> Phân tích chi tiết</a></li>
+          <li><a href="#users"><span class="icon">👥</span> Quản lý người dùng</a></li>
+          <li><a href="#reports"><span class="icon">📝</span> Báo cáo</a></li>
+          <li><a href="#alerts"><span class="icon">🔔</span> Cảnh báo</a></li>
+          <li><a href="#settings"><span class="icon">⚙️</span> Cài đặt hệ thống</a></li>
+        </ul>
+      </nav>
+      
+      <div class="sidebar-footer">
+        <div class="user-info">
+          <div class="user-avatar admin">👑</div>
+          <div class="user-details">
+            <div class="user-name">Admin</div>
+            <div class="user-role">Quản trị viên</div>
+          </div>
+        </div>
+        <button id="logout-btn" class="logout-button">Đăng xuất</button>
+      </div>
+    </aside>
+    
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Header with actions -->
+      <header class="content-header">
+        <h2>Admin Dashboard</h2>
+        <div class="header-actions">
+          <div class="date-filter">
+            <label for="date-range">Thời gian:</label>
+            <select id="date-range">
+              <option value="today">Hôm nay</option>
+              <option value="week" selected>7 ngày qua</option>
+              <option value="month">30 ngày qua</option>
+              <option value="year">12 tháng qua</option>
+              <option value="custom">Tùy chỉnh</option>
+            </select>
+          </div>
+          <button id="refresh-btn" class="refresh-button">Làm mới</button>
+          <button id="export-all-btn" class="export-button">Xuất báo cáo</button>
+        </div>
+      </header>
+      
+      <!-- Dashboard Overview Section -->
+      <section id="dashboard" class="dashboard-section active">
+        <!-- System Health Cards -->
+        <div class="stats-row">
+          <div class="system-card">
+            <div class="system-icon"><span class="status-good">●</span></div>
+            <div class="system-details">
+              <div class="system-title">API Status</div>
+              <div class="system-value">Hoạt động tốt</div>
+            </div>
+            <div class="system-metric">
+              <div class="system-number">99.8%</div>
+              <div class="system-label">Uptime</div>
+            </div>
+          </div>
+          
+          <div class="system-card">
+            <div class="system-icon"><span class="status-warning">●</span></div>
+            <div class="system-details">
+              <div class="system-title">Tải hệ thống</div>
+              <div class="system-value">Trung bình</div>
+            </div>
+            <div class="system-metric">
+              <div class="system-number">68%</div>
+              <div class="system-label">CPU/RAM</div>
+            </div>
+          </div>
+          
+          <div class="system-card">
+            <div class="system-icon"><span class="status-good">●</span></div>
+            <div class="system-details">
+              <div class="system-title">Độ chính xác</div>
+              <div class="system-value">Tốt</div>
+            </div>
+            <div class="system-metric">
+              <div class="system-number">92.5%</div>
+              <div class="system-label">F1 Score</div>
+            </div>
+          </div>
+          
+          <div class="system-card">
+            <div class="system-icon"><span class="status-alert">●</span></div>
+            <div class="system-details">
+              <div class="system-title">Cảnh báo</div>
+              <div class="system-value">Cần xử lý</div>
+            </div>
+            <div class="system-metric">
+              <div class="system-number">5</div>
+              <div class="system-label">Chưa xử lý</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Activity Overview -->
+        <div class="stats-cards">
+          <div class="stat-card">
+            <div class="stat-icon users">👥</div>
+            <div class="stat-details">
+              <div class="stat-value">147</div>
+              <div class="stat-label">Người dùng</div>
+            </div>
+            <div class="stat-change positive">+12%</div>
+          </div>
+          
+          <div class="stat-card">
+            <div class="stat-icon scans">🔍</div>
+            <div class="stat-details">
+              <div class="stat-value">24,891</div>
+              <div class="stat-label">Lượt quét</div>
+            </div>
+            <div class="stat-change positive">+23%</div>
+          </div>
+          
+          <div class="stat-card">
+            <div class="stat-icon toxic">⚠️</div>
+            <div class="stat-details">
+              <div class="stat-value">2,453</div>
+              <div class="stat-label">Phát hiện độc hại</div>
+            </div>
+            <div class="stat-change negative">-5%</div>
+          </div>
+          
+          <div class="stat-card">
+            <div class="stat-icon accuracy">✓</div>
+            <div class="stat-details">
+              <div class="stat-value">92.5%</div>
+              <div class="stat-label">Độ chính xác</div>
+            </div>
+            <div class="stat-change positive">+1.2%</div>
+          </div>
+        </div>
+        
+        <!-- Main Charts -->
+        <div class="charts-container">
+          <div class="chart-card wide">
+            <div class="chart-header">
+              <h3>Tổng quan hoạt động</h3>
+              <div class="chart-tabs">
+                <button class="chart-tab active" data-period="day">Theo ngày</button>
+                <button class="chart-tab" data-period="week">Theo tuần</button>
+                <button class="chart-tab" data-period="month">Theo tháng</button>
+              </div>
+            </div>
+            <div class="chart-body">
+              <canvas id="activity-chart"></canvas>
+            </div>
+          </div>
+        </div>
+        
+        <div class="charts-container">
+          <div class="chart-card">
+            <div class="chart-header">
+              <h3>Phân bố theo nền tảng</h3>
+            </div>
+            <div class="chart-body">
+              <canvas id="platforms-chart"></canvas>
+            </div>
+          </div>
+          
+          <div class="chart-card">
+            <div class="chart-header">
+              <h3>Phân loại nội dung</h3>
+            </div>
+            <div class="chart-body">
+              <canvas id="categories-chart"></canvas>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Recent Alerts -->
+        <div class="alerts-container">
+          <div class="section-header">
+            <h3>Cảnh báo gần đây</h3>
+            <a href="#alerts" class="view-all">Xem tất cả</a>
+          </div>
+          
+          <div class="alerts-list">
+            <div class="alert-item high">
+              <div class="alert-priority">Cao</div>
+              <div class="alert-content">
+                <div class="alert-title">Phát hiện lượng lớn ngôn từ thù ghét từ IP: 192.168.1.45</div>
+                <div class="alert-details">15 trường hợp trong 10 phút qua</div>
+              </div>
+              <div class="alert-time">12:34 - 15/03/2025</div>
+              <div class="alert-actions">
+                <button class="alert-action" title="Đánh dấu đã đọc">✓</button>
+                <button class="alert-action" title="Chi tiết">👁️</button>
+                <button class="alert-action" title="Chặn IP">🚫</button>
+              </div>
+            </div>
+            
+            <div class="alert-item medium">
+              <div class="alert-priority">Vừa</div>
+              <div class="alert-content">
+                <div class="alert-title">Người dùng @user123 bị báo cáo 5 lần</div>
+                <div class="alert-details">Các bình luận mang tính xúc phạm liên tục</div>
+              </div>
+              <div class="alert-time">10:15 - 15/03/2025</div>
+              <div class="alert-actions">
+                <button class="alert-action" title="Đánh dấu đã đọc">✓</button>
+                <button class="alert-action" title="Chi tiết">👁️</button>
+                <button class="alert-action" title="Cảnh báo người dùng">📧</button>
+              </div>
+            </div>
+            
+            <div class="alert-item low">
+              <div class="alert-priority">Thấp</div>
+              <div class="alert-content">
+                <div class="alert-title">Phát hiện mẫu spam mới trên Facebook</div>
+                <div class="alert-details">Mẫu văn bản quảng cáo mới chưa có trong cơ sở dữ liệu</div>
+              </div>
+              <div class="alert-time">09:22 - 15/03/2025</div>
+              <div class="alert-actions">
+                <button class="alert-action" title="Đánh dấu đã đọc">✓</button>
+                <button class="alert-action" title="Chi tiết">👁️</button>
+                <button class="alert-action" title="Thêm vào cơ sở dữ liệu">➕</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      
+      <!-- Analytics Section -->
+      <section id="analytics" class="dashboard-section">
+        <div class="section-header with-actions">
+          <h3>Phân tích chi tiết</h3>
+          <div class="section-actions">
+            <div class="filter-dropdown">
+              <button class="filter-button">Bộ lọc <span class="arrow-down">▼</span></button>
+              <div class="filter-menu">
+                <label><input type="checkbox" checked> Facebook</label>
+                <label><input type="checkbox" checked> YouTube</label>
+                <label><input type="checkbox" checked> Twitter</label>
+                <div class="filter-divider"></div>
+                <label><input type="checkbox" checked> Bình thường</label>
+                <label><input type="checkbox" checked> Xúc phạm</label>
+                <label><input type="checkbox" checked> Thù ghét</label>
+                <label><input type="checkbox" checked> Spam</label>
+              </div>
+            </div>
+            <button class="export-button">Xuất phân tích</button>
+          </div>
+        </div>
+        
+        <div class="analytics-cards">
+          <div class="analytics-card">
+            <div class="analytics-header">
+              <h4>Chỉ số phát hiện</h4>
+              <div class="analytics-period">7 ngày qua</div>
+            </div>
+            <div class="analytics-metrics">
+              <div class="metric">
+                <div class="metric-value">92.5%</div>
+                <div class="metric-label">Độ chính xác</div>
+              </div>
+              <div class="metric">
+                <div class="metric-value">91.2%</div>
+                <div class="metric-label">Độ chuẩn xác</div>
+              </div>
+              <div class="metric">
+                <div class="metric-value">94.3%</div>
+                <div class="metric-label">Độ phủ</div>
+              </div>
+              <div class="metric">
+                <div class="metric-value">92.7%</div>
+                <div class="metric-label">F1 Score</div>
+              </div>
+            </div>
+            <div class="analytics-chart">
+              <canvas id="performance-chart"></canvas>
+            </div>
+          </div>
+          
+          <div class="analytics-card">
+            <div class="analytics-header">
+              <h4>Phân bố theo thời gian</h4>
+              <div class="chart-tabs small">
+                <button class="chart-tab active" data-view="day">Ngày</button>
+                <button class="chart-tab" data-view="week">Tuần</button>
+                <button class="chart-tab" data-view="hour">Giờ</button>
+              </div>
+            </div>
+            <div class="analytics-chart">
+              <canvas id="time-distribution-chart"></canvas>
+            </div>
+          </div>
+          
+          <div class="analytics-card">
+            <div class="analytics-header">
+              <h4>Phổ biến nhất theo loại</h4>
+            </div>
+            <div class="common-phrases">
+              <div class="phrases-category">
+                <div class="category-header offensive">Xúc phạm</div>
+                <div class="phrases-list">
+                  <div class="phrase-item">
+                    <div class="phrase-text">đồ ngu dốt</div>
+                    <div class="phrase-count">145 lần</div>
+                  </div>
+                  <div class="phrase-item">
+                    <div class="phrase-text">thật là vô dụng</div>
+                    <div class="phrase-count">98 lần</div>
+                  </div>
+                  <div class="phrase-item">
+                    <div class="phrase-text">chẳng biết gì cả</div>
+                    <div class="phrase-count">76 lần</div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="phrases-category">
+                <div class="category-header hate">Thù ghét</div>
+                <div class="phrases-list">
+                  <div class="phrase-item">
+                    <div class="phrase-text">cần bị cấm</div>
+                    <div class="phrase-count">52 lần</div>
+                  </div>
+                  <div class="phrase-item">
+                    <div class="phrase-text">nên biến mất</div>
+                    <div class="phrase-count">37 lần</div>
+                  </div>
+                  <div class="phrase-item">
+                    <div class="phrase-text">tôi ghét cậu</div>
+                    <div class="phrase-count">24 lần</div>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="phrases-category">
+                <div class="category-header spam">Spam</div>
+                <div class="phrases-list">
+                  <div class="phrase-item">
+                    <div class="phrase-text">giảm giá 90%</div>
+                    <div class="phrase-count">203 lần</div>
+                  </div>
+                  <div class="phrase-item">
+                    <div class="phrase-text">mua ngay kẻo hết</div>
+                    <div class="phrase-count">189 lần</div>
+                  </div>
+                  <div class="phrase-item">
+                    <div class="phrase-text">liên hệ ngay</div>
+                    <div class="phrase-count">152 lần</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="analytics-card">
+            <div class="analytics-header">
+              <h4>Bản đồ nhiệt theo nhãn</h4>
+            </div>
+            <div class="heatmap-container">
+              <div class="heatmap-labels">
+                <div>Thứ 2</div>
+                <div>Thứ 3</div>
+                <div>Thứ 4</div>
+                <div>Thứ 5</div>
+                <div>Thứ 6</div>
+                <div>Thứ 7</div>
+                <div>CN</div>
+              </div>
+              <div class="heatmap-grid">
+                <!-- Generated by JavaScript -->
+              </div>
+              <div class="heatmap-legend">
+                <div class="legend-item">
+                  <div class="legend-color" style="background-color: rgba(76, 175, 80, 0.1);"></div>
+                  <div class="legend-label">Thấp</div>
+                </div>
+                <div class="legend-item">
+                  <div class="legend-color" style="background-color: rgba(76, 175, 80, 0.5);"></div>
+                  <div class="legend-label">Trung bình</div>
+                </div>
+                <div class="legend-item">
+                  <div class="legend-color" style="background-color: rgba(76, 175, 80, 0.9);"></div>
+                  <div class="legend-label">Cao</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      
+      <!-- User Management Section -->
+      <section id="users" class="dashboard-section">
+        <div class="section-header with-actions">
+          <h3>Quản lý người dùng</h3>
+          <div class="section-actions">
+            <div class="search-box">
+              <input type="text" placeholder="Tìm người dùng...">
+              <button class="search-button">🔍</button>
+            </div>
+            <button class="primary-button">+ Thêm người dùng</button>
+          </div>
+        </div>
+        
+        <div class="data-table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Tên người dùng</th>
+                <th>Email</th>
+                <th>Vai trò</th>
+                <th>Trạng thái</th>
+                <th>Ngày đăng ký</th>
+                <th>Hoạt động</th>
+                <th>Hành động</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>1</td>
+                <td class="with-avatar">
+                  <span class="avatar admin">👑</span> Admin
+                </td>
+                <td>admin@example.com</td>
+                <td><span class="badge admin">Quản trị viên</span></td>
+                <td><span class="status active">Hoạt động</span></td>
+                <td>15/01/2025</td>
+                <td>Vừa truy cập</td>
+                <td class="actions">
+                  <button class="table-action" title="Chỉnh sửa">✏️</button>
+                  <button class="table-action" title="Đặt lại mật khẩu">🔑</button>
+                </td>
+              </tr>
+              <tr>
+                <td>2</td>
+                <td class="with-avatar">
+                  <span class="avatar">🧑</span> nguyen.van.a
+                </td>
+                <td>nguyen.van.a@example.com</td>
+                <td><span class="badge user">Người dùng</span></td>
+                <td><span class="status active">Hoạt động</span></td>
+                <td>20/02/2025</td>
+                <td>12 phút trước</td>
+                <td class="actions">
+                  <button class="table-action" title="Chỉnh sửa">✏️</button>
+                  <button class="table-action" title="Đặt lại mật khẩu">🔑</button>
+                  <button class="table-action" title="Vô hiệu hóa">🚫</button>
+                </td>
+              </tr>
+              <tr>
+                <td>3</td>
+                <td class="with-avatar">
+                  <span class="avatar">👩</span> tran.thi.b
+                </td>
+                <td>tran.thi.b@example.com</td>
+                <td><span class="badge moderator">Người kiểm duyệt</span></td>
+                <td><span class="status active">Hoạt động</span></td>
+                <td>05/03/2025</td>
+                <td>35 phút trước</td>
+                <td class="actions">
+                  <button class="table-action" title="Chỉnh sửa">✏️</button>
+                  <button class="table-action" title="Đặt lại mật khẩu">🔑</button>
+                  <button class="table-action" title="Vô hiệu hóa">🚫</button>
+                </td>
+              </tr>
+              <tr>
+                <td>4</td>
+                <td class="with-avatar">
+                  <span class="avatar">👨</span> le.van.c
+                </td>
+                <td>le.van.c@example.com</td>
+                <td><span class="badge user">Người dùng</span></td>
+                <td><span class="status inactive">Không hoạt động</span></td>
+                <td>10/03/2025</td>
+                <td>2 ngày trước</td>
+                <td class="actions">
+                  <button class="table-action" title="Chỉnh sửa">✏️</button>
+                  <button class="table-action" title="Đặt lại mật khẩu">🔑</button>
+                  <button class="table-action" title="Kích hoạt">✓</button>
+                </td>
+              </tr>
+              <tr>
+                <td>5</td>
+                <td class="with-avatar">
+                  <span class="avatar">👩</span> pham.thi.d
+                </td>
+                <td>pham.thi.d@example.com</td>
+                <td><span class="badge user">Người dùng</span></td>
+                <td><span class="status warning">Cảnh báo</span></td>
+                <td>12/03/2025</td>
+                <td>5 giờ trước</td>
+                <td class="actions">
+                  <button class="table-action" title="Chỉnh sửa">✏️</button>
+                  <button class="table-action" title="Đặt lại mật khẩu">🔑</button>
+                  <button class="table-action" title="Vô hiệu hóa">🚫</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          
+          <div class="pagination">
+            <button class="pagination-button" disabled>←</button>
+            <span class="pagination-info">Trang 1 / 3</span>
+            <button class="pagination-button">→</button>
+          </div>
+        </div>
+      </section>
+      
+      <!-- Reports Section -->
+      <section id="reports" class="dashboard-section">
+        <div class="section-header with-actions">
+          <h3>Báo cáo hệ thống</h3>
+          <div class="section-actions">
+            <div class="filter-dropdown">
+              <button class="filter-button">Loại báo cáo <span class="arrow-down">▼</span></button>
+              <div class="filter-menu">
+                <label><input type="checkbox" checked> Hoạt động hệ thống</label>
+                <label><input type="checkbox" checked> Phân tích nội dung</label>
+                <label><input type="checkbox" checked> Người dùng</label>
+                <label><input type="checkbox" checked> Hiệu suất</label>
+              </div>
+            </div>
+            <button class="export-button">Tạo báo cáo mới</button>
+          </div>
+        </div>
+        
+        <div class="reports-list">
+          <div class="report-item">
+            <div class="report-icon system">📊</div>
+            <div class="report-details">
+              <div class="report-title">Báo cáo hoạt động hệ thống</div>
+              <div class="report-description">Tổng quan về hoạt động của hệ thống trong 30 ngày qua</div>
+              <div class="report-meta">
+                <span class="report-date">15/03/2025</span>
+                <span class="report-author">Admin</span>
+              </div>
+            </div>
+            <div class="report-format">PDF</div>
+            <div class="report-actions">
+              <button class="report-action" title="Tải xuống">📥</button>
+              <button class="report-action" title="Xem">👁️</button>
+              <button class="report-action" title="Gửi email">📧</button>
+              <button class="report-action" title="Xóa">🗑️</button>
+            </div>
+          </div>
+          
+          <div class="report-item">
+            <div class="report-icon content">📝</div>
+            <div class="report-details">
+              <div class="report-title">Phân tích nội dung độc hại</div>
+              <div class="report-description">Phân tích chi tiết về các loại nội dung độc hại và mẫu phổ biến</div>
+              <div class="report-meta">
+                <span class="report-date">10/03/2025</span>
+                <span class="report-author">Admin</span>
+              </div>
+            </div>
+            <div class="report-format">XLSX</div>
+            <div class="report-actions">
+              <button class="report-action" title="Tải xuống">📥</button>
+              <button class="report-action" title="Xem">👁️</button>
+              <button class="report-action" title="Gửi email">📧</button>
+              <button class="report-action" title="Xóa">🗑️</button>
+            </div>
+          </div>
+          
+          <div class="report-item">
+            <div class="report-icon user">👥</div>
+            <div class="report-details">
+              <div class="report-title">Báo cáo người dùng</div>
+              <div class="report-description">Thống kê về người dùng hệ thống và hoạt động của họ</div>
+              <div class="report-meta">
+                <span class="report-date">05/03/2025</span>
+                <span class="report-author">Admin</span>
+              </div>
+            </div>
+            <div class="report-format">PDF</div>
+            <div class="report-actions">
+              <button class="report-action" title="Tải xuống">📥</button>
+              <button class="report-action" title="Xem">👁️</button>
+              <button class="report-action" title="Gửi email">📧</button>
+              <button class="report-action" title="Xóa">🗑️</button>
+            </div>
+          </div>
+          
+          <div class="report-item">
+            <div class="report-icon performance">🚀</div>
+            <div class="report-details">
+              <div class="report-title">Báo cáo hiệu suất hệ thống</div>
+              <div class="report-description">Phân tích hiệu suất API và thời gian phản hồi</div>
+              <div class="report-meta">
+                <span class="report-date">01/03/2025</span>
+                <span class="report-author">Admin</span>
+              </div>
+            </div>
+            <div class="report-format">CSV</div>
+            <div class="report-actions">
+              <button class="report-action" title="Tải xuống">📥</button>
+              <button class="report-action" title="Xem">👁️</button>
+              <button class="report-action" title="Gửi email">📧</button>
+              <button class="report-action" title="Xóa">🗑️</button>
+            </div>
+          </div>
+        </div>
+      </section>
+      
+      <!-- Other sections will be added as needed -->
+    </main>
+  </div>
+  
+  <script src="scripts/admin_dashboard.js"></script>
+  <script src="scripts/admin_charts.js"></script>
+</body>
+</html>

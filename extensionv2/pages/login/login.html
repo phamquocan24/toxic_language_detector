@@ -1,0 +1,78 @@
+<!-- login.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Toxic Language Detector - Login</title>
+  <link rel="stylesheet" href="styles/auth.css">
+</head>
+<body>
+  <div class="auth-container">
+    <div class="auth-header">
+      <img src="../icons/iris_scan.png" alt="Logo" class="auth-logo">
+      <h1>Toxic Language Detector</h1>
+    </div>
+    
+    <div class="auth-tabs">
+      <button class="auth-tab active" data-tab="login">Đăng nhập</button>
+      <button class="auth-tab" data-tab="register">Đăng ký</button>
+    </div>
+    
+    <div class="auth-form-container">
+      <!-- Login Form -->
+      <form id="login-form" class="auth-form active">
+        <div class="form-group">
+          <label for="login-username">Tên đăng nhập</label>
+          <input type="text" id="login-username" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="login-password">Mật khẩu</label>
+          <input type="password" id="login-password" required>
+        </div>
+        
+        <div class="form-group remember-me">
+          <label>
+            <input type="checkbox" id="remember-me">
+            <span>Ghi nhớ đăng nhập</span>
+          </label>
+        </div>
+        
+        <div id="login-error" class="error-message"></div>
+        
+        <button type="submit" class="auth-button">Đăng nhập</button>
+      </form>
+      
+      <!-- Register Form -->
+      <form id="register-form" class="auth-form">
+        <div class="form-group">
+          <label for="register-email">Email</label>
+          <input type="email" id="register-email" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="register-username">Tên đăng nhập</label>
+          <input type="text" id="register-username" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="register-password">Mật khẩu</label>
+          <input type="password" id="register-password" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="register-confirm-password">Xác nhận mật khẩu</label>
+          <input type="password" id="register-confirm-password" required>
+        </div>
+        
+        <div id="register-error" class="error-message"></div>
+        
+        <button type="submit" class="auth-button">Đăng ký</button>
+      </form>
+    </div>
+  </div>
+  
+  <script src="scripts/auth.js"></script>
+</body>
+</html>

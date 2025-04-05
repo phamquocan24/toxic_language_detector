@@ -1,0 +1,257 @@
+/* themes.css - Xác định chủ đề của extension (sáng/tối) */
+
+/* Light Theme (Default) */
+:root {
+    /* Color Palette - Light Theme */
+    --primary-color: #2196F3;
+    --primary-dark: #1976D2;
+    --primary-light: #BBDEFB;
+    --accent-color: #FF4081;
+    
+    --success-color: #4CAF50;
+    --warning-color: #FF9800;
+    --error-color: #F44336;
+    --info-color: #2196F3;
+    
+    --text-primary: #212121;
+    --text-secondary: #757575;
+    --divider-color: #BDBDBD;
+    --background-color: #F5F7FA;
+    --card-background: #FFFFFF;
+    --border-color: #E0E0E0;
+    
+    --clean-color: #4CAF50;
+    --offensive-color: #FF9800;
+    --hate-color: #F44336;
+    --spam-color: #9C27B0;
+    
+    /* Shadow */
+    --shadow-small: 0 2px 5px rgba(0, 0, 0, 0.1);
+    --shadow-medium: 0 4px 10px rgba(0, 0, 0, 0.15);
+    --shadow-large: 0 8px 20px rgba(0, 0, 0, 0.2);
+  }
+  
+  /* Dark Theme */
+  [data-theme="dark"] {
+    /* Color Palette - Dark Theme */
+    --primary-color: #42A5F5; /* Lighter version for better contrast */
+    --primary-dark: #2196F3;
+    --primary-light: #64B5F6;
+    --accent-color: #FF4081;
+    
+    --success-color: #66BB6A; /* Lighter for dark mode */
+    --warning-color: #FFA726;
+    --error-color: #EF5350;
+    --info-color: #42A5F5;
+    
+    --text-primary: #FAFAFA;
+    --text-secondary: #B0BEC5;
+    --divider-color: #424242;
+    --background-color: #121212;
+    --card-background: #1E1E1E;
+    --border-color: #333333;
+    
+    /* Classification colors - lighter for dark mode */
+    --clean-color: #66BB6A;
+    --offensive-color: #FFA726;
+    --hate-color: #EF5350;
+    --spam-color: #BA68C8;
+    
+    /* Shadow for dark mode is more subtle */
+    --shadow-small: 0 2px 5px rgba(0, 0, 0, 0.3);
+    --shadow-medium: 0 4px 10px rgba(0, 0, 0, 0.4);
+    --shadow-large: 0 8px 20px rgba(0, 0, 0, 0.5);
+  }
+  /* High Contrast Theme (tiếp tục) */
+[data-theme="high-contrast"] {
+    /* Color Palette - High Contrast Theme */
+    --primary-color: #0078D7;
+    --primary-dark: #005A9E;
+    --primary-light: #4CA2F8;
+    --accent-color: #FF0066;
+    
+    --success-color: #0F8A24;
+    --warning-color: #D83B01;
+    --error-color: #D40000;
+    --info-color: #0078D7;
+    
+    --text-primary: #000000;
+    --text-secondary: #333333;
+    --divider-color: #777777;
+    --background-color: #FFFFFF;
+    --card-background: #FFFFFF;
+    --border-color: #000000;
+    
+    /* Classification colors - higher contrast */
+    --clean-color: #0F8A24;
+    --offensive-color: #D83B01;
+    --hate-color: #D40000;
+    --spam-color: #8400A8;
+    
+    /* Stronger borders and solid contrasts */
+    --shadow-small: none;
+    --shadow-medium: none;
+    --shadow-large: none;
+    
+    /* Increase border widths in high contrast mode */
+    --border-width: 2px;
+  }
+  
+  /* Theme Switcher Styles */
+  .theme-switcher {
+    display: flex;
+    align-items: center;
+    margin: 10px 0;
+  }
+  
+  .theme-option {
+    display: flex;
+    align-items: center;
+    margin-right: 15px;
+    cursor: pointer;
+  }
+  
+  .theme-radio {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+  
+  .theme-radio + .theme-label {
+    padding-left: 24px;
+    position: relative;
+    cursor: pointer;
+    font-size: 14px;
+    user-select: none;
+  }
+  
+  .theme-radio + .theme-label:before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 18px;
+    height: 18px;
+    border: 2px solid var(--border-color);
+    border-radius: 50%;
+    background: var(--card-background);
+  }
+  
+  .theme-radio:checked + .theme-label:after {
+    content: '';
+    position: absolute;
+    left: 5px;
+    top: 5px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--primary-color);
+  }
+  
+  /* Vietnamese Font Support */
+  html[lang="vi"] {
+    font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  }
+  
+  /* Print styles */
+  @media print {
+    body {
+      background-color: #fff;
+      color: #000;
+    }
+    
+    .card {
+      box-shadow: none;
+      border: 1px solid #000;
+    }
+    
+    .no-print {
+      display: none !important;
+    }
+    
+    a {
+      color: #000;
+      text-decoration: underline;
+    }
+    
+    .container {
+      width: 100%;
+      max-width: 100%;
+      padding: 0;
+    }
+    
+    .table {
+      border-collapse: collapse;
+    }
+    
+    .table th,
+    .table td {
+      background-color: #fff !important;
+      border: 1px solid #000 !important;
+    }
+  }
+  
+  /* CSS Variables for Animation Durations */
+  :root {
+    --animation-speed-slow: 1000ms;
+    --animation-speed-normal: 500ms;
+    --animation-speed-fast: 300ms;
+  }
+  
+  /* Animation related classes */
+  .fade-in {
+    animation: fadeIn var(--animation-speed-normal);
+  }
+  
+  .fade-out {
+    animation: fadeOut var(--animation-speed-normal);
+  }
+  
+  .slide-in {
+    animation: slideIn var(--animation-speed-normal);
+  }
+  
+  .slide-out {
+    animation: slideOut var(--animation-speed-normal);
+  }
+  
+  /* Keyframes for animations */
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
+  @keyframes fadeOut {
+    from { opacity: 1; }
+    to { opacity: 0; }
+  }
+  
+  @keyframes slideIn {
+    from { transform: translateY(-20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  
+  @keyframes slideOut {
+    from { transform: translateY(0); opacity: 1; }
+    to { transform: translateY(20px); opacity: 0; }
+  }
+  
+  /* Accessibility Enhancements */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+  
+  /* Focus visible improvements for keyboard navigation */
+  :focus-visible {
+    outline: 3px solid var(--primary-color);
+    outline-offset: 2px;
+  }
