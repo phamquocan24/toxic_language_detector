@@ -37,7 +37,7 @@ logs/
 *.log
 
 # Model files (nếu bạn muốn loại trừ, hãy bỏ comment dấu #)
-model/*.h5
+# model/*.h5
 # model/*.pkl
 
 # IDE specific files
