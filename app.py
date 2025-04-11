@@ -551,9 +551,6 @@ from typing import List, Dict, Any, Optional, Tuple
 import numpy as np
 import re
 
-import tensorrt as trt
-print("TensorRT version:", trt.__version__)
-
 app = FastAPI()
 
 # Add middleware
