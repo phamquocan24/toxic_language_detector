@@ -79,7 +79,7 @@ from datetime import datetime, timedelta
 from backend.db.models import get_db, User, Role, Log, Comment
 from backend.api.models.prediction import UserResponse, LogResponse, CommentResponse, UserCreate, UserUpdate, DashboardData
 from backend.api.routes.auth import get_admin_user
-from backend.services.ml_model import get_model_stats
+from backend.services.ml_model import get_ml_stats
 
 router = APIRouter()
 
@@ -153,7 +153,7 @@ def get_dashboard_data(
         trend_interval = timedelta(days=30)
     
     # Sử dụng model stats
-    model_stats = get_model_stats()
+    ml_stats = get_ml_stats()
     
     return {
         "statistics": {
@@ -166,7 +166,7 @@ def get_dashboard_data(
             "active_users": active_users
         },
         "platforms": platform_stats,
-        "model_stats": model_stats,
+        "ml_stats": ml_stats,
         "period": period
     }
 

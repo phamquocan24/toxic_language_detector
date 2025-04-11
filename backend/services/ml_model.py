@@ -427,7 +427,7 @@ def predict_text(text: str) -> Tuple[int, float, Dict[str, float]]:
     model = get_ml_model()
     return model.predict(text)
 
-def get_model_stats() -> Dict[str, Any]:
+def get_ml_stats() -> Dict[str, Any]:
     """
     Lấy thống kê về model
     

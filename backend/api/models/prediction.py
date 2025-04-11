@@ -109,7 +109,7 @@ class CommentResponse(CommentBase):
     similarity: Optional[float] = None  # Cho kết quả tìm kiếm tương tự
     
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class PredictionRequest(BaseModel):
     text: str
@@ -130,7 +130,7 @@ class PredictionResponse(BaseModel):
     timestamp: Optional[str] = None
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "text": "This is a sample comment",
                 "processed_text": "this is a sample comment",
@@ -197,7 +197,7 @@ class UserResponse(BaseModel):
     created_at: Optional[datetime] = None
     
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class UserLogin(BaseModel):
     username: str
@@ -211,7 +211,7 @@ class LogResponse(BaseModel):
     timestamp: datetime
     
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class PasswordResetRequest(BaseModel):
     email: EmailStr
@@ -264,7 +264,7 @@ class TextAnalysisResponse(BaseModel):
 class DashboardData(BaseModel):
     statistics: Dict[str, int]
     platforms: Dict[str, int]
-    model_stats: Optional[Dict[str, Any]] = None
+    ml_stats: Optional[Dict[str, Any]] = None
     period: str
 
 class ExtensionStatsResponse(BaseModel):
