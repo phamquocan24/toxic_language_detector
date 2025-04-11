@@ -1065,8 +1065,9 @@ class PredictionRequest(BaseModel):
     metadata: Optional[Dict[str, Any]] = None
     save_result: Optional[bool] = Field(default=True, description="Có lưu kết quả vào database không")
 
-    class Config:
-        from_attributes = True  # Updated from orm_mode=True
+    model_config = {
+        "from_attributes": True
+    }  # Updated from orm_mode=True
 
 class PredictionResponse(BaseModel):
     text: str
@@ -1077,8 +1078,9 @@ class PredictionResponse(BaseModel):
     processed_text: Optional[str] = None
     timestamp: Optional[str] = None
 
-    class Config:
-        from_attributes = True
+    model_config = {
+        "from_attributes": True
+    }
         
     @field_validator('probabilities', mode='before')
     @classmethod

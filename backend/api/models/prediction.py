@@ -108,8 +108,9 @@ class CommentResponse(CommentBase):
     user_id: Optional[int] = None
     similarity: Optional[float] = None  # Cho kết quả tìm kiếm tương tự
     
-    class Config:
-        orm_mode = True
+    model_config = {
+        "from_attributes": True
+    }
 
 class PredictionRequest(BaseModel):
     text: str
@@ -173,8 +174,9 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     password: str
+    confirm_password:str
     
-    @field_validator('password', 'new_password')
+    @field_validator('password', 'confirm_password')
     @classmethod
     def validate_passwords(cls, v):
         if len(v) < 8:
@@ -197,8 +199,9 @@ class UserResponse(BaseModel):
     last_login: Optional[datetime] = None
     created_at: Optional[datetime] = None
     
-    class Config:
-        orm_mode = True
+    model_config = {
+        "from_attributes": True
+    }
 
 class UserLogin(BaseModel):
     username: str
@@ -211,8 +214,9 @@ class LogResponse(BaseModel):
     action: str
     timestamp: datetime
     
-    class Config:
-        orm_mode = True
+    model_config = {
+        "from_attributes": True
+    }
 
 class PasswordResetRequest(BaseModel):
     email: EmailStr
