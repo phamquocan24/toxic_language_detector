@@ -166,3 +166,4 @@ def get_email_service():
         EmailService: Đối tượng EmailService
     """
     return EmailService
+send_reset_password_email = EmailService.send_password_reset
