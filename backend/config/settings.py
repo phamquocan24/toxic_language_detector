@@ -46,8 +46,10 @@
 # settings = Settings()
 # config/settings.py
 import os
-from pydantic_settings import BaseSettings, EmailStr, Field
+from pydantic_settings import BaseSettings, Field
 from pydantic import validator
+from pydantic import Field
+from pydantic import EmailStr
 from typing import List, Dict, Any, Optional
 from dotenv import load_dotenv
 
