@@ -537,6 +537,7 @@ import os
 import sys
 import tensorflow as tf
 import gradio as gr
+from backend.core.rate_limiter import RateLimiterMiddleware
 from fastapi import FastAPI, HTTPException, Depends, status, Request, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
@@ -549,6 +550,15 @@ import json
 from typing import List, Dict, Any, Optional, Tuple
 import numpy as np
 import re
+
+import tensorrt as trt
+print("TensorRT version:", trt.__version__)
+
+app = FastAPI()
+
+# Add middleware
+app.add_middleware(RateLimiterMiddleware, max_requests=5, window_seconds=30)
+
 # Hiển thị PYTHONPATH
 print("PYTHONPATH:", sys.path)
 
