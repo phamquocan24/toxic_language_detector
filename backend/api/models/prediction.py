@@ -225,7 +225,7 @@ class PasswordReset(BaseModel):
     token: str
     new_password: str = Field(..., min_length=8)
     
-    @field_validator('password', 'new_password')
+    @field_validator('new_password')
     @classmethod
     def validate_passwords(cls, v):
         if len(v) < 8:
