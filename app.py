@@ -1119,7 +1119,7 @@ class BatchPredictionResponse(BaseModel):
 class HealthResponse(BaseModel):
     status: str
     version: str
-    model_info: Dict[str, Any]
+    ml_info: Dict[str, Any]
     memory_usage: Optional[Dict[str, float]] = None
     uptime: Optional[float] = None
 
@@ -1369,7 +1369,7 @@ async def health_check():
     }
     
     # Thông tin model
-    model_info = {
+    ml_info = {
         "type": "safetensors" if getattr(model, "using_safetensors", False) else "h5",
         "using_backend": getattr(model, "has_backend_model", False),
         "using_dummy": getattr(model, "using_dummy_model", False)
@@ -1382,7 +1382,7 @@ async def health_check():
     return {
         "status": "healthy",
         "version": "1.0.0",
-        "model_info": model_info,
+        "ml_info": ml_info,
         "memory_usage": memory_usage,
         "uptime": uptime
     }
@@ -1583,7 +1583,7 @@ async def root():
 {
   "status": "healthy",
   "version": "1.0.0",
-  "model_info": {
+  "ml_info": {
     "type": "h5",
     "using_backend": true,
     "using_dummy": false

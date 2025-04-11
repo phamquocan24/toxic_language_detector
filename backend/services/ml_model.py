@@ -356,7 +356,7 @@ class MLModel:
         # Trong tương lai, có thể thay đổi để sử dụng worker pool hoặc giải pháp khác
         return self.predict(text)
     
-    def get_model_info(self) -> Dict[str, Any]:
+    def get_ml_info(self) -> Dict[str, Any]:
         """
         Lấy thông tin về model
         
@@ -427,7 +427,7 @@ def predict_text(text: str) -> Tuple[int, float, Dict[str, float]]:
     model = get_ml_model()
     return model.predict(text)
 
-def get_ml_stats() -> Dict[str, Any]:
+def get_model_stats() -> Dict[str, Any]:
     """
     Lấy thống kê về model
     
@@ -435,4 +435,4 @@ def get_ml_stats() -> Dict[str, Any]:
         Dict[str, Any]: Thống kê về model
     """
     model = get_ml_model()
-    return model.get_model_info()
+    return model.get_ml_info()
