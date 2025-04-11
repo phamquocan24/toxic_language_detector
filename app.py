@@ -506,7 +506,7 @@ from fastapi import FastAPI, HTTPException, Depends, status, Request, Background
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel, Field, validator, field_validator
+from pydantic import BaseModel, Field, field_validator
 import time
 import logging
 import json
@@ -1080,7 +1080,8 @@ class PredictionResponse(BaseModel):
     class Config:
         from_attributes = True
         
-    @validator('probabilities', pre=True, always=True)
+    @field_validator('probabilities', mode='before')
+    @classmethod
     def set_probabilities(cls, v, values):
         # Nếu không có probabilities, tạo một dictionary với giá trị mặc định
         if v is None and 'prediction' in values:
