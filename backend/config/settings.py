@@ -48,7 +48,7 @@
 import os
 from typing import List, Dict, Any, Optional
 from dotenv import load_dotenv
-from pydantic import validator, EmailStr, Field
+from pydantic import EmailStr, Field, field_validator
 from pydantic_settings import BaseSettings  # Import validator từ pydantic, không phải pydantic_settings
 
 # Load .env file
@@ -175,19 +175,22 @@ class Settings(BaseSettings):
     VIETNAMESE_STOPWORDS_FILE: Optional[str] = os.getenv("VIETNAMESE_STOPWORDS_FILE", "data/vietnamese_stopwords.txt")
     VIETNAMESE_OFFENSIVE_WORDLIST_FILE: Optional[str] = os.getenv("VIETNAMESE_OFFENSIVE_WORDLIST_FILE", "data/vietnamese_offensive_words.txt")
     
-    @validator("SECRET_KEY")
+    @field_validator('SECRET_KEY')
+    @classmethod
     def validate_secret_key(cls, v):
         if v == "supersecretkey" and os.getenv("ENVIRONMENT", "development") == "production":
             raise ValueError("SECRET_KEY must be changed in production")
         return v
-    
-    @validator("EXTENSION_API_KEY")
+
+    @field_validator('EXTENSION_API_KEY')
+    @classmethod
     def validate_extension_api_key(cls, v):
         if v == "extension-api-key" and os.getenv("ENVIRONMENT", "development") == "production":
             raise ValueError("EXTENSION_API_KEY must be changed in production")
         return v
-    
-    @validator("ADMIN_PASSWORD")
+
+    @field_validator('ADMIN_PASSWORD')
+    @classmethod
     def validate_admin_password(cls, v):
         if v == "password" and os.getenv("ENVIRONMENT", "development") == "production":
             raise ValueError("ADMIN_PASSWORD must be changed in production")

@@ -83,7 +83,7 @@
 #     class Config:
 #         orm_mode = True
 # api/models/prediction.py
-from pydantic import BaseModel, Field, EmailStr, validator
+from pydantic import BaseModel, Field, EmailStr, field_validator
 from typing import List, Optional, Dict, Any, Union
 from datetime import datetime
 
@@ -174,8 +174,9 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
     password: str
     
-    @validator('password')
-    def password_min_length(cls, v):
+    @field_validator('password', 'new_password')
+    @classmethod
+    def validate_passwords(cls, v):
         if len(v) < 8:
             raise ValueError('Mật khẩu phải có ít nhất 8 ký tự')
         return v
@@ -220,8 +221,9 @@ class PasswordReset(BaseModel):
     token: str
     new_password: str = Field(..., min_length=8)
     
-    @validator('new_password')
-    def password_validate(cls, v):
+    @field_validator('password', 'new_password')
+    @classmethod
+    def validate_passwords(cls, v):
         if len(v) < 8:
             raise ValueError('Mật khẩu phải có ít nhất 8 ký tự')
         return v
