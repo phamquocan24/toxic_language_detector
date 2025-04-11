@@ -61,7 +61,7 @@ class Log(Base):
     is_reviewed = Column(Boolean, default=False)  # Đánh dấu log đã được xem xét
     
     # Thông tin bổ sung
-    metadata = Column(JSON, nullable=True)
+    meta_data = Column(JSON, nullable=True)
     
     # Tạo indexes để tối ưu hóa truy vấn
     __table_args__ = (
