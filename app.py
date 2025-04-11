@@ -506,7 +506,7 @@ from fastapi import FastAPI, HTTPException, Depends, status, Request, Background
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, validator, field_validator
 import time
 import logging
 import json

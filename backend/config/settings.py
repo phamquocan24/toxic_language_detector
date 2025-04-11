@@ -49,6 +49,8 @@ import os
 from pydantic import BaseSettings, validator, EmailStr, Field
 from typing import List, Dict, Any, Optional
 from dotenv import load_dotenv
+from pydantic_settings import BaseSettings
+from pydantic import validator  # Import validator từ pydantic, không phải pydantic_settings
 
 # Load .env file
 load_dotenv()
