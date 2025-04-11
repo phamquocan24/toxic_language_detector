@@ -83,7 +83,7 @@ class Comment(Base, TimestampMixin):
     user = relationship("User", back_populates="comments")
     
     # Metadata bổ sung từ nền tảng
-    metadata = Column(JSON, nullable=True)
+    meta_data = Column(JSON, nullable=True)
     
     # Để hỗ trợ báo cáo
     is_in_report = Column(Boolean, default=False, index=True)

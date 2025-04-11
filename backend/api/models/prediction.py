@@ -92,7 +92,7 @@ class CommentBase(BaseModel):
     platform: str = "unknown"
     source_user_name: Optional[str] = None
     source_url: Optional[str] = None
-    metadata: Optional[Dict[str, Any]] = None
+    meta_data: Optional[Dict[str, Any]] = None
 
 class CommentCreate(CommentBase):
     processed_content: Optional[str] = None
