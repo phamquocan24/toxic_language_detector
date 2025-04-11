@@ -131,7 +131,7 @@ class PredictionResponse(BaseModel):
     timestamp: Optional[str] = None
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "text": "This is a sample comment",
                 "processed_text": "this is a sample comment",

@@ -502,6 +502,7 @@
 import os
 import sys
 import gradio as gr
+from transformers import AutoTokenizer
 from fastapi import FastAPI, HTTPException, Depends, status, Request, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
@@ -513,6 +514,8 @@ import json
 from typing import List, Dict, Any, Optional, Tuple
 import numpy as np
 import re
+
+tokenizer = AutoTokenizer.from_pretrained("path/to/tokenizer")
 
 # Thiết lập logging
 logging.basicConfig(

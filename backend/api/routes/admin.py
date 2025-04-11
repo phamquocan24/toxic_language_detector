@@ -153,7 +153,7 @@ def get_dashboard_data(
         trend_interval = timedelta(days=30)
     
     # Sử dụng model stats
-    model_stats = get_model_stats()
+    ml_stats = get_model_stats()
     
     return {
         "statistics": {
@@ -166,7 +166,7 @@ def get_dashboard_data(
             "active_users": active_users
         },
         "platforms": platform_stats,
-        "model_stats": model_stats,
+        "model_stats": ml_stats,
         "period": period
     }
 
