@@ -270,7 +270,7 @@ class TextAnalysisResponse(BaseModel):
 class DashboardData(BaseModel):
     statistics: Dict[str, int]
     platforms: Dict[str, int]
-    model_stats: Optional[Dict[str, Any]] = None
+    ml_stats: Optional[Dict[str, Any]] = None
     period: str
 
 class ExtensionStatsResponse(BaseModel):

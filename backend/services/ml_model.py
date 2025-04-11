@@ -250,6 +250,10 @@ class MLModel:
         model = tf.keras.Model(inputs=inputs, outputs=outputs)
         model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
         return model
+    def predict(self, text: str) -> Tuple[int, float]:
+        if not self.loaded or not self.model:
+            logger.error("Model chưa được tải.")
+            return -1, 0.0
     
     def _preprocess_text(self, text):
         """Tiền xử lý văn bản tiếng Việt cho dự đoán"""
@@ -356,7 +360,7 @@ class MLModel:
         # Trong tương lai, có thể thay đổi để sử dụng worker pool hoặc giải pháp khác
         return self.predict(text)
     
-    def get_ml_info(self) -> Dict[str, Any]:
+    def get_model_info(self) -> Dict[str, Any]:
         """
         Lấy thông tin về model
         
@@ -435,4 +439,10 @@ def get_model_stats() -> Dict[str, Any]:
         Dict[str, Any]: Thống kê về model
     """
     model = get_ml_model()
-    return model.get_ml_info()
+    return model.get_model_info()
+
+def get_labels(self) -> List[str]:
+    return self.labels or ["clean", "offensive", "hate", "spam"]
+
+def is_loaded(self) -> bool:
+    return self.loaded
