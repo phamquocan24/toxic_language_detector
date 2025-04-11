@@ -22,7 +22,7 @@ class UserSettings(Base, TimestampMixin):
     email_notifications = Column(Boolean, default=True)
     
     # Cài đặt khác dưới dạng JSON
-    meta_data = Column(JSON, nullable=True)
+    metadata = Column(JSON, nullable=True)
     
     # Relationships
     user = relationship("User", back_populates="settings")
@@ -48,7 +48,7 @@ class UserSettings(Base, TimestampMixin):
                 theme="light",
                 language="vi",
                 notifications_enabled=True,
-                meta_data={}
+                metadata={}
             )
             db.add(settings)
             db.commit()

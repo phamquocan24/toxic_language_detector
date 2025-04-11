@@ -32,7 +32,7 @@ logger = logging.getLogger("db.models")
 def init_db():
     """Khởi tạo database schema"""
     try:
-        Base.meta_data.create_all(bind=engine)
+        Base.metadata.create_all(bind=engine)
         logger.info("Database tables created successfully")
     except Exception as e:
         logger.error(f"Error creating database tables: {str(e)}")
@@ -181,7 +181,7 @@ def create_initial_data():
                 theme="light",
                 language="vi",
                 notifications_enabled=True,
-                meta_data="{}",
+                metadata="{}",
                 created_at=datetime.utcnow()
             )
             db.add(admin_settings)

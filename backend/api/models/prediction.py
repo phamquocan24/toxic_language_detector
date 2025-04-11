@@ -92,7 +92,7 @@ class CommentBase(BaseModel):
     platform: str = "unknown"
     source_user_name: Optional[str] = None
     source_url: Optional[str] = None
-    meta_data: Optional[Dict[str, Any]] = None
+    metadata: Optional[Dict[str, Any]] = None
 
 class CommentCreate(CommentBase):
     processed_content: Optional[str] = None
@@ -109,7 +109,7 @@ class CommentResponse(CommentBase):
     similarity: Optional[float] = None  # Cho kết quả tìm kiếm tương tự
     
     class Config:
-        from_attributes = True
+        orm_mode = True
 
 class PredictionRequest(BaseModel):
     text: str
@@ -117,7 +117,7 @@ class PredictionRequest(BaseModel):
     source_user_name: Optional[str] = None
     source_url: Optional[str] = None
     save_result: Optional[bool] = True
-    meta_data: Optional[Dict[str, Any]] = None
+    metadata: Optional[Dict[str, Any]] = None
 
 class PredictionResponse(BaseModel):
     text: str
@@ -130,7 +130,7 @@ class PredictionResponse(BaseModel):
     timestamp: Optional[str] = None
     
     class Config:
-        json_schema_extra = {
+        schema_extra = {
             "example": {
                 "text": "This is a sample comment",
                 "processed_text": "this is a sample comment",
@@ -148,7 +148,7 @@ class BatchPredictionItemRequest(BaseModel):
     platform: Optional[str] = "unknown"
     source_user_name: Optional[str] = None
     source_url: Optional[str] = None
-    meta_data: Optional[Dict[str, Any]] = None
+    metadata: Optional[Dict[str, Any]] = None
 
 class BatchPredictionRequest(BaseModel):
     comments: List[BatchPredictionItemRequest]
@@ -197,7 +197,7 @@ class UserResponse(BaseModel):
     created_at: Optional[datetime] = None
     
     class Config:
-        from_attributes = True
+        orm_mode = True
 
 class UserLogin(BaseModel):
     username: str
@@ -211,7 +211,7 @@ class LogResponse(BaseModel):
     timestamp: datetime
     
     class Config:
-        from_attributes = True
+        orm_mode = True
 
 class PasswordResetRequest(BaseModel):
     email: EmailStr
@@ -264,7 +264,7 @@ class TextAnalysisResponse(BaseModel):
 class DashboardData(BaseModel):
     statistics: Dict[str, int]
     platforms: Dict[str, int]
-    ml_stats: Optional[Dict[str, Any]] = None
+    model_stats: Optional[Dict[str, Any]] = None
     period: str
 
 class ExtensionStatsResponse(BaseModel):

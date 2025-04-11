@@ -170,7 +170,7 @@ async def predict_single(
             confidence=confidence, 
             probabilities=probabilities,
             user_id=current_user.id,
-            meta_data=request.meta_data
+            metadata=request.metadata
         )
     
     # Trích xuất các từ khóa
@@ -221,7 +221,7 @@ async def predict_batch(
                 confidence=confidence,
                 probabilities=probabilities,
                 user_id=current_user.id,
-                meta_data=comment.meta_data
+                metadata=comment.metadata
             )
         
         results.append({
@@ -321,7 +321,7 @@ async def upload_csv_file(
         # Lưu vào database nếu cần
         if save_results:
             # Tạo metadata từ các cột khác
-            meta_data = {}
+            metadata = {}
             for col in df.columns:
                 if col != text_column and col not in ['user', 'username', 'source_user', 'url', 'link', 'source_url']:
                     value = row[col]
@@ -331,7 +331,7 @@ async def upload_csv_file(
                     # Bỏ qua nếu là NaN
                     if pd.isna(value):
                         continue
-                    meta_data[col] = value
+                    metadata[col] = value
             
             background_tasks.add_task(
                 store_prediction, 
@@ -345,7 +345,7 @@ async def upload_csv_file(
                 confidence=confidence,
                 probabilities=probabilities,
                 user_id=current_user.id,
-                meta_data=meta_data
+                metadata=metadata
             )
         
         # Thêm vào kết quả
@@ -501,7 +501,7 @@ def store_prediction(
     confidence: float = 0.0,
     probabilities: Optional[Dict[str, float]] = None,
     user_id: Optional[int] = None,
-    meta_data: Optional[Dict[str, Any]] = None
+    metadata: Optional[Dict[str, Any]] = None
 ):
     """
     Hàm lưu kết quả dự đoán vào database
@@ -521,7 +521,7 @@ def store_prediction(
         probabilities=json.dumps(probabilities) if probabilities else None,
         user_id=user_id,
         created_at=datetime.utcnow(),
-        meta_data=json.dumps(meta_data) if meta_data else None
+        metadata=json.dumps(metadata) if metadata else None
     )
     
     # Lưu vector

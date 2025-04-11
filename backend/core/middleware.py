@@ -103,8 +103,7 @@ class LogMiddleware(BaseHTTPMiddleware):
         path = request.url.path
         query_params = str(request.query_params) if request.query_params else None
         method = request.method
-        client = getattr(request, "client", None)
-        client_ip = client.host if client else "unknown"
+        client_ip = request.client.host
         user_agent = request.headers.get("user-agent", "")
         
         # Lấy thông tin người dùng từ token (nếu có)
@@ -189,7 +188,7 @@ class LogMiddleware(BaseHTTPMiddleware):
                 user_agent=user_agent,
                 user_id=user_id,
                 timestamp=datetime.utcnow(),
-                meta_data=json.dumps({
+                metadata=json.dumps({
                     "process_time_ms": round(process_time * 1000),
                     "exception": exception_info
                 })
@@ -223,12 +222,8 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
             return await call_next(request)
         
         # Lấy client IP
-        client = getattr(request, "client", None)
-        client_ip = request.headers.get("x-forwarded-for")
-
-        if not client_ip:
-            client_ip = client.host if client else "unknown"
-        elif "," in client_ip:
+        client_ip = request.headers.get("x-forwarded-for", request.client.host)
+        if client_ip and "," in client_ip:
             client_ip = client_ip.split(",")[0].strip()
         
         # Kiểm tra nếu IP là localhost

@@ -499,73 +499,20 @@
 #     import uvicorn
 #     uvicorn.run(app, host="0.0.0.0", port=7860)
 # app.py - Entry Point for Toxic Language Detection API
-
-
-
-
-# # app.py - Hugging Face Space Entry Point
-# import os
-# import sys
-# import gradio as gr
-# from fastapi import FastAPI, HTTPException, Depends, status, Request
-# from fastapi.middleware.cors import CORSMiddleware
-# from fastapi.responses import HTMLResponse, JSONResponse
-# from fastapi.staticfiles import StaticFiles
-# from pydantic import BaseModel
-# try:
-#     from backend.api.routes import admin, auth, extension, prediction, toxic_detection
-#     from backend.core.middleware import LogMiddleware
-#     from backend.db.models.base import Base
-#     from backend.db.models import Base, engine
-#     # Thêm import model_adapter nếu có
-#     try:
-#         from backend.services.model_adapter import ModelAdapter
-#     except ImportError:
-#         print("ModelAdapter not found. Will use default model loading.")
-# except ImportError:
-#     print("Warning: Backend modules not found. Running in standalone mode.")
-
-# from typing import List, Dict, Any, Optional
-# import tensorflow as tf
-# import numpy as np
-# from sklearn.feature_extraction.text import TfidfVectorizer
-# import re
-# import logging
-
-
 import os
 import sys
-import tensorflow as tf
 import gradio as gr
-from backend.core.rate_limiter import RateLimiterMiddleware
 from fastapi import FastAPI, HTTPException, Depends, status, Request, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel, Field, validator, field_validator
-from sklearn.feature_extraction.text import TfidfVectorizer
+from pydantic import BaseModel, Field, validator
 import time
 import logging
 import json
 from typing import List, Dict, Any, Optional, Tuple
 import numpy as np
 import re
-
-app = FastAPI()
-
-# Add middleware
-app.add_middleware(RateLimiterMiddleware, max_requests=5, window_seconds=30)
-
-# Hiển thị PYTHONPATH
-print("PYTHONPATH:", sys.path)
-
-# Kiểm tra xem thư mục backend có tồn tại hay không
-backend_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "backend")
-print("Backend directory exists:", os.path.exists(backend_dir))
-
-# Liệt kê các file trong thư mục backend nếu tồn tại
-if os.path.exists(backend_dir):
-    print("Files in backend directory:", os.listdir(backend_dir))
 
 # Thiết lập logging
 logging.basicConfig(
@@ -602,11 +549,9 @@ try:
     from backend.api.routes import admin, auth, extension, prediction, toxic_detection
     from backend.core.middleware import LogMiddleware, RateLimitMiddleware, ExceptionMiddleware
     from backend.db.models import Base, engine, init_db, create_initial_data
-    from backend.db.models.base import Base
     from backend.services.ml_model import get_ml_model, predict_text
     from backend.services.model_adapter import ModelAdapter
     from backend.config.settings import settings
-    
     
     USING_BACKEND = True
     logger.info("Đã tải thành công backend modules, sử dụng chế độ tích hợp")
@@ -1117,7 +1062,7 @@ class PredictionRequest(BaseModel):
     platform_id: Optional[str] = None
     source_user_name: Optional[str] = None
     source_url: Optional[str] = None
-    meta_data: Optional[Dict[str, Any]] = None
+    metadata: Optional[Dict[str, Any]] = None
     save_result: Optional[bool] = Field(default=True, description="Có lưu kết quả vào database không")
 
     class Config:
@@ -1135,7 +1080,7 @@ class PredictionResponse(BaseModel):
     class Config:
         from_attributes = True
         
-    @field_validator('probabilities', mode='before')
+    @validator('probabilities', pre=True, always=True)
     def set_probabilities(cls, v, values):
         # Nếu không có probabilities, tạo một dictionary với giá trị mặc định
         if v is None and 'prediction' in values:
@@ -1177,9 +1122,6 @@ class HealthResponse(BaseModel):
     model_info: Dict[str, Any]
     memory_usage: Optional[Dict[str, float]] = None
     uptime: Optional[float] = None
-
-    class Config:
-        protected_namespaces = ()
 
 # API Key validation
 API_KEY = os.environ.get("API_KEY", "test-api-key")
@@ -1263,7 +1205,7 @@ async def detect_toxic_language(
                         platform_id=request.platform_id,
                         source_user_name=request.source_user_name,
                         source_url=request.source_url,
-                        meta_data=request.meta_data
+                        metadata=request.metadata
                     )
             except Exception as e:
                 logger.error(f"Lỗi khi sử dụng backend cho dự đoán: {str(e)}")
@@ -1389,7 +1331,7 @@ async def batch_detect_toxic_language(
                     platform_id=item.platform_id,
                     source_user_name=item.source_user_name,
                     source_url=item.source_url,
-                    meta_data=item.meta_data
+                    metadata=item.metadata
                 )
         
         # Tạo response tổng hợp
