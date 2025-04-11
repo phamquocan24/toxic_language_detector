@@ -22,7 +22,7 @@ class UserSettings(Base, TimestampMixin):
     email_notifications = Column(Boolean, default=True)
     
     # Cài đặt khác dưới dạng JSON
-    metadata = Column(JSON, nullable=True)
+    meta_data = Column(JSON, nullable=True)
     
     # Relationships
     user = relationship("User", back_populates="settings")
