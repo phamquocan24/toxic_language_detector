@@ -22,10 +22,10 @@ RUN python -m pip install --upgrade pip && pip install --no-cache-dir -r require
 COPY . .
 
 # Cài đặt TensorRT (nếu bạn có file .tar.gz, hoặc đang dùng server riêng)
-COPY TensorRT-10.x.x.x.tar.gz /tmp/
-RUN cd /tmp && tar -xvzf TensorRT-*.tar.gz && \
-    cp -r TensorRT-*/python/* /usr/local/lib/python3.10/dist-packages/ && \
-    cp -r TensorRT-*/lib/* /usr/lib/x86_64-linux-gnu/
+# COPY TensorRT-10.x.x.x.tar.gz /tmp/
+# RUN cd /tmp && tar -xvzf TensorRT-*.tar.gz && \
+#     cp -r TensorRT-*/python/* /usr/local/lib/python3.10/dist-packages/ && \
+#     cp -r TensorRT-*/lib/* /usr/lib/x86_64-linux-gnu/
 
 # Nếu bạn dùng model chuyển đổi sẵn trước khi chạy server
 RUN python convert_model.py
