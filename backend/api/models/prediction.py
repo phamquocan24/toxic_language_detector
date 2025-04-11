@@ -92,7 +92,7 @@ class CommentBase(BaseModel):
     platform: str = "unknown"
     source_user_name: Optional[str] = None
     source_url: Optional[str] = None
-    metadata: Optional[Dict[str, Any]] = None
+    meta_data: Optional[Dict[str, Any]] = None
 
 class CommentCreate(CommentBase):
     processed_content: Optional[str] = None
@@ -117,7 +117,7 @@ class PredictionRequest(BaseModel):
     source_user_name: Optional[str] = None
     source_url: Optional[str] = None
     save_result: Optional[bool] = True
-    metadata: Optional[Dict[str, Any]] = None
+    meta_data: Optional[Dict[str, Any]] = None
 
 class PredictionResponse(BaseModel):
     text: str
@@ -148,7 +148,7 @@ class BatchPredictionItemRequest(BaseModel):
     platform: Optional[str] = "unknown"
     source_user_name: Optional[str] = None
     source_url: Optional[str] = None
-    metadata: Optional[Dict[str, Any]] = None
+    meta_data: Optional[Dict[str, Any]] = None
 
 class BatchPredictionRequest(BaseModel):
     comments: List[BatchPredictionItemRequest]

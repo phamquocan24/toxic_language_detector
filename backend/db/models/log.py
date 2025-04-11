@@ -61,7 +61,7 @@ class Log(Base):
     is_reviewed = Column(Boolean, default=False)  # Đánh dấu log đã được xem xét
     
     # Thông tin bổ sung
-    metadata = Column(JSON, nullable=True)
+    meta_data = Column(JSON, nullable=True)
     
     # Tạo indexes để tối ưu hóa truy vấn
     __table_args__ = (
@@ -71,7 +71,7 @@ class Log(Base):
     )
     
     @classmethod
-    def create_system_log(cls, db, message, level="info", metadata=None):
+    def create_system_log(cls, db, message, level="info", meta_data=None):
         """
         Tạo log hệ thống
         
@@ -90,14 +90,14 @@ class Log(Base):
             log_level=level,
             is_error=level in ["error", "critical"],
             timestamp=datetime.utcnow(),
-            metadata=metadata
+            meta_data=meta_data
         )
         db.add(log)
         db.commit()
         return log
     
     @classmethod
-    def create_security_log(cls, db, action, user_id=None, client_ip=None, is_error=False, metadata=None):
+    def create_security_log(cls, db, action, user_id=None, client_ip=None, is_error=False, meta_data=None):
         """
         Tạo log bảo mật
         
@@ -121,14 +121,14 @@ class Log(Base):
             is_error=is_error,
             is_sensitive=True,
             timestamp=datetime.utcnow(),
-            metadata=metadata
+            meta_data=meta_data
         )
         db.add(log)
         db.commit()
         return log
     
     @classmethod
-    def create_user_activity_log(cls, db, user_id, action, metadata=None):
+    def create_user_activity_log(cls, db, user_id, action, meta_data=None):
         """
         Tạo log hoạt động người dùng
         
@@ -147,7 +147,7 @@ class Log(Base):
             log_type="user_activity",
             log_level="info",
             timestamp=datetime.utcnow(),
-            metadata=metadata
+            meta_data=meta_data
         )
         db.add(log)
         db.commit()

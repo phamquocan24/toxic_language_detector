@@ -1110,7 +1110,7 @@ class PredictionRequest(BaseModel):
     platform_id: Optional[str] = None
     source_user_name: Optional[str] = None
     source_url: Optional[str] = None
-    metadata: Optional[Dict[str, Any]] = None
+    meta_data: Optional[Dict[str, Any]] = None
     save_result: Optional[bool] = Field(default=True, description="Có lưu kết quả vào database không")
 
     class Config:
@@ -1256,7 +1256,7 @@ async def detect_toxic_language(
                         platform_id=request.platform_id,
                         source_user_name=request.source_user_name,
                         source_url=request.source_url,
-                        metadata=request.metadata
+                        meta_data=request.meta_data
                     )
             except Exception as e:
                 logger.error(f"Lỗi khi sử dụng backend cho dự đoán: {str(e)}")
@@ -1382,7 +1382,7 @@ async def batch_detect_toxic_language(
                     platform_id=item.platform_id,
                     source_user_name=item.source_user_name,
                     source_url=item.source_url,
-                    metadata=item.metadata
+                    meta_data=item.meta_data
                 )
         
         # Tạo response tổng hợp

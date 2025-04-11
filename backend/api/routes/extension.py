@@ -119,7 +119,7 @@ async def extension_detect(
         prediction=prediction, 
         confidence=confidence,
         user_id=current_user.id,
-        metadata=request.metadata
+        meta_data=request.meta_data
     )
     
     return {
@@ -164,7 +164,7 @@ async def extension_batch_detect(
                 prediction=prediction, 
                 confidence=confidence,
                 user_id=current_user.id,
-                metadata=item.metadata
+                meta_data=item.meta_data
             )
         
         # Thêm kết quả vào danh sách
@@ -366,7 +366,7 @@ def store_extension_prediction(
     prediction: int = 0, 
     confidence: float = 0.0,
     user_id: Optional[int] = None,
-    metadata: Dict[str, Any] = None
+    meta_data: Dict[str, Any] = None
 ):
     """
     Hàm lưu kết quả dự đoán vào database
@@ -384,7 +384,7 @@ def store_extension_prediction(
         confidence=confidence,
         user_id=user_id,
         created_at=datetime.utcnow(),
-        metadata=metadata
+        meta_data=meta_data
     )
     
     # Lưu vector

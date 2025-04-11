@@ -449,7 +449,7 @@ class UserService:
                     user_id=updated_by_id,
                     action=f"Updated user: {user.username} (ID: {user.id})",
                     timestamp=datetime.utcnow(),
-                    metadata=json.dumps({
+                    meta_data=json.dumps({
                         "user_id": user.id,
                         "old_values": old_values,
                         "new_values": {k: v for k, v in kwargs.items() if k != "password"}
@@ -501,7 +501,7 @@ class UserService:
                     user_id=deleted_by_id,
                     action=f"Deleted user: {username} (ID: {user_id})",
                     timestamp=datetime.utcnow(),
-                    metadata=json.dumps({
+                    meta_data=json.dumps({
                         "user_id": user_id,
                         "username": username,
                         "email": email

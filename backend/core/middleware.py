@@ -188,7 +188,7 @@ class LogMiddleware(BaseHTTPMiddleware):
                 user_agent=user_agent,
                 user_id=user_id,
                 timestamp=datetime.utcnow(),
-                metadata=json.dumps({
+                meta_data=json.dumps({
                     "process_time_ms": round(process_time * 1000),
                     "exception": exception_info
                 })
