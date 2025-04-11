@@ -549,6 +549,16 @@ import json
 from typing import List, Dict, Any, Optional, Tuple
 import numpy as np
 import re
+# Hiển thị PYTHONPATH
+print("PYTHONPATH:", sys.path)
+
+# Kiểm tra xem thư mục backend có tồn tại hay không
+backend_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "backend")
+print("Backend directory exists:", os.path.exists(backend_dir))
+
+# Liệt kê các file trong thư mục backend nếu tồn tại
+if os.path.exists(backend_dir):
+    print("Files in backend directory:", os.listdir(backend_dir))
 
 # Thiết lập logging
 logging.basicConfig(
