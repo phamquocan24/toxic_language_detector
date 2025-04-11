@@ -181,7 +181,7 @@ def create_initial_data():
                 theme="light",
                 language="vi",
                 notifications_enabled=True,
-                metadata="{}",
+                meta_data="{}",
                 created_at=datetime.utcnow()
             )
             db.add(admin_settings)
