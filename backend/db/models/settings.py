@@ -25,7 +25,7 @@ class UserSettings(Base, TimestampMixin):
     meta_data = Column(JSON, nullable=True)
     
     # Relationships
-    user = relationship("User", back_populates="settings")
+    user = relationship("User", back_populates="settings", foreign_keys=[user_id])
     
     @staticmethod
     def get_user_settings(db, user_id):
