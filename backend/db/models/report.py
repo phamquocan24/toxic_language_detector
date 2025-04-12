@@ -38,7 +38,7 @@ class Report(Base, TimestampMixin):
     updated_by = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     
     # Relationships - Chỉ định rõ foreign_keys để tránh nhầm lẫn
-    user = relationship("User", foreign_keys=[user_id], back_populates="reports")
+    user = relationship("User", back_populates="reports", foreign_keys=[user_id])
     editor = relationship("User", foreign_keys=[updated_by], backref="edited_reports")
     
     @staticmethod
