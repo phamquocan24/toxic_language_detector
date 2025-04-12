@@ -67,6 +67,7 @@ class User(Base, TimestampMixin):
     role = relationship("Role", back_populates="users")
     comments = relationship("Comment", back_populates="user")
     logs = relationship("Log", back_populates="user")
+    reports = relationship("Report", back_populates="user")
     
     def is_admin(self):
         """

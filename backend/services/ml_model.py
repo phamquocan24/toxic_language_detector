@@ -222,15 +222,51 @@ class MLModel:
             
             # Tải tokenizer nếu tìm thấy
             if tokenizer_path and os.path.exists(tokenizer_path):
-                with open(tokenizer_path, 'rb') as handle:
-                    self.tokenizer = pickle.load(handle)
-                logger.info(f"Đã tải Vietnamese tokenizer từ {tokenizer_path}")
+                try:
+                    with open(tokenizer_path, 'rb') as handle:
+                        self.tokenizer = pickle.load(handle)
+                    logger.info(f"Đã tải Vietnamese tokenizer từ {tokenizer_path}")
+                except Exception as load_error:
+                    logger.error(f"Lỗi khi tải tokenizer: {load_error}")
+                    logger.info("Tạo tokenizer mới do không thể tải file")
+                    self.tokenizer = Tokenizer(num_words=self.max_words, filters='!"#$%&()*+,-./:;<=>?@[\\]^_`{|}~\t\n')
+                    # Fit với một số văn bản mẫu tiếng Việt cơ bản
+                    sample_texts = [
+                        "mẫu văn bản tiếng việt", 
+                        "thêm một số từ vựng phổ biến", 
+                        "ngôn từ thù ghét căm thù", 
+                        "từ ngữ xúc phạm đồ ngu ngốc",
+                        "spam quảng cáo giảm giá khuyến mãi",
+                        "đây là văn bản bình thường không có nội dung tiêu cực"
+                    ]
+                    self.tokenizer.fit_on_texts(sample_texts)
             else:
                 logger.warning("Không tìm thấy tokenizer, khởi tạo mới (chỉ dùng cho phát triển)")
                 self.tokenizer = Tokenizer(num_words=self.max_words, filters='!"#$%&()*+,-./:;<=>?@[\\]^_`{|}~\t\n')
+                # Fit với một số văn bản mẫu tiếng Việt
+                sample_texts = [
+                    "mẫu văn bản tiếng việt", 
+                    "thêm một số từ vựng phổ biến", 
+                    "ngôn từ thù ghét căm thù", 
+                    "từ ngữ xúc phạm đồ ngu ngốc",
+                    "spam quảng cáo giảm giá khuyến mãi",
+                    "đây là văn bản bình thường không có nội dung tiêu cực"
+                ]
+                self.tokenizer.fit_on_texts(sample_texts)
         except Exception as e:
             logger.error(f"Lỗi khi tải tokenizer: {e}")
             self.tokenizer = Tokenizer(num_words=self.max_words, filters='!"#$%&()*+,-./:;<=>?@[\\]^_`{|}~\t\n')
+            # Fit với một số văn bản mẫu tiếng Việt
+            sample_texts = [
+                "mẫu văn bản tiếng việt", 
+                "thêm một số từ vựng phổ biến", 
+                "ngôn từ thù ghét căm thù", 
+                "từ ngữ xúc phạm đồ ngu ngốc",
+                "spam quảng cáo giảm giá khuyến mãi",
+                "đây là văn bản bình thường không có nội dung tiêu cực"
+            ]
+            self.tokenizer.fit_on_texts(sample_texts)
+            logger.info("Đã tạo tokenizer mới do không thể tải file")
         
         self.loaded = True
     
