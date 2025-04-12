@@ -250,10 +250,6 @@ class MLModel:
         model = tf.keras.Model(inputs=inputs, outputs=outputs)
         model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
         return model
-    def predict(self, text: str) -> Tuple[int, float]:
-        if not self.loaded or not self.model:
-            logger.error("Model chưa được tải.")
-            return -1, 0.0
     
     def _preprocess_text(self, text):
         """Tiền xử lý văn bản tiếng Việt cho dự đoán"""
@@ -289,13 +285,18 @@ class MLModel:
         if not self.loaded:
             self.load_model()
         
+        # Kiểm tra model đã tải chưa
+        if not self.loaded or not self.model:
+            logger.error("Model chưa được tải.")
+            return 0, 0.5, {label: 0.25 for label in self.get_labels()}
+        
         # Tiền xử lý văn bản
         try:
             preprocessed_text, cleaned_text = self._preprocess_text(text)
         except Exception as e:
             logger.error(f"Lỗi khi tiền xử lý văn bản: {e}")
             # Fallback nếu tiền xử lý thất bại
-            return 0, 0.5, {label: 0.25 for label in self.labels}
+            return 0, 0.5, {label: 0.25 for label in self.get_labels()}
         
         # Lấy các đặc trưng spam bổ sung
         _, spam_features = preprocess_for_spam_detection(text)
@@ -306,14 +307,14 @@ class MLModel:
         except Exception as e:
             logger.error(f"Lỗi khi dự đoán: {e}")
             # Fallback nếu dự đoán thất bại
-            return 0, 0.5, {label: 0.25 for label in self.labels}
+            return 0, 0.5, {label: 0.25 for label in self.get_labels()}
         
         # Lấy nhãn và độ tin cậy
         predicted_class = np.argmax(prediction)
         confidence = float(prediction[predicted_class])
         
         # Tạo dictionary xác suất cho từng nhãn
-        probabilities = {label: float(prob) for label, prob in zip(self.labels, prediction)}
+        probabilities = {label: float(prob) for label, prob in zip(self.get_labels(), prediction)}
         
         # Áp dụng các quy tắc heuristic cho việc phát hiện spam nâng cao
         # Nếu model không chắc chắn nhưng có các dấu hiệu spam mạnh
@@ -344,11 +345,11 @@ class MLModel:
                 predicted_class = 3  # Spam
                 confidence = max(confidence, spam_score)
                 # Cập nhật probabilities
-                probabilities = {label: 0.1 for label in self.labels}
-                probabilities[self.labels[3]] = confidence
+                probabilities = {label: 0.1 for label in self.get_labels()}
+                probabilities[self.get_labels()[3]] = confidence
         
         # Log kết quả ở chế độ debug
-        logger.debug(f"Dự đoán cho '{text[:50]}...': {self.labels[predicted_class]} (tin cậy: {confidence:.2f})")
+        logger.debug(f"Dự đoán cho '{text[:50]}...': {self.get_labels()[predicted_class]} (tin cậy: {confidence:.2f})")
         
         return int(predicted_class), confidence, probabilities
     
@@ -379,7 +380,7 @@ class MLModel:
             "max_length": self.max_length,
             "max_words": self.max_words,
             "device": self.device,
-            "labels": self.labels,
+            "labels": self.get_labels(),
             "is_dummy": not os.path.exists(self.model_path),
             "total_params": total_params,
             "vocab_size": len(self.tokenizer.word_index) + 1 if self.tokenizer else 0
@@ -402,6 +403,14 @@ class MLModel:
         keywords = extract_keywords(cleaned_text)
         
         return keywords
+    
+    def get_labels(self) -> List[str]:
+        """Lấy danh sách các nhãn"""
+        return self.labels or ["clean", "offensive", "hate", "spam"]
+    
+    def is_loaded(self) -> bool:
+        """Kiểm tra model đã được tải chưa"""
+        return self.loaded
 
 # Khởi tạo singleton instance
 _model_instance = None
@@ -440,9 +449,3 @@ def get_model_stats() -> Dict[str, Any]:
     """
     model = get_ml_model()
     return model.get_model_info()
-
-def get_labels(self) -> List[str]:
-    return self.labels or ["clean", "offensive", "hate", "spam"]
-
-def is_loaded(self) -> bool:
-    return self.loaded

@@ -5,6 +5,16 @@ from backend.db.models.base import Base, TimestampMixin
 from datetime import datetime
 from enum import Enum
 
+class ReportStatus(str, Enum):
+    pending = "pending"
+    processing = "processing"
+    completed = "completed"
+    rejected = "rejected"
+
+class ReportType(str, Enum):
+    toxic_detection = "toxic_detection"
+    # bạn có thể thêm các loại khác tại đây
+
 class Report(Base, TimestampMixin):
     """
     Model lưu trữ báo cáo phát hiện ngôn từ tiêu cực
@@ -15,8 +25,8 @@ class Report(Base, TimestampMixin):
     title = Column(String(255), nullable=False)
     description = Column(Text, nullable=True)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
-    status = Column(String(50), default="pending")  # pending, processing, completed, rejected
-    report_type = Column(String(50), default="toxic_detection")
+    status = Column(String(50), default=ReportStatus.pending.value)
+    report_type = Column(String(50), default=ReportType.toxic_detection.value)
     
     # Dữ liệu tổng hợp, lưu dưới dạng JSON
     report_data = Column(JSON, nullable=True)
@@ -24,11 +34,12 @@ class Report(Base, TimestampMixin):
     # Thông tin bổ sung
     is_public = Column(Boolean, default=False)
     exported_formats = Column(String(255), nullable=True)  # csv,pdf,xlsx
-    
-    # Relationships
-    user = relationship("User", back_populates="reports", passive_deletes=True)
     exported_at = Column(DateTime, nullable=True)
     updated_by = Column(Integer, ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    
+    # Relationships - Chỉ định rõ foreign_keys để tránh nhầm lẫn
+    user = relationship("User", foreign_keys=[user_id], back_populates="reports")
+    editor = relationship("User", foreign_keys=[updated_by], backref="edited_reports")
     
     @staticmethod
     def get_user_reports(db, user_id, limit=10, offset=0):
@@ -68,8 +79,21 @@ class Report(Base, TimestampMixin):
         ).order_by(
             Report.created_at.desc()
         ).offset(offset).limit(limit).all()
+    
     @staticmethod
     def get_user_reports_with_count(db, user_id, limit=10, offset=0):
+        """
+        Lấy danh sách báo cáo của người dùng kèm tổng số
+        
+        Args:
+            db: Database session
+            user_id: ID của người dùng
+            limit: Số lượng báo cáo tối đa
+            offset: Vị trí bắt đầu
+            
+        Returns:
+            tuple: (danh sách báo cáo, tổng số báo cáo)
+        """
         query = db.query(Report).filter(Report.user_id == user_id)
         total = query.count()
         results = query.order_by(Report.created_at.desc()).offset(offset).limit(limit).all()
@@ -77,16 +101,3 @@ class Report(Base, TimestampMixin):
     
     def __repr__(self):
         return f"Report(id={self.id}, title={self.title})"
-    
-class ReportStatus(str, Enum):
-    pending = "pending"
-    processing = "processing"
-    completed = "completed"
-    rejected = "rejected"
-
-class ReportType(str, Enum):
-    toxic_detection = "toxic_detection"
-    # bạn có thể thêm các loại khác tại đây
-
-status = Column(String(50), default=ReportStatus.pending.value)
-report_type = Column(String(50), default=ReportType.toxic_detection.value)
