@@ -69,6 +69,7 @@ class User(Base, TimestampMixin):
     logs = relationship("Log", back_populates="user")
     reports = relationship("Report", back_populates="user", foreign_keys="Report.user_id")
     settings = relationship("UserSettings", back_populates="user", uselist=False)
+    refresh_tokens = relationship("RefreshToken", back_populates="user", cascade="all, delete-orphan")
     
     def is_admin(self):
         """
