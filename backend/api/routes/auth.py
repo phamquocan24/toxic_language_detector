@@ -165,6 +165,10 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
     if db_email:
         raise HTTPException(status_code=400, detail="Email đã được đăng ký")
     
+    # Kiểm tra mật khẩu xác nhận
+    if user.password != user.confirm_password:
+        raise HTTPException(status_code=400, detail="Mật khẩu và xác nhận mật khẩu không khớp")
+    
     # Lấy vai trò người dùng mặc định
     role = db.query(Role).filter(Role.name == "user").first()
     if not role:
@@ -178,6 +182,7 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
     db_user = User(
         username=user.username,
         email=user.email,
+        name=user.name,  # Thêm name nếu có
         hashed_password=hashed_password,
         role_id=role.id,
         created_at=datetime.utcnow(),

@@ -214,6 +214,14 @@ def create_user(
     """
     Tạo người dùng mới (chỉ admin)
     """
+    # Kiểm tra username
+    db_username = db.query(User).filter(User.username == user_data.username).first()
+    if db_username:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Username đã được đăng ký"
+        )
+
     # Kiểm tra email đã tồn tại chưa
     existing_user = db.query(User).filter(User.email == user_data.email).first()
     if existing_user:
@@ -222,15 +230,23 @@ def create_user(
             detail="Email already registered"
         )
     
+    # Kiểm tra mật khẩu xác nhận
+    if user_data.password != user_data.confirm_password:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Passwords do not match"
+        )
+    
     # Tạo người dùng mới
     from backend.core.security import get_password_hash
     
     new_user = User(
-        name=user_data.name,
+        username=user_data.username,
         email=user_data.email,
+        name=user_data.name,  # Sử dụng name nếu có
         hashed_password=get_password_hash(user_data.password),
-        role=user_data.role,
-        is_active=user_data.is_active
+        role_id=user_data.role_id if hasattr(user_data, 'role_id') else 2,  # Mặc định là vai trò user
+        is_active=True
     )
     
     db.add(new_user)
@@ -276,6 +292,15 @@ def update_user(
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     
+    # Kiểm tra username nếu thay đổi
+    if user_data.username and user_data.username != user.username:
+        existing_user = db.query(User).filter(User.username == user_data.username).first()
+        if existing_user:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Username already registered"
+            )
+    
     # Kiểm tra email nếu thay đổi
     if user_data.email and user_data.email != user.email:
         existing_user = db.query(User).filter(User.email == user_data.email).first()
@@ -286,20 +311,23 @@ def update_user(
             )
     
     # Cập nhật thông tin
-    if user_data.name is not None:
+    if hasattr(user_data, 'username') and user_data.username is not None:
+        user.username = user_data.username
+    
+    if hasattr(user_data, 'name') and user_data.name is not None:
         user.name = user_data.name
     
     if user_data.email is not None:
         user.email = user_data.email
     
-    if user_data.role is not None:
-        user.role = user_data.role
+    if hasattr(user_data, 'role_id') and user_data.role_id is not None:
+        user.role_id = user_data.role_id
     
-    if user_data.is_active is not None:
+    if hasattr(user_data, 'is_active') and user_data.is_active is not None:
         user.is_active = user_data.is_active
     
     # Cập nhật mật khẩu nếu có
-    if user_data.password:
+    if hasattr(user_data, 'password') and user_data.password:
         from backend.core.security import get_password_hash
         user.hashed_password = get_password_hash(user_data.password)
     
