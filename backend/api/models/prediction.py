@@ -171,7 +171,7 @@ class TokenResponse(BaseModel):
 class UserBase(BaseModel):
     username: str
     email: EmailStr
-    name: Optional[str] = None  # Thêm trường name (tên hiển thị)
+    name: Optional[str] = None
 
 class UserCreate(UserBase):
     password: str
@@ -187,18 +187,20 @@ class UserCreate(UserBase):
 class UserUpdate(BaseModel):
     username: Optional[str] = None
     email: Optional[EmailStr] = None
-    name: Optional[str] = None  # Thêm trường name
+    name: Optional[str] = None
     password: Optional[str] = None
     role: Optional[str] = None
+    role_id: Optional[int] = None
     is_active: Optional[bool] = None
 
 class UserResponse(BaseModel):
     id: int
     username: str
     email: str
-    name: Optional[str] = None  # Thêm trường name
+    name: Optional[str] = None
     is_active: bool
-    role: str
+    role_id: int
+    role: Optional[str] = None 
     last_login: Optional[datetime] = None
     created_at: Optional[datetime] = None
     
