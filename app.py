@@ -1131,6 +1131,64 @@ class HealthResponse(BaseModel):
     memory_usage: Optional[Dict[str, float]] = None
     uptime: Optional[float] = None
 
+class ExceptionHandlingMiddleware(BaseHTTPMiddleware):
+    """
+    Middleware để xử lý các exception chung
+    """
+    
+    async def dispatch(self, request: Request, call_next):
+        try:
+            return await call_next(request)
+        except ValidationError as e:
+            # Xử lý lỗi validation từ Pydantic
+            return JSONResponse(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                content={"detail": f"Lỗi validation: {str(e)}"}
+            )
+        except Exception as e:
+            # Log lỗi
+            logger.error(f"Unhandled exception: {str(e)}")
+            import traceback
+            logger.error(traceback.format_exc())
+            
+            # Trả về response lỗi
+            return JSONResponse(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                content={"detail": f"Lỗi server: {str(e)}"}
+            )
+
+# Thêm middleware vào ứng dụng
+app.add_middleware(ExceptionHandlingMiddleware)
+
+# Thêm event handler cho ứng dụng để xử lý lỗi trong quá trình khởi động
+@app.on_event("startup")
+async def startup_event():
+    logger.info("=== Khởi động API phát hiện ngôn từ tiêu cực tiếng Việt ===")
+    # Patch các model để xử lý đối tượng Role
+    try:
+        from pydantic import BaseModel
+        from backend.api.models.prediction import UserResponse
+        
+        # Kiểm tra xem field_validator đã được áp dụng cho UserResponse chưa
+        if not any(validator.field_name == 'role' for validator in UserResponse.__pydantic_decorators__.field_validators):
+            from pydantic import field_validator
+            # Thêm validator
+            @field_validator('role', mode='before')
+            def extract_role_name(cls, v):
+                if hasattr(v, 'name'):
+                    return v.name
+                return v
+            
+            # Áp dụng validator
+            setattr(UserResponse, 'extract_role_name', extract_role_name)
+            UserResponse.__pydantic_decorators__.field_validators.append(extract_role_name)
+            
+        logger.info("Đã patch UserResponse model để xử lý đối tượng Role")
+    except Exception as e:
+        logger.error(f"Không thể patch UserResponse model: {str(e)}")
+        
+    logger.info("Ứng dụng đã sẵn sàng xử lý requests")
+
 # API Key validation
 API_KEY = os.environ.get("API_KEY", "test-api-key")
 

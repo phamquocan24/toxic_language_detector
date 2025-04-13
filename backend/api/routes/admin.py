@@ -183,7 +183,7 @@ def prepare_user_response(user):
         return user_dict
     return user
 
-@router.get("/users", response_model=List[UserResponse])
+@router.get("/admin/users", response_model=List[UserResponse])
 def get_users(
     skip: int = 0, 
     limit: int = 100,
@@ -220,7 +220,7 @@ def get_users(
     # Chuẩn bị response để đảm bảo role là string
     return [prepare_user_response(user) for user in users]
 
-@router.get("/users/{user_id}", response_model=UserResponse)
+@router.get("/admin/users/{user_id}", response_model=UserResponse)
 def get_user(
     user_id: int, 
     db: Session = Depends(get_db),
@@ -236,7 +236,7 @@ def get_user(
     # Chuẩn bị response để đảm bảo role là string
     return prepare_user_response(user)
 
-@router.post("/users", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/admin/users", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 def create_user(
     user_data: UserCreate,
     db: Session = Depends(get_db),
@@ -290,7 +290,7 @@ def create_user(
     # Trả về user đã chuẩn bị
     return prepare_user_response(new_user)
 
-@router.get("/users/{user_id}", response_model=UserResponse)
+@router.get("/admin/users/{user_id}", response_model=UserResponse)
 def get_user(
     user_id: int, 
     db: Session = Depends(get_db),
@@ -304,7 +304,7 @@ def get_user(
         raise HTTPException(status_code=404, detail="User not found")
     return user
 
-@router.put("/users/{user_id}", response_model=UserResponse)
+@router.put("/admin/users/{user_id}", response_model=UserResponse)
 def update_user(
     user_id: int,
     user_data: UserUpdate,
@@ -381,7 +381,7 @@ def update_user(
     # Trả về user đã chuẩn bị
     return prepare_user_response(user)
 
-@router.delete("/users/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/admin/users/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_user(
     user_id: int, 
     db: Session = Depends(get_db),
