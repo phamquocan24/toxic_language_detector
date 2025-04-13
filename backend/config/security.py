@@ -108,13 +108,22 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
     db.commit()
     
     return user
-
 async def get_admin_user(current_user: User = Depends(get_current_user)):
-    """Check if current user has admin role"""
-    if current_user.role.name != "admin":
+    """
+    Kiểm tra nếu người dùng hiện tại có quyền admin
+    """
+    # Lấy role name
+    role_name = None
+    if hasattr(current_user, 'role'):
+        if isinstance(current_user.role, str):
+            role_name = current_user.role
+        elif hasattr(current_user.role, 'name'):
+            role_name = current_user.role.name
+    
+    if role_name != "admin":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not enough permissions"
+            detail="Không đủ quyền hạn. Yêu cầu quyền admin."
         )
     return current_user
 

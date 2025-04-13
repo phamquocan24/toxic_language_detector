@@ -170,6 +170,19 @@ def get_dashboard_data(
         "period": period
     }
 
+# Thêm hàm helper vào file backend/api/routes/admin.py để chuyển đổi đối tượng Role thành string
+
+def prepare_user_response(user):
+    """
+    Chuẩn bị đối tượng User cho response, chuyển đổi role thành string
+    """
+    # Đảm bảo role là string
+    if user.role and hasattr(user.role, 'name'):
+        user_dict = user.__dict__.copy()
+        user_dict['role'] = user.role.name
+        return user_dict
+    return user
+
 @router.get("/users", response_model=List[UserResponse])
 def get_users(
     skip: int = 0, 
@@ -193,7 +206,7 @@ def get_users(
         )
     
     if role:
-        query = query.filter(User.role == role)
+        query = query.join(Role).filter(Role.name == role)
     
     if active is not None:
         if active:
@@ -203,7 +216,25 @@ def get_users(
     
     # Thực hiện query
     users = query.offset(skip).limit(limit).all()
-    return users
+    
+    # Chuẩn bị response để đảm bảo role là string
+    return [prepare_user_response(user) for user in users]
+
+@router.get("/users/{user_id}", response_model=UserResponse)
+def get_user(
+    user_id: int, 
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_admin_user)
+):
+    """
+    Lấy thông tin chi tiết của một người dùng
+    """
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Chuẩn bị response để đảm bảo role là string
+    return prepare_user_response(user)
 
 @router.post("/users", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 def create_user(
@@ -214,14 +245,6 @@ def create_user(
     """
     Tạo người dùng mới (chỉ admin)
     """
-    # Kiểm tra username
-    db_username = db.query(User).filter(User.username == user_data.username).first()
-    if db_username:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Username đã được đăng ký"
-        )
-
     # Kiểm tra email đã tồn tại chưa
     existing_user = db.query(User).filter(User.email == user_data.email).first()
     if existing_user:
@@ -230,23 +253,25 @@ def create_user(
             detail="Email already registered"
         )
     
-    # Kiểm tra mật khẩu xác nhận
-    if user_data.password != user_data.confirm_password:
+    # Tìm role dựa trên tên role
+    role = db.query(Role).filter(Role.name == user_data.role).first()
+    if not role:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Passwords do not match"
+            detail=f"Role '{user_data.role}' not found"
         )
     
     # Tạo người dùng mới
     from backend.core.security import get_password_hash
     
     new_user = User(
-        username=user_data.username,
+        name=user_data.name,
         email=user_data.email,
-        name=user_data.name if hasattr(user_data, 'name') else None,  # Sử dụng name nếu có
+        username=user_data.username,  # Thêm username vào
         hashed_password=get_password_hash(user_data.password),
-        role_id=user_data.role_id if hasattr(user_data, 'role_id') else 2,  # Mặc định là vai trò user
-        is_active=True
+        role_id=role.id,
+        is_active=True,  # Mặc định là active
+        created_at=datetime.utcnow()
     )
     
     db.add(new_user)
@@ -257,12 +282,13 @@ def create_user(
     log = Log(
         user_id=current_user.id,
         action=f"Created user: {new_user.email}",
-        timestamp=datetime.now()
+        timestamp=datetime.utcnow()
     )
     db.add(log)
     db.commit()
     
-    return new_user
+    # Trả về user đã chuẩn bị
+    return prepare_user_response(new_user)
 
 @router.get("/users/{user_id}", response_model=UserResponse)
 def get_user(
@@ -302,31 +328,44 @@ def update_user(
             )
     
     # Cập nhật thông tin
-    if hasattr(user_data, 'username') and user_data.username is not None:
-        user.username = user_data.username
-    
-    if hasattr(user_data, 'name') and user_data.name is not None:
+    if user_data.name is not None:
         user.name = user_data.name
     
     if user_data.email is not None:
         user.email = user_data.email
     
-    if hasattr(user_data, 'role_id') and user_data.role_id is not None:
-        user.role_id = user_data.role_id
+    if user_data.username is not None:
+        # Kiểm tra username đã tồn tại chưa
+        existing_user = db.query(User).filter(
+            User.username == user_data.username, 
+            User.id != user_id
+        ).first()
+        if existing_user:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Username already taken"
+            )
+        user.username = user_data.username
     
-    if hasattr(user_data, 'is_active') and user_data.is_active is not None:
+    if user_data.role is not None:
+        # Tìm role dựa trên tên role
+        role = db.query(Role).filter(Role.name == user_data.role).first()
+        if not role:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Role '{user_data.role}' not found"
+            )
+        user.role_id = role.id
+    
+    if user_data.is_active is not None:
         user.is_active = user_data.is_active
-    
-    # Cập nhật mật khẩu nếu có
-    if hasattr(user_data, 'password') and user_data.password:
-        from backend.core.security import get_password_hash
-        user.hashed_password = get_password_hash(user_data.password)
     
     # Cập nhật mật khẩu nếu có
     if user_data.password:
         from backend.core.security import get_password_hash
         user.hashed_password = get_password_hash(user_data.password)
     
+    user.updated_at = datetime.utcnow()
     db.commit()
     db.refresh(user)
     
@@ -334,12 +373,13 @@ def update_user(
     log = Log(
         user_id=current_user.id,
         action=f"Updated user: {user.email}",
-        timestamp=datetime.now()
+        timestamp=datetime.utcnow()
     )
     db.add(log)
     db.commit()
     
-    return user
+    # Trả về user đã chuẩn bị
+    return prepare_user_response(user)
 
 @router.delete("/users/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_user(

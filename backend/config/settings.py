@@ -64,7 +64,7 @@ class Settings(BaseSettings):
     
     # Server settings
     HOST: str = os.getenv("HOST", "0.0.0.0")
-    PORT: int = int(os.getenv("PORT", "8000"))
+    PORT: int = int(os.getenv("PORT", "7860"))
     WORKERS: int = int(os.getenv("WORKERS", "1"))
     RELOAD: bool = os.getenv("RELOAD", "False").lower() == "true"
     

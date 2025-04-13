@@ -176,6 +176,7 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
     password: str
     confirm_password:str
+    role: str = "user"  # Mặc định là user role, sử dụng string thay vì role_id
     
     @field_validator('password', 'confirm_password')
     @classmethod
@@ -183,14 +184,20 @@ class UserCreate(UserBase):
         if len(v) < 8:
             raise ValueError('Mật khẩu phải có ít nhất 8 ký tự')
         return v
-
+    
+    @field_validator('confirm_password')
+    @classmethod
+    def passwords_match(cls, v, info):
+        if 'password' in info.data and v != info.data['password']:
+            raise ValueError('Mật khẩu xác nhận không khớp')
+        return v
+    
 class UserUpdate(BaseModel):
     username: Optional[str] = None
     email: Optional[EmailStr] = None
     name: Optional[str] = None
     password: Optional[str] = None
-    role: Optional[str] = None
-    role_id: Optional[int] = None
+    role: Optional[str] = None  # Sử dụng string thay vì role_id
     is_active: Optional[bool] = None
 
 class UserResponse(BaseModel):
@@ -200,13 +207,20 @@ class UserResponse(BaseModel):
     name: Optional[str] = None
     is_active: bool
     role_id: int
-    role: Optional[str] = None 
+    role: str
     last_login: Optional[datetime] = None
     created_at: Optional[datetime] = None
     
     model_config = {
         "from_attributes": True
     }
+    @field_validator('role', mode='before')
+    @classmethod
+    def extract_role_name(cls, v):
+        # Kiểm tra nếu v là đối tượng Role thì lấy thuộc tính name
+        if hasattr(v, 'name'):
+            return v.name
+        return v
 
 class UserLogin(BaseModel):
     username: str

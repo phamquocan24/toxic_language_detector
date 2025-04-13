@@ -165,11 +165,7 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
     if db_email:
         raise HTTPException(status_code=400, detail="Email đã được đăng ký")
     
-    # Kiểm tra mật khẩu xác nhận
-    if user.password != user.confirm_password:
-        raise HTTPException(status_code=400, detail="Mật khẩu và xác nhận mật khẩu không khớp")
-    
-    # Lấy vai trò người dùng mặc định
+    # Lấy vai trò người dùng
     role = db.query(Role).filter(Role.name == "user").first()
     if not role:
         role = Role(name="user", description="Người dùng thông thường")
@@ -182,7 +178,7 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
     db_user = User(
         username=user.username,
         email=user.email,
-        name=user.name,  # Thêm name nếu có
+        name=user.name or user.username,
         hashed_password=hashed_password,
         role_id=role.id,
         created_at=datetime.utcnow(),
@@ -201,7 +197,8 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
     db.add(log)
     db.commit()
     
-    return db_user
+    # Sử dụng utility function
+    return prepare_user_response(db_user)
 
 @router.post("/token", response_model=TokenResponse)
 def login_for_access_token(
@@ -226,10 +223,13 @@ def login_for_access_token(
             headers={"WWW-Authenticate": "Bearer"},
         )
     
+    # Lấy role name
+    role_name = user.role.name if hasattr(user.role, 'name') else "user"
+    
     # Tạo token
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
-        data={"sub": user.username, "role": user.role.name},
+        data={"sub": user.username, "role": role_name},
         expires_delta=access_token_expires
     )
     
@@ -253,16 +253,19 @@ def login_for_access_token(
         "token_type": "bearer",
         "user_id": user.id,
         "username": user.username,
-        "role": user.role.name,
+        "role": role_name,
         "expires_in": settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60
     }
+
+from backend.utils.user_utils import prepare_user_response
 
 @router.get("/me", response_model=UserResponse)
 def read_users_me(current_user: User = Depends(get_current_user)):
     """
     Lấy thông tin người dùng hiện tại
     """
-    return current_user
+    # Sử dụng utility function
+    return prepare_user_response(current_user)
 
 @router.post("/logout")
 def logout(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
