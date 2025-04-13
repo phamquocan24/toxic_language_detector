@@ -1,0 +1,486 @@
+/* Base styles */
+:root {
+  --primary-color: #4285F4;
+  --secondary-color: #34A853;
+  --warning-color: #FBBC05;
+  --danger-color: #EA4335;
+  --clean-color: #34A853;
+  --offensive-color: #FBBC05;
+  --hate-color: #EA4335;
+  --spam-color: #673AB7;
+  --gray-light: #f1f1f1;
+  --gray: #ccc;
+  --gray-dark: #666;
+  --black: #333;
+  --white: #fff;
+  --shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  --border-radius: 4px;
+}
+
+body {
+  width: 360px;
+  min-height: 420px;
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--black);
+  background-color: var(--white);
+}
+
+.container {
+  padding: 15px;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--gray);
+  padding-bottom: 10px;
+}
+
+.logo {
+  width: 32px;
+  height: 32px;
+  margin-right: 10px;
+}
+
+h1 {
+  font-size: 16px;
+  margin: 0;
+  color: var(--primary-color);
+}
+
+h2 {
+  font-size: 15px;
+  margin: 15px 0 10px;
+  color: var(--black);
+  border-bottom: 1px solid var(--gray-light);
+  padding-bottom: 5px;
+}
+
+h3 {
+  font-size: 14px;
+  margin: 15px 0 8px;
+  color: var(--gray-dark);
+}
+
+/* Form elements */
+.form-group {
+  margin-bottom: 15px;
+}
+
+label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 500;
+  color: var(--gray-dark);
+}
+
+input[type="text"],
+input[type="email"],
+input[type="password"] {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--gray);
+  border-radius: var(--border-radius);
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 1px var(--primary-color);
+}
+
+.btn {
+  display: inline-block;
+  padding: 8px 15px;
+  background-color: var(--gray-light);
+  color: var(--gray-dark);
+  border: none;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+  text-decoration: none;
+  transition: background-color 0.2s, box-shadow 0.2s;
+}
+
+.btn:hover {
+  background-color: var(--gray);
+}
+
+.btn.primary {
+  background-color: var(--primary-color);
+  color: var(--white);
+}
+
+.btn.primary:hover {
+  background-color: #3a76d8;
+}
+
+.btn.danger {
+  background-color: var(--danger-color);
+  color: var(--white);
+}
+
+.btn.danger:hover {
+  background-color: #d33426;
+}
+
+.btn.logout {
+  background-color: #f8f8f8;
+  color: var(--danger-color);
+  border: 1px solid #eee;
+  padding: 4px 10px;
+  font-size: 12px;
+}
+
+.btn.logout:hover {
+  background-color: #f1f1f1;
+  border-color: #ddd;
+}
+
+/* Authentication screens */
+.auth-screen {
+  display: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.auth-screen.active {
+  display: block;
+  opacity: 1;
+}
+
+.form-actions {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.form-links {
+  margin-top: 15px;
+  text-align: center;
+  font-size: 13px;
+}
+
+.form-links a {
+  display: inline-block;
+  margin: 0 5px;
+  color: var(--primary-color);
+  text-decoration: none;
+}
+
+.form-links a:hover {
+  text-decoration: underline;
+}
+
+.message {
+  margin-top: 15px;
+  padding: 8px 10px;
+  font-size: 13px;
+  border-radius: var(--border-radius);
+  display: none;
+}
+
+.message.error {
+  display: block;
+  background-color: rgba(234, 67, 53, 0.1);
+  color: var(--danger-color);
+  border: 1px solid rgba(234, 67, 53, 0.2);
+}
+
+.message.success {
+  display: block;
+  background-color: rgba(52, 168, 83, 0.1);
+  color: var(--secondary-color);
+  border: 1px solid rgba(52, 168, 83, 0.2);
+}
+
+/* Main app container */
+#app-container {
+  opacity: 1;
+  transition: opacity 0.3s ease;
+}
+
+#app-container.hidden {
+  display: none;
+  opacity: 0;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 15px;
+  padding: 8px 12px;
+  background-color: #f8f8f8;
+  border-radius: var(--border-radius);
+}
+
+#user-name {
+  font-weight: 500;
+}
+
+#user-role {
+  font-size: 12px;
+  background: var(--gray-light);
+  padding: 2px 6px;
+  border-radius: 10px;
+  margin-left: 5px;
+  color: var(--gray-dark);
+}
+
+/* Toggle Switch */
+.toggle-container {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.toggle {
+  position: relative;
+  display: inline-block;
+  width: 40px;
+  height: 22px;
+  margin-right: 10px;
+}
+
+.toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--gray);
+  transition: .3s;
+  border-radius: 22px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 16px;
+  width: 16px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .3s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: var(--primary-color);
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px var(--primary-color);
+}
+
+input:checked + .slider:before {
+  transform: translateX(18px);
+}
+
+.toggle-label {
+  font-weight: 500;
+}
+
+/* Checkbox */
+.checkbox {
+  display: block;
+  position: relative;
+  padding-left: 30px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.checkbox input {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+
+.checkmark {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 18px;
+  width: 18px;
+  background-color: var(--gray-light);
+  border-radius: 3px;
+}
+
+.checkbox:hover input ~ .checkmark {
+  background-color: var(--gray);
+}
+
+.checkbox input:checked ~ .checkmark {
+  background-color: var(--primary-color);
+}
+
+.checkmark:after {
+  content: "";
+  position: absolute;
+  display: none;
+}
+
+.checkbox input:checked ~ .checkmark:after {
+  display: block;
+}
+
+.checkbox .checkmark:after {
+  left: 6px;
+  top: 2px;
+  width: 4px;
+  height: 9px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+/* Settings */
+.settings {
+  margin-bottom: 20px;
+  padding: 10px;
+  background-color: var(--gray-light);
+  border-radius: var(--border-radius);
+}
+
+.setting-item {
+  margin-bottom: 12px;
+}
+
+.setting-item label {
+  display: block;
+  margin-bottom: 5px;
+}
+
+.setting-item input[type="range"] {
+  width: 80%;
+  vertical-align: middle;
+}
+
+.setting-item span {
+  display: inline-block;
+  width: 30px;
+  text-align: right;
+}
+
+.platforms {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+/* Statistics */
+.stats {
+  margin-bottom: 20px;
+}
+
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.stat-item {
+  padding: 10px;
+  background-color: var(--gray-light);
+  border-radius: var(--border-radius);
+  text-align: center;
+}
+
+.stat-value {
+  font-size: 20px;
+  font-weight: 700;
+  margin-bottom: 5px;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: var(--gray-dark);
+}
+
+.stat-item.clean .stat-value {
+  color: var(--clean-color);
+}
+
+.stat-item.offensive .stat-value {
+  color: var(--offensive-color);
+}
+
+.stat-item.hate .stat-value {
+  color: var(--hate-color);
+}
+
+.stat-item.spam .stat-value {
+  color: var(--spam-color);
+}
+
+.reset-btn {
+  width: 100%;
+  padding: 8px;
+  background-color: var(--gray-light);
+  border: none;
+  border-radius: var(--border-radius);
+  color: var(--gray-dark);
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.reset-btn:hover {
+  background-color: var(--gray);
+}
+
+/* Web action */
+.web-action {
+  margin: 20px 0;
+  text-align: center;
+}
+
+.web-action .btn {
+  width: 100%;
+  padding: 10px;
+}
+
+/* Footer */
+.footer {
+  margin-top: 20px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--gray-dark);
+  border-top: 1px solid var(--gray-light);
+  padding-top: 10px;
+}
+
+.footer p {
+  margin: 5px 0;
+}
+
+.footer .small {
+  font-size: 10px;
+  color: var(--gray);
+}
+
+/* Hidden elements */
+.hidden {
+  display: none !important;
+}

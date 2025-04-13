@@ -771,7 +771,7 @@ class TwitterAPI(SocialMediaBase):
             
         self._handle_rate_limit()
         
-        endpoint = f"{self.api_url}/users/{user_id}/tweets"
+        endpoint = f"{self.api_url}/admin/users/{user_id}/tweets"
         params = {
             "max_results": min(max_results, 100),  # Twitter API giới hạn 100 item mỗi request
             "tweet.fields": "created_at,public_metrics,conversation_id",

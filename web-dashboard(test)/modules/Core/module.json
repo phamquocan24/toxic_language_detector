@@ -1,0 +1,11 @@
+{
+    "name": "Core",
+    "alias": "core",
+    "description": "Core Module",
+    "keywords": [],
+    "priority": 0,
+    "providers": [],
+    "files": [
+        "helpers.php"
+    ]
+}

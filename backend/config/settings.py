@@ -68,6 +68,10 @@ class Settings(BaseSettings):
     WORKERS: int = int(os.getenv("WORKERS", "1"))
     RELOAD: bool = os.getenv("RELOAD", "False").lower() == "true"
     
+    # URL settings
+    BACKEND_URL: str = os.getenv("BACKEND_URL", "http://localhost:7860")
+    FRONTEND_URL: str = os.getenv("FRONTEND_URL", "http://localhost:7860")
+    
     # Security settings
     SECRET_KEY: str = os.getenv("SECRET_KEY", "supersecretkey")
     ALGORITHM: str = "HS256"
@@ -124,15 +128,15 @@ class Settings(BaseSettings):
     TIKTOK_API_KEY: str = os.getenv("TIKTOK_API_KEY", "")
     
     # Email settings
-    MAIL_SERVER: str = os.getenv("MAIL_SERVER", "")
+    MAIL_SERVER: str = os.getenv("MAIL_SERVER", "smtp.gmail.com")
     MAIL_PORT: int = int(os.getenv("MAIL_PORT", "587"))
-    MAIL_USERNAME: str = os.getenv("MAIL_USERNAME", "")
-    MAIL_PASSWORD: str = os.getenv("MAIL_PASSWORD", "")
-    MAIL_FROM: EmailStr = os.getenv("MAIL_FROM", "noreply@example.com")
+    MAIL_USERNAME: str = os.getenv("MAIL_USERNAME", "anpham25052004@gmail.com")
+    MAIL_PASSWORD: str = os.getenv("MAIL_PASSWORD", "pzro nhir xhnb iurt")
+    MAIL_FROM: EmailStr = os.getenv("MAIL_FROM", "anpham25052004@gmail.com")
     MAIL_FROM_NAME: str = os.getenv("MAIL_FROM_NAME", "Toxic Language Detector")
     MAIL_TLS: bool = os.getenv("MAIL_TLS", "True").lower() == "true"
     MAIL_SSL: bool = os.getenv("MAIL_SSL", "False").lower() == "true"
-    MAIL_DEBUG: bool = os.getenv("MAIL_DEBUG", "False").lower() == "true"
+    MAIL_DEBUG: bool = os.getenv("MAIL_DEBUG", "True").lower() == "true"
     
     # Rate limiting
     RATE_LIMIT_ENABLED: bool = os.getenv("RATE_LIMIT_ENABLED", "True").lower() == "true"

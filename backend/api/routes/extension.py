@@ -75,7 +75,7 @@
 # api/routes/extension.py
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Query
 from sqlalchemy.orm import Session
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Union
 from datetime import datetime
 from backend.db.models import get_db, Comment, User, Log
 from backend.api.models.prediction import (
@@ -86,18 +86,22 @@ from backend.api.models.prediction import (
     ExtensionStatsResponse
 )
 from backend.services.ml_model import MLModel
-from backend.core.security import get_current_user
 from backend.utils.vector_utils import extract_features
 
 router = APIRouter()
 ml_model = MLModel()
+
+# Hàm xác thực tùy chọn
+def get_optional_current_user(db: Session = Depends(get_db)):
+    """Hàm xác thực không bắt buộc, luôn trả về None"""
+    return None
 
 @router.post("/detect", response_model=PredictionResponse)
 async def extension_detect(
     request: PredictionRequest,
     background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: Optional[User] = Depends(get_optional_current_user)
 ):
     """
     API endpoint để extension gửi và phân tích một comment
@@ -108,19 +112,20 @@ async def extension_detect(
     # Ánh xạ dự đoán sang text
     prediction_text = {0: "clean", 1: "offensive", 2: "hate", 3: "spam"}[prediction]
     
-    # Lưu dự đoán trong background với user_id của người đang đăng nhập
-    background_tasks.add_task(
-        store_extension_prediction, 
-        db=db, 
-        content=request.text, 
-        platform=request.platform, 
-        source_user_name=request.source_user_name,
-        source_url=request.source_url,
-        prediction=prediction, 
-        confidence=confidence,
-        user_id=current_user.id,
-        metadata=request.metadata
-    )
+    # Lưu dự đoán trong background nếu người dùng đã xác thực
+    if current_user:
+        background_tasks.add_task(
+            store_extension_prediction, 
+            db=db, 
+            content=request.text, 
+            platform=request.platform, 
+            source_user_name=request.source_user_name,
+            source_url=request.source_url,
+            prediction=prediction, 
+            confidence=confidence,
+            user_id=current_user.id,
+            metadata=request.metadata
+        )
     
     return {
         "text": request.text,
@@ -128,7 +133,7 @@ async def extension_detect(
         "confidence": confidence,
         "probabilities": probabilities,
         "prediction_text": prediction_text,
-        "user_id": current_user.id,
+        "user_id": current_user.id if current_user else None,
         "timestamp": datetime.utcnow().isoformat()
     }
 
@@ -137,7 +142,7 @@ async def extension_batch_detect(
     request: BatchPredictionRequest,
     background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_optional_current_user)
 ):
     """
     API endpoint để extension gửi và phân tích nhiều comments cùng lúc
@@ -195,7 +200,7 @@ async def extension_batch_detect(
 async def extension_stats(
     period: Optional[str] = Query("all", regex="^(day|week|month|all)$"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_optional_current_user)
 ):
     """
     API endpoint để lấy thống kê cho extension
@@ -274,7 +279,7 @@ async def extension_stats(
 async def delete_extension_comment(
     comment_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_optional_current_user)
 ):
     """
     API endpoint để extension xóa một comment đã phát hiện
@@ -305,7 +310,7 @@ async def delete_extension_comment(
 
 @router.get("/settings")
 async def get_extension_settings(
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_optional_current_user),
     db: Session = Depends(get_db)
 ):
     """
@@ -336,7 +341,7 @@ async def get_extension_settings(
 @router.post("/settings")
 async def update_extension_settings(
     settings: Dict[str, Any],
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(get_optional_current_user),
     db: Session = Depends(get_db)
 ):
     """

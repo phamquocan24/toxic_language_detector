@@ -1,0 +1,34 @@
+{
+    "name": "ecommerce/brand",
+    "description": "",
+    "authors": [
+        {
+            "name": "Envay Soft",
+            "email": "envaysoft@gmail.com"
+        }
+    ],
+    "require": {
+        "php": "^8.1.0"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [],
+            "aliases": {
+
+            }
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\Brand\\": "",
+            "Modules\\Brand\\App\\": "app/",
+            "Modules\\Brand\\Database\\Factories\\": "database/factories/",
+            "Modules\\Brand\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Modules\\Brand\\Tests\\": "tests/"
+        }
+    }
+}

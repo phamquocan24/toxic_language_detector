@@ -222,7 +222,7 @@ async def get_current_user(
     token: Optional[str] = Depends(oauth2_scheme),
     db: Session = Depends(get_db),
     request: Request = None
-) -> User:
+) -> Optional[User]:
     """
     Lấy người dùng hiện tại từ JWT token
     
@@ -235,56 +235,65 @@ async def get_current_user(
         HTTPException: Nếu token không hợp lệ hoặc người dùng không tồn tại
         
     Returns:
-        User: Người dùng đã xác thực
+        User: Người dùng đã xác thực, hoặc None nếu không có token
     """
+    # Nếu không có token, trả về None (không xác thực)
+    if token is None:
+        return None
+    
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Không thể xác thực thông tin đăng nhập",
         headers={"WWW-Authenticate": "Bearer"},
     )
     
-    if token is None:
-        raise credentials_exception
-    
     try:
         # Giải mã JWT token
-        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        payload = decode_token(token)
         username: str = payload.get("sub")
         
         if username is None:
             raise credentials_exception
-            
-        # Kiểm tra nếu là refresh token
+        
+        # Kiểm tra xem token có phải là refresh token không
         if payload.get("type") == "refresh":
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Refresh token không thể sử dụng cho API này",
+                detail="Cannot use refresh token for authentication",
                 headers={"WWW-Authenticate": "Bearer"},
             )
-            
+        
+        # Lấy thông tin người dùng từ database
+        user = db.query(User).filter(User.username == username).first()
+        
+        if user is None:
+            raise credentials_exception
+        
+        # Kiểm tra xem tài khoản có bị khóa không
+        if not user.is_active:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="User account is disabled",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        
+        # Ghi log
+        try:
+            if request:
+                log = Log(
+                    user_id=user.id,
+                    action=f"Authentication: {request.method} {request.url.path}",
+                    timestamp=datetime.utcnow(),
+                    ip_address=request.client.host if request.client else None
+                )
+                db.add(log)
+                db.commit()
+        except Exception as e:
+            logger.error(f"Lỗi khi ghi log xác thực: {str(e)}")
+        
+        return user
     except JWTError:
         raise credentials_exception
-        
-    # Lấy người dùng từ database
-    user = db.query(User).filter(User.username == username).first()
-    
-    if user is None:
-        raise credentials_exception
-        
-    # Kiểm tra nếu người dùng bị vô hiệu hóa
-    if not user.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Tài khoản đã bị vô hiệu hóa",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    
-    # Cập nhật thời gian hoạt động
-    if request:
-        user.last_activity = datetime.utcnow()
-        db.commit()
-    
-    return user
 
 async def verify_api_key(
     api_key: Optional[str] = Depends(api_key_header),
