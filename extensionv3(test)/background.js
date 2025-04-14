@@ -5,7 +5,7 @@
 
 // API Configuration
 const API_CONFIG = {
-  BASE_URL: 'http://localhost:8000',
+  BASE_URL: 'http://localhost:7860',
   AUTH_ENDPOINTS: {
     LOGIN: '/auth/login',
     REGISTER: '/auth/register',

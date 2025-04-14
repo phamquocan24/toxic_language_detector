@@ -5,7 +5,7 @@
 
 // API Configuration
 const API_CONFIG = {
-  BASE_URL: 'http://localhost:8000',
+  BASE_URL: 'http://localhost:7860',
   AUTH_ENDPOINTS: {
     LOGIN: '/auth/login',
     REGISTER: '/auth/register',
@@ -17,7 +17,7 @@ const API_CONFIG = {
     DETECT: '/extension/detect',
     STATS: '/toxic/stats'
   },
-  WEB_DASHBOARD: 'http://localhost:8000/dashboard'
+  WEB_DASHBOARD: 'http://localhost:7860/dashboard'
 };
 
 // DOM Elements - Auth

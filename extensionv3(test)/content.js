@@ -29,7 +29,7 @@ const CATEGORY_STYLES = {
 
 // API Configuration
 const API_CONFIG = {
-  WEB_DASHBOARD: 'http://localhost:8000/dashboard'
+  WEB_DASHBOARD: 'http://localhost:7860/dashboard'
 };
 
 // Platform definitions
