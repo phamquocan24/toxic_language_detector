@@ -1,23 +1,25 @@
 {
   "manifest_version": 3,
-  "name": "Toxic Language Detector",
+  "name": "__MSG_extensionName__",
   "version": "1.0.0",
-  "description": "Phát hiện và cảnh báo ngôn từ độc hại trên mạng xã hội",
-  "permissions": [
-    "storage",
-    "activeTab",
-    "scripting",
-    "tabs"
-  ],
-  "host_permissions": [
-    "*://*.facebook.com/*",
-    "*://*.youtube.com/*",
-    "*://*.twitter.com/*", 
-    "*://*.x.com/*",
-    "http://localhost:7860/*"
-  ],
+  "description": "__MSG_extensionDescription__",
+  "default_locale": "en",
+  "icons": {
+    "16": "assets/icons/icon16.png",
+    "48": "assets/icons/icon48.png",
+    "128": "assets/icons/icon128.png"
+  },
+  "action": {
+    "default_popup": "views/popup.html",
+    "default_icon": {
+      "16": "assets/icons/icon16.png",
+      "48": "assets/icons/icon48.png",
+      "128": "assets/icons/icon128.png"
+    }
+  },
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "scripts/background-wrapper.js",
+    "type": "module"
   },
   "content_scripts": [
     {
@@ -27,28 +29,28 @@
         "*://*.twitter.com/*",
         "*://*.x.com/*"
       ],
-      "js": ["content.js"],
-      "css": ["styles.css"]
+      "js": ["scripts/content-wrapper.js"],
+      "css": ["assets/styles/content.css"],
+      "run_at": "document_idle"
     }
   ],
-  "action": {
-    "default_popup": "popup/popup.html",
-    "default_icon": {
-      "16": "icons/icon16.png",
-      "48": "icons/icon48.png",
-      "128": "icons/icon128.png"
-    }
-  },
-  "icons": {
-    "16": "icons/icon16.png",
-    "48": "icons/icon48.png",
-    "128": "icons/icon128.png"
-  },
   "web_accessible_resources": [
     {
-      "resources": ["icons/*"],
+      "resources": ["assets/*", "src/*", "scripts/*", "views/*"],
       "matches": ["<all_urls>"]
     }
+  ],
+  "permissions": [
+    "storage",
+    "activeTab",
+    "tabs",
+    "notifications",
+    "alarms",
+    "contextMenus",
+    "scripting"
+  ],
+  "host_permissions": [
+    "http://localhost:7860/*"
   ],
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'self'"

@@ -1,0 +1,238 @@
+{
+  "extensionName": {
+    "message": "Toxic Language Detector",
+    "description": "Tên của extension"
+  },
+  "extensionDescription": {
+    "message": "Phát hiện và cảnh báo ngôn từ độc hại trên mạng xã hội",
+    "description": "Mô tả của extension"
+  },
+  "dashboard": {
+    "message": "Tổng quan",
+    "description": "Tên tab tổng quan"
+  },
+  "analysis": {
+    "message": "Phân tích",
+    "description": "Tên tab phân tích"
+  },
+  "settings": {
+    "message": "Cài đặt",
+    "description": "Tên tab cài đặt"
+  },
+  "statusOn": {
+    "message": "Đang bật",
+    "description": "Trạng thái khi bật"
+  },
+  "statusOff": {
+    "message": "Đã tắt",
+    "description": "Trạng thái khi tắt"
+  },
+  "totalDetections": {
+    "message": "Tổng cộng",
+    "description": "Nhãn cho tổng số phát hiện"
+  },
+  "clean": {
+    "message": "Bình thường",
+    "description": "Nhãn cho loại bình thường"
+  },
+  "offensive": {
+    "message": "Xúc phạm",
+    "description": "Nhãn cho loại xúc phạm"
+  },
+  "hate": {
+    "message": "Thù ghét",
+    "description": "Nhãn cho loại thù ghét"
+  },
+  "spam": {
+    "message": "Spam",
+    "description": "Nhãn cho loại spam"
+  },
+  "serverStatus": {
+    "message": "Máy chủ:",
+    "description": "Nhãn cho trạng thái máy chủ"
+  },
+  "detectionStatus": {
+    "message": "Phát hiện:",
+    "description": "Nhãn cho trạng thái phát hiện"
+  },
+  "serverHealthy": {
+    "message": "Hoạt động tốt",
+    "description": "Trạng thái máy chủ khỏe mạnh"
+  },
+  "serverWarning": {
+    "message": "Có vấn đề",
+    "description": "Trạng thái máy chủ có vấn đề"
+  },
+  "serverDown": {
+    "message": "Không kết nối được",
+    "description": "Trạng thái máy chủ không kết nối được"
+  },
+  "detectionActive": {
+    "message": "Đang hoạt động",
+    "description": "Trạng thái phát hiện đang hoạt động"
+  },
+  "detectionInactive": {
+    "message": "Đã tắt",
+    "description": "Trạng thái phát hiện đã tắt"
+  },
+  "analyzeText": {
+    "message": "Phân tích văn bản",
+    "description": "Tiêu đề phân tích văn bản"
+  },
+  "textPlaceholder": {
+    "message": "Nhập văn bản để phân tích...",
+    "description": "Placeholder cho ô nhập văn bản"
+  },
+  "analyzeButton": {
+    "message": "Phân tích",
+    "description": "Nút phân tích"
+  },
+  "analyzing": {
+    "message": "Đang phân tích...",
+    "description": "Trạng thái đang phân tích"
+  },
+  "analysisResult": {
+    "message": "Kết quả phân tích",
+    "description": "Tiêu đề kết quả phân tích"
+  },
+  "classification": {
+    "message": "Phân loại:",
+    "description": "Nhãn cho phân loại"
+  },
+  "confidence": {
+    "message": "Độ tin cậy:",
+    "description": "Nhãn cho độ tin cậy"
+  },
+  "keywords": {
+    "message": "Từ khóa:",
+    "description": "Nhãn cho từ khóa"
+  },
+  "noKeywords": {
+    "message": "Không có",
+    "description": "Thông báo khi không có từ khóa"
+  },
+  "enterText": {
+    "message": "Vui lòng nhập văn bản",
+    "description": "Thông báo khi chưa nhập văn bản"
+  },
+  "analysisError": {
+    "message": "Lỗi phân tích",
+    "description": "Thông báo khi có lỗi phân tích"
+  },
+  "general": {
+    "message": "Chung",
+    "description": "Tiêu đề phần cài đặt chung"
+  },
+  "enableDetection": {
+    "message": "Bật phát hiện",
+    "description": "Cài đặt bật phát hiện"
+  },
+  "enableHighlight": {
+    "message": "Đánh dấu nội dung độc hại",
+    "description": "Cài đặt đánh dấu nội dung độc hại"
+  },
+  "enableNotifications": {
+    "message": "Bật thông báo",
+    "description": "Cài đặt bật thông báo"
+  },
+  "platforms": {
+    "message": "Nền tảng",
+    "description": "Tiêu đề phần cài đặt nền tảng"
+  },
+  "detection": {
+    "message": "Phát hiện",
+    "description": "Tiêu đề phần cài đặt phát hiện"
+  },
+  "confidenceThreshold": {
+    "message": "Ngưỡng tin cậy",
+    "description": "Cài đặt ngưỡng tin cậy"
+  },
+  "language": {
+    "message": "Ngôn ngữ",
+    "description": "Cài đặt ngôn ngữ"
+  },
+  "vietnamese": {
+    "message": "Tiếng Việt",
+    "description": "Tên ngôn ngữ tiếng Việt"
+  },
+  "english": {
+    "message": "Tiếng Anh",
+    "description": "Tên ngôn ngữ tiếng Anh"
+  },
+  "saveSettings": {
+    "message": "Lưu cài đặt",
+    "description": "Nút lưu cài đặt"
+  },
+  "resetSettings": {
+    "message": "Khôi phục mặc định",
+    "description": "Nút khôi phục cài đặt mặc định"
+  },
+  "saving": {
+    "message": "Đang lưu...",
+    "description": "Trạng thái đang lưu"
+  },
+  "saved": {
+    "message": "Đã lưu!",
+    "description": "Thông báo đã lưu"
+  },
+  "savingError": {
+    "message": "Lỗi!",
+    "description": "Thông báo lỗi khi lưu"
+  },
+  "login": {
+    "message": "Đăng nhập",
+    "description": "Nhãn đăng nhập"
+  },
+  "register": {
+    "message": "Đăng ký",
+    "description": "Nhãn đăng ký"
+  },
+  "logout": {
+    "message": "Đăng xuất",
+    "description": "Nhãn đăng xuất"
+  },
+  "openDashboard": {
+    "message": "Mở dashboard",
+    "description": "Nhãn mở dashboard"
+  },
+  "username": {
+    "message": "Tên đăng nhập",
+    "description": "Nhãn tên đăng nhập"
+  },
+  "password": {
+    "message": "Mật khẩu",
+    "description": "Nhãn mật khẩu"
+  },
+  "email": {
+    "message": "Email",
+    "description": "Nhãn email"
+  },
+  "confirmPassword": {
+    "message": "Xác nhận mật khẩu",
+    "description": "Nhãn xác nhận mật khẩu"
+  },
+  "forgotPassword": {
+    "message": "Quên mật khẩu?",
+    "description": "Nhãn quên mật khẩu"
+  },
+  "enterFullInfo": {
+    "message": "Vui lòng nhập đầy đủ thông tin",
+    "description": "Thông báo khi chưa nhập đủ thông tin"
+  },
+  "passwordsDoNotMatch": {
+    "message": "Mật khẩu xác nhận không khớp",
+    "description": "Thông báo khi mật khẩu không khớp"
+  },
+  "loginFailed": {
+    "message": "Đăng nhập thất bại",
+    "description": "Thông báo khi đăng nhập thất bại"
+  },
+  "registrationFailed": {
+    "message": "Đăng ký thất bại",
+    "description": "Thông báo khi đăng ký thất bại"
+  },
+  "registrationSuccess": {
+    "message": "Đăng ký thành công! Vui lòng đăng nhập.",
+    "description": "Thông báo khi đăng ký thành công"
+  }
+} 
