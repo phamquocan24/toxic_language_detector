@@ -356,13 +356,14 @@ def extract_features(text: str, reduce_dim: bool = False) -> np.ndarray:
     # Tiền xử lý văn bản
     processed_text = preprocess_text(text)
     
-    # Huấn luyện vectorizer nếu chưa được huấn luyện
-    if not hasattr(vectorizer, 'vocabulary_'):
-        vectorizer.fit([processed_text])
-        logger.debug("Đã huấn luyện vectorizer trên một văn bản mẫu")
-    
-    # Chuyển đổi văn bản thành vector
-    vector = vectorizer.transform([processed_text])
+    if not processed_text.strip():
+        return np.zeros(10000)
+
+    try:
+        vector = vectorizer.fit_transform([processed_text]).toarray()[0]
+    except ValueError as e:
+        logging.error("Error in vectorizer.fit_transform: %s. Returning zero vector.", e)
+        vector = np.zeros(10000)
     
     # Giảm chiều nếu được yêu cầu
     if reduce_dim:
@@ -370,13 +371,13 @@ def extract_features(text: str, reduce_dim: bool = False) -> np.ndarray:
         if not hasattr(svd, 'components_'):
             logger.warning("SVD chưa được huấn luyện, không thể giảm chiều vector")
             # Trả về vector đặc mật (sparse) dưới dạng mảng đặc (dense)
-            return vector.toarray()[0]
+            return vector
         
-        reduced_vector = svd.transform(vector)
+        reduced_vector = svd.transform(vector.reshape(1, -1))
         return reduced_vector[0]
     
     # Trả về vector dưới dạng mảng đặc (dense)
-    return vector.toarray()[0]
+    return vector
 
 def compute_similarity(vec1: np.ndarray, vec2: np.ndarray) -> float:
     """
@@ -449,7 +450,7 @@ def find_similar_vectors(query_vector: np.ndarray, vectors: List[np.ndarray],
             continue
         
         # Tính độ tương tự
-        sim = cosine_similarity(query_vector, vec)[0][0]
+        sim = compute_similarity(query_vector, vec)
         
         if sim >= threshold:
             similarities.append((i, float(sim)))

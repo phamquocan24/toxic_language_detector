@@ -76,7 +76,7 @@
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Query
 from sqlalchemy.orm import Session
 from typing import List, Dict, Any, Optional, Union
-from datetime import datetime
+from datetime import datetime, timedelta
 from backend.db.models import get_db, Comment, User, Log
 from backend.api.models.prediction import (
     PredictionRequest, 
@@ -87,6 +87,7 @@ from backend.api.models.prediction import (
 )
 from backend.services.ml_model import MLModel
 from backend.utils.vector_utils import extract_features
+from backend.api.routes.auth import get_current_user
 
 router = APIRouter()
 ml_model = MLModel()
@@ -149,7 +150,7 @@ async def extension_batch_detect(
     """
     results = []
     
-    for item in request.items:
+    for item in request.dict().get('items', []):
         # Thực hiện dự đoán
         prediction, confidence, probabilities = ml_model.predict(item.text)
         
@@ -168,7 +169,7 @@ async def extension_batch_detect(
                 source_url=item.source_url,
                 prediction=prediction, 
                 confidence=confidence,
-                user_id=current_user.id,
+                user_id=current_user.id if current_user else None,
                 metadata=item.metadata
             )
         
@@ -183,8 +184,8 @@ async def extension_batch_detect(
     
     # Ghi log
     log = Log(
-        user_id=current_user.id,
-        action=f"Batch prediction: {len(request.items)} items",
+        user_id=current_user.id if current_user else None,
+        action=f"Batch prediction: {len(request.dict().get('items', []))} items",
         timestamp=datetime.utcnow()
     )
     db.add(log)
@@ -199,12 +200,23 @@ async def extension_batch_detect(
 @router.get("/stats", response_model=ExtensionStatsResponse)
 async def extension_stats(
     period: Optional[str] = Query("all", regex="^(day|week|month|all)$"),
+    admin_token: Optional[str] = Query(None),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_optional_current_user)
+    current_user: Optional[User] = Depends(get_optional_current_user)
 ):
     """
     API endpoint để lấy thống kê cho extension
     """
+    # If there is no authenticated user, check for a valid admin_token
+    if current_user is None and admin_token:
+         from backend.config.settings import settings
+         if admin_token == settings.ADMIN_TOKEN:
+              from backend.db.models import User, Role
+              # Create a dummy admin user with ID -1
+              current_user = User(id=-1, role=Role(name="admin"))
+    if current_user is None:
+         raise HTTPException(status_code=401, detail="Authentication required for stats endpoint")
+
     # Xác định khoảng thời gian
     filter_date = None
     if period == "day":
@@ -310,19 +322,32 @@ async def delete_extension_comment(
 
 @router.get("/settings")
 async def get_extension_settings(
-    current_user: User = Depends(get_optional_current_user),
+    current_user: Optional[User] = Depends(get_optional_current_user),
     db: Session = Depends(get_db)
 ):
     """
     API endpoint để lấy cài đặt của extension cho user hiện tại
     """
-    # Lấy settings từ database hoặc trả về mặc định
-    settings = {}
-    
+    # If no user is authenticated, return default settings
+    if current_user is None:
+        default_settings = {
+            "enabled_platforms": ["facebook", "youtube", "twitter", "tiktok"],
+            "auto_analyze": True,
+            "highlight_comments": True,
+            "notification": True,
+            "store_clean": False,
+            "threshold": 0.7
+        }
+        return {
+            "settings": default_settings,
+            "user_id": None,
+            "role": "anonymous"
+        }
+
+    # Lấy settings từ database nếu có, hoặc sử dụng mặc định
     if hasattr(current_user, 'extension_settings') and current_user.extension_settings:
         settings = current_user.extension_settings
     else:
-        # Cài đặt mặc định
         settings = {
             "enabled_platforms": ["facebook", "youtube", "twitter", "tiktok"],
             "auto_analyze": True,
@@ -331,7 +356,7 @@ async def get_extension_settings(
             "store_clean": False,
             "threshold": 0.7
         }
-    
+
     return {
         "settings": settings,
         "user_id": current_user.id,

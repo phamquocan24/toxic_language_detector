@@ -518,3 +518,10 @@ def get_comment_clusters(
         
     except ImportError:
         raise HTTPException(status_code=500, detail="Không có thư viện scikit-learn để phân cụm")
+
+# Added new function save_prediction (stub implementation) to support batch detection
+
+def save_prediction(**prediction):
+    import logging
+    logging.info("Saving prediction: %s", prediction)
+    return prediction

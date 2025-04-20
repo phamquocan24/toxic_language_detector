@@ -95,13 +95,13 @@ if not os.path.exists(SAFETENSORS_MODEL_PATH) and not os.path.exists(COMPATIBLE_
             tf.keras.layers.Dropout(0.5),
             tf.keras.layers.Dense(4, activation='softmax')
         ])
-
+        
         model.compile(
             optimizer='adam',
             loss='categorical_crossentropy',
             metrics=['accuracy']
         )
-
+        
         # Lưu model
         model.save(COMPATIBLE_MODEL_PATH)
         logger.info(
@@ -168,8 +168,6 @@ class BatchPredictionResponse(BaseModel):
     timestamp: str
 
 # Hàm tạo model tương thích nếu không thể tải model ban đầu
-
-
 def create_compatible_model():
     """Tạo một model tương thích với cấu trúc đầu vào 10000 chiều"""
     logger.info("Tạo model dự phòng với đầu vào 10000 chiều...")
@@ -183,8 +181,6 @@ def create_compatible_model():
     return model
 
 # Load ML model
-
-
 class ToxicDetectionModel:
     def __init__(self):
         # Load or create model trained on Vietnamese social media data
@@ -326,7 +322,7 @@ class ToxicDetectionModel:
         except Exception as e:
             logger.error(f"Error loading Vietnamese NLP library: {e}")
             self.has_vietnamese_nlp = False
-
+    
     def preprocess_text(self, text):
         """
         Tiền xử lý văn bản tiếng Việt, giữ nguyên dấu và tạo vector đặc trưng
@@ -356,7 +352,7 @@ class ToxicDetectionModel:
         if not hasattr(self.vectorizer, 'vocabulary_'):
             # Fit với một tập mẫu để đảm bảo có đủ tính năng
             sample_texts = [
-                text,
+                text, 
                 "mẫu văn bản thêm vào",
                 "thêm một số từ vựng phổ biến tiếng việt",
                 "spam quảng cáo giảm giá khuyến mãi mua ngay kẻo hết",
