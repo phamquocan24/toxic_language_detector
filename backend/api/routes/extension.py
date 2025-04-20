@@ -73,7 +73,7 @@
 #     db.add(comment)
 #     db.commit()
 # api/routes/extension.py
-from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Query
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Query, Request
 from sqlalchemy.orm import Session
 from typing import List, Dict, Any, Optional, Union
 from datetime import datetime, timedelta
@@ -88,6 +88,8 @@ from backend.api.models.prediction import (
 from backend.services.ml_model import MLModel
 from backend.utils.vector_utils import extract_features
 from backend.api.routes.auth import get_current_user
+from backend.config.settings import settings
+import sqlalchemy as sa
 
 router = APIRouter()
 ml_model = MLModel()
@@ -199,23 +201,18 @@ async def extension_batch_detect(
 
 @router.get("/stats", response_model=ExtensionStatsResponse)
 async def extension_stats(
+    request: Request,
     period: Optional[str] = Query("all", regex="^(day|week|month|all)$"),
-    admin_token: Optional[str] = Query(None),
     db: Session = Depends(get_db),
-    current_user: Optional[User] = Depends(get_optional_current_user)
+    current_user: User = Depends(get_current_user)
 ):
     """
     API endpoint để lấy thống kê cho extension
+    Yêu cầu xác thực thông qua Authorization header
     """
-    # If there is no authenticated user, check for a valid admin_token
-    if current_user is None and admin_token:
-         from backend.config.settings import settings
-         if admin_token == settings.ADMIN_TOKEN:
-              from backend.db.models import User, Role
-              # Create a dummy admin user with ID -1
-              current_user = User(id=-1, role=Role(name="admin"))
-    if current_user is None:
-         raise HTTPException(status_code=401, detail="Authentication required for stats endpoint")
+    # Check if Authorization header is present
+    if not request.headers.get("Authorization"):
+        raise HTTPException(status_code=401, detail="Authorization header missing. Please include valid Bearer token.")
 
     # Xác định khoảng thời gian
     filter_date = None
@@ -247,7 +244,7 @@ async def extension_stats(
     # Số lượng theo platform
     platforms = db.query(
         Comment.platform, 
-        db.func.count(Comment.id).label('count')
+        sa.func.count(Comment.id).label('count')
     ).filter(
         Comment.user_id == current_user.id
     )
@@ -366,7 +363,7 @@ async def get_extension_settings(
 @router.post("/settings")
 async def update_extension_settings(
     settings: Dict[str, Any],
-    current_user: User = Depends(get_optional_current_user),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """

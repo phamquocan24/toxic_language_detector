@@ -271,23 +271,40 @@ def get_trend(
     if period == "day":
         start_date = now - timedelta(days=1)
         date_format = "%H:00"  # Format theo giờ
-        group_by = sa.func.date_trunc('hour', Comment.created_at)
     elif period == "week":
         start_date = now - timedelta(days=7)
         date_format = "%Y-%m-%d"  # Format theo ngày
-        group_by = sa.func.date_trunc('day', Comment.created_at)
     elif period == "month":
         start_date = now - timedelta(days=30)
         date_format = "%Y-%m-%d"  # Format theo ngày
-        group_by = sa.func.date_trunc('day', Comment.created_at)
     elif period == "year":
         start_date = now - timedelta(days=365)
         date_format = "%Y-%m"  # Format theo tháng
-        group_by = sa.func.date_trunc('month', Comment.created_at)
     else:
         start_date = now - timedelta(days=7)
         date_format = "%Y-%m-%d"
-        group_by = sa.func.date_trunc('day', Comment.created_at)
+        
+    # Kiểm tra loại database để chọn đúng hàm xử lý datetime
+    # is_sqlite sẽ kiểm tra xem database URL có chứa 'sqlite' không
+    from backend.config.settings import settings
+    is_sqlite = 'sqlite' in settings.DATABASE_URL.lower()
+    
+    # Tạo hàm trích xuất date phù hợp với từng loại DB
+    if is_sqlite:
+        if period == "day":
+            group_by = sa.func.strftime('%Y-%m-%d %H:00:00', Comment.created_at)
+        elif period == "week" or period == "month":
+            group_by = sa.func.strftime('%Y-%m-%d', Comment.created_at)
+        elif period == "year":
+            group_by = sa.func.strftime('%Y-%m', Comment.created_at)
+    else:
+        # PostgreSQL
+        if period == "day":
+            group_by = sa.func.date_trunc('hour', Comment.created_at)
+        elif period == "week" or period == "month":
+            group_by = sa.func.date_trunc('day', Comment.created_at)
+        elif period == "year":
+            group_by = sa.func.date_trunc('month', Comment.created_at)
     
     # Xây dựng query cơ sở
     query = db.query(
@@ -326,8 +343,11 @@ def get_trend(
     
     # Xử lý dữ liệu từ database
     for date, prediction, count in trend_data:
-        # Format date string
-        date_str = date.strftime(date_format)
+        # Format date string - xử lý cả khi date là str (SQLite) và datetime (PostgreSQL)
+        if isinstance(date, str):
+            date_str = date
+        else:
+            date_str = date.strftime(date_format)
         
         # Kiểm tra xem đã có date này chưa
         if date_str not in data_by_date:
