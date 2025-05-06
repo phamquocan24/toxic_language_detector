@@ -21,74 +21,145 @@
       <span class="toggle-label">Enable Extension</span>
     </div>
     
-    <div class="settings">
-      <h2>Settings</h2>
-      
-      <div class="setting-item">
-        <label for="threshold">Sensitivity Threshold:</label>
-        <input type="range" id="threshold" min="0.5" max="0.9" step="0.05" value="0.7">
-        <span id="threshold-value">0.7</span>
+    <div class="tabs">
+      <div class="tab-header">
+        <div class="tab-button active" data-tab="settings">Cài đặt</div>
+        <div class="tab-button" data-tab="stats">Thống kê</div>
+        <div class="tab-button" data-tab="analyze">Phân tích</div>
       </div>
       
-      <div class="setting-item">
-        <label class="checkbox">
-          <input type="checkbox" id="highlight-toxic" checked>
-          <span class="checkmark"></span>
-          Highlight Toxic Content
-        </label>
+      <div class="tab-content">
+        <!-- Tab 1: Settings -->
+        <div class="tab-pane active" id="settings-tab">
+          <h2>Settings</h2>
+          
+          <div class="setting-item">
+            <label for="threshold">Sensitivity Threshold:</label>
+            <input type="range" id="threshold" min="0.5" max="0.9" step="0.05" value="0.7">
+            <span id="threshold-value">0.7</span>
+          </div>
+          
+          <div class="setting-item">
+            <label class="checkbox">
+              <input type="checkbox" id="highlight-toxic" checked>
+              <span class="checkmark"></span>
+              Highlight Toxic Content
+            </label>
+          </div>
+          
+          <h3>Enable on Platforms:</h3>
+          <div class="platforms">
+            <label class="checkbox">
+              <input type="checkbox" id="platform-facebook" checked>
+              <span class="checkmark"></span>
+              Facebook
+            </label>
+            
+            <label class="checkbox">
+              <input type="checkbox" id="platform-youtube" checked>
+              <span class="checkmark"></span>
+              YouTube
+            </label>
+            
+            <label class="checkbox">
+              <input type="checkbox" id="platform-twitter" checked>
+              <span class="checkmark"></span>
+              Twitter
+            </label>
+          </div>
+        </div>
+        
+        <!-- Tab 2: Statistics -->
+        <div class="tab-pane" id="stats-tab">
+          <h2>Thống kê</h2>
+          <div class="stat-grid">
+            <div class="stat-item">
+              <div class="stat-value" id="stat-scanned">0</div>
+              <div class="stat-label">Đã quét</div>
+            </div>
+            
+            <div class="stat-item clean">
+              <div class="stat-value" id="stat-clean">0</div>
+              <div class="stat-label">Bình thường</div>
+            </div>
+            
+            <div class="stat-item offensive">
+              <div class="stat-value" id="stat-offensive">0</div>
+              <div class="stat-label">Xúc phạm</div>
+            </div>
+            
+            <div class="stat-item hate">
+              <div class="stat-value" id="stat-hate">0</div>
+              <div class="stat-label">Thù ghét</div>
+            </div>
+            
+            <div class="stat-item spam">
+              <div class="stat-value" id="stat-spam">0</div>
+              <div class="stat-label">Spam</div>
+            </div>
+          </div>
+          <button id="reset-stats" class="reset-btn">Đặt lại thống kê</button>
+        </div>
+
+        <!-- Tab 3: Text Analysis -->
+        <div class="tab-pane" id="analyze-tab">
+          <h2>Phân tích văn bản</h2>
+          
+          <div class="analyze-container">
+            <textarea id="analyze-text" placeholder="Nhập văn bản cần phân tích..."></textarea>
+            
+            <button id="analyze-button" class="action-button">Phân tích</button>
+            
+            <div id="result-container" class="result-container hidden">
+              <h3>Kết quả phân tích:</h3>
+              
+              <div class="result-item">
+                <div class="result-label">Phân loại:</div>
+                <div id="result-category" class="result-value"></div>
+              </div>
+              
+              <div class="result-item">
+                <div class="result-label">Độ tin cậy:</div>
+                <div id="result-confidence" class="result-value"></div>
+              </div>
+              
+              <div class="result-progress">
+                <div class="progress-item">
+                  <span>Bình thường:</span>
+                  <div class="progress-bar">
+                    <div id="progress-clean" class="progress-fill" style="width: 0%"></div>
+                  </div>
+                  <span id="percent-clean">0%</span>
+                </div>
+                
+                <div class="progress-item">
+                  <span>Xúc phạm:</span>
+                  <div class="progress-bar">
+                    <div id="progress-offensive" class="progress-fill progress-offensive" style="width: 0%"></div>
+                  </div>
+                  <span id="percent-offensive">0%</span>
+                </div>
+                
+                <div class="progress-item">
+                  <span>Thù ghét:</span>
+                  <div class="progress-bar">
+                    <div id="progress-hate" class="progress-fill progress-hate" style="width: 0%"></div>
+                  </div>
+                  <span id="percent-hate">0%</span>
+                </div>
+                
+                <div class="progress-item">
+                  <span>Spam:</span>
+                  <div class="progress-bar">
+                    <div id="progress-spam" class="progress-fill progress-spam" style="width: 0%"></div>
+                  </div>
+                  <span id="percent-spam">0%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-      
-      <h3>Enable on Platforms:</h3>
-      <div class="platforms">
-        <label class="checkbox">
-          <input type="checkbox" id="platform-facebook" checked>
-          <span class="checkmark"></span>
-          Facebook
-        </label>
-        
-        <label class="checkbox">
-          <input type="checkbox" id="platform-youtube" checked>
-          <span class="checkmark"></span>
-          YouTube
-        </label>
-        
-        <label class="checkbox">
-          <input type="checkbox" id="platform-twitter" checked>
-          <span class="checkmark"></span>
-          Twitter
-        </label>
-      </div>
-    </div>
-    
-    <div class="stats">
-      <h2>Thống kê</h2>
-      <div class="stat-grid">
-        <div class="stat-item">
-          <div class="stat-value" id="stat-scanned">0</div>
-          <div class="stat-label">Đã quét</div>
-        </div>
-        
-        <div class="stat-item clean">
-          <div class="stat-value" id="stat-clean">0</div>
-          <div class="stat-label">Bình thường</div>
-        </div>
-        
-        <div class="stat-item offensive">
-          <div class="stat-value" id="stat-offensive">0</div>
-          <div class="stat-label">Xúc phạm</div>
-        </div>
-        
-        <div class="stat-item hate">
-          <div class="stat-value" id="stat-hate">0</div>
-          <div class="stat-label">Thù ghét</div>
-        </div>
-        
-        <div class="stat-item spam">
-          <div class="stat-value" id="stat-spam">0</div>
-          <div class="stat-label">Spam</div>
-        </div>
-      </div>
-      <button id="reset-stats" class="reset-btn">Đặt lại thống kê</button>
     </div>
     
     <div class="footer">

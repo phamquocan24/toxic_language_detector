@@ -278,3 +278,161 @@ input:checked + .slider:before {
 .stat-item.spam .stat-value {
   color: #9C27B0;
 }
+
+/* Tab Navigation */
+.tab-header {
+  display: flex;
+  border-bottom: 1px solid #ddd;
+  margin-bottom: 15px;
+}
+
+.tab-button {
+  padding: 10px 15px;
+  cursor: pointer;
+  background-color: #f1f1f1;
+  border-radius: 5px 5px 0 0;
+  margin-right: 5px;
+  transition: all 0.3s;
+}
+
+.tab-button:hover {
+  background-color: #e0e0e0;
+}
+
+.tab-button.active {
+  background-color: #4285f4;
+  color: white;
+  font-weight: bold;
+}
+
+.tab-pane {
+  display: none;
+}
+
+.tab-pane.active {
+  display: block;
+}
+
+/* Text Analysis Tab */
+.analyze-container {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+#analyze-text {
+  width: 100%;
+  min-height: 100px;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-family: Arial, sans-serif;
+  resize: vertical;
+}
+
+.action-button {
+  background-color: #4285f4;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background-color 0.3s;
+}
+
+.action-button:hover {
+  background-color: #3367d6;
+}
+
+.result-container {
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  padding: 15px;
+}
+
+.result-container.hidden {
+  display: none;
+}
+
+.result-item {
+  display: flex;
+  margin-bottom: 10px;
+}
+
+.result-label {
+  width: 100px;
+  font-weight: bold;
+}
+
+.result-value {
+  flex-grow: 1;
+}
+
+.result-value.clean {
+  color: #4CAF50;
+  font-weight: bold;
+}
+
+.result-value.offensive {
+  color: #FF9800;
+  font-weight: bold;
+}
+
+.result-value.hate {
+  color: #F44336;
+  font-weight: bold;
+}
+
+.result-value.spam {
+  color: #9C27B0;
+  font-weight: bold;
+}
+
+.result-progress {
+  margin-top: 15px;
+}
+
+.progress-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.progress-item span {
+  width: 80px;
+}
+
+.progress-item span:last-child {
+  width: 50px;
+  text-align: right;
+}
+
+.progress-bar {
+  flex-grow: 1;
+  height: 10px;
+  background-color: #e0e0e0;
+  border-radius: 5px;
+  margin: 0 10px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background-color: #4CAF50;
+  width: 0%;
+  transition: width 0.5s ease-in-out;
+}
+
+.progress-offensive {
+  background-color: #FF9800;
+}
+
+.progress-hate {
+  background-color: #F44336;
+}
+
+.progress-spam {
+  background-color: #9C27B0;
+}

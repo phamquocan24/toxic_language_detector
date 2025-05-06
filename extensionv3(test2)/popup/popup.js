@@ -3,64 +3,170 @@
  * Handles user settings and statistics for all 4 classification categories
  */
 
-// DOM elements
-  const enableToggle = document.getElementById('enable-toggle');
-  const thresholdSlider = document.getElementById('threshold');
-  const thresholdValue = document.getElementById('threshold-value');
-  const highlightToxic = document.getElementById('highlight-toxic');
-  const platformFacebook = document.getElementById('platform-facebook');
-  const platformYoutube = document.getElementById('platform-youtube');
-  const platformTwitter = document.getElementById('platform-twitter');
-  
-  // Statistics elements
-  const statScanned = document.getElementById('stat-scanned');
-  const statClean = document.getElementById('stat-clean');
-  const statOffensive = document.getElementById('stat-offensive');
-  const statHate = document.getElementById('stat-hate');
-  const statSpam = document.getElementById('stat-spam');
-  const resetStatsBtn = document.getElementById('reset-stats');
-  
-// Classification visibility toggles
-const showClean = document.getElementById('show-clean');
-const showOffensive = document.getElementById('show-offensive');
-const showHate = document.getElementById('show-hate');
-const showSpam = document.getElementById('show-spam');
+// Extension API Endpoint
+const API_ENDPOINT = "http://localhost:7860";
+
+// Authentication credentials - sử dụng credential từ background.js
+const AUTH_CREDENTIALS = {
+  username: "admin",
+  password: "password"
+};
+
+// Create a Base64 encoded Basic Auth token
+const BASIC_AUTH_TOKEN = btoa(`${AUTH_CREDENTIALS.username}:${AUTH_CREDENTIALS.password}`);
+
+// Tab elements
+const tabButtons = document.querySelectorAll('.tab-button');
+const tabPanes = document.querySelectorAll('.tab-pane');
+
+// Initialize popup when DOM is loaded
+document.addEventListener('DOMContentLoaded', initializePopup);
 
 /**
- * Load all settings and statistics from storage
-   */
-  function loadSettings() {
-    chrome.storage.sync.get(null, (data) => {
-      // Extension enabled state
-      if (enableToggle) {
-        enableToggle.checked = data.enabled !== undefined ? data.enabled : true;
-      }
+ * Initialize the popup UI
+ */
+function initializePopup() {
+  // Lấy các tham chiếu DOM elements
+  initializeDOMReferences();
+  
+  // Thiết lập điều hướng tab
+  setupTabNavigation();
+  
+  // Nạp cài đặt và thống kê
+  loadSettings();
+  loadStats();
+  
+  // Thiết lập xử lý sự kiện
+  setupEventHandlers();
+}
+
+// DOM references
+let enableToggle, thresholdSlider, thresholdValue, highlightToxic;
+let platformFacebook, platformYoutube, platformTwitter;
+let statScanned, statClean, statOffensive, statHate, statSpam, resetStatsBtn;
+let showClean, showOffensive, showHate, showSpam;
+let analyzeText, analyzeButton, resultContainer, resultCategory, resultConfidence;
+let progressClean, progressOffensive, progressHate, progressSpam;
+let percentClean, percentOffensive, percentHate, percentSpam;
+
+/**
+ * Initialize all DOM references
+ */
+function initializeDOMReferences() {
+  // Settings elements
+  enableToggle = document.getElementById('enable-toggle');
+  thresholdSlider = document.getElementById('threshold');
+  thresholdValue = document.getElementById('threshold-value');
+  highlightToxic = document.getElementById('highlight-toxic');
+  platformFacebook = document.getElementById('platform-facebook');
+  platformYoutube = document.getElementById('platform-youtube');
+  platformTwitter = document.getElementById('platform-twitter');
+
+  // Classification visibility toggles
+  showClean = document.getElementById('show-clean');
+  showOffensive = document.getElementById('show-offensive');
+  showHate = document.getElementById('show-hate');
+  showSpam = document.getElementById('show-spam');
+  
+  // Statistics elements
+  statScanned = document.getElementById('stat-scanned');
+  statClean = document.getElementById('stat-clean');
+  statOffensive = document.getElementById('stat-offensive');
+  statHate = document.getElementById('stat-hate');
+  statSpam = document.getElementById('stat-spam');
+  resetStatsBtn = document.getElementById('reset-stats');
+  
+  // Text analysis elements
+  analyzeText = document.getElementById('analyze-text');
+  analyzeButton = document.getElementById('analyze-button');
+  resultContainer = document.getElementById('result-container');
+  resultCategory = document.getElementById('result-category');
+  resultConfidence = document.getElementById('result-confidence');
+  progressClean = document.getElementById('progress-clean');
+  progressOffensive = document.getElementById('progress-offensive');
+  progressHate = document.getElementById('progress-hate');
+  progressSpam = document.getElementById('progress-spam');
+  percentClean = document.getElementById('percent-clean');
+  percentOffensive = document.getElementById('percent-offensive');
+  percentHate = document.getElementById('percent-hate');
+  percentSpam = document.getElementById('percent-spam');
+}
+
+// Category mapping
+const categoryNames = {
+  0: "Bình thường",
+  1: "Xúc phạm",
+  2: "Thù ghét",
+  3: "Spam"
+};
+
+const categoryClasses = {
+  0: "clean",
+  1: "offensive",
+  2: "hate",
+  3: "spam"
+};
+
+/**
+ * Setup tab navigation
+ */
+function setupTabNavigation() {
+  if (!tabButtons) return;
+  
+  tabButtons.forEach(button => {
+    button.addEventListener('click', () => {
+      // Remove active class from all buttons and panes
+      tabButtons.forEach(btn => btn.classList.remove('active'));
+      tabPanes.forEach(pane => pane.classList.remove('active'));
       
-      // Threshold
-    if (thresholdSlider && thresholdValue && data.threshold) {
-      thresholdSlider.value = data.threshold;
-      thresholdValue.textContent = data.threshold;
-      }
+      // Add active class to clicked button
+      button.classList.add('active');
       
-      // Highlight toxic content
-      if (highlightToxic) {
-        highlightToxic.checked = data.highlightToxic !== undefined ? data.highlightToxic : true;
+      // Show corresponding pane
+      const tabName = button.getAttribute('data-tab');
+      const tabPane = document.getElementById(`${tabName}-tab`);
+      if (tabPane) {
+        tabPane.classList.add('active');
       }
-      
-      // Platform settings
-      if (data.platforms) {
-        if (platformFacebook) {
-          platformFacebook.checked = data.platforms.facebook !== undefined ? data.platforms.facebook : true;
-        }
-        if (platformYoutube) {
-          platformYoutube.checked = data.platforms.youtube !== undefined ? data.platforms.youtube : true;
-        }
-        if (platformTwitter) {
-          platformTwitter.checked = data.platforms.twitter !== undefined ? data.platforms.twitter : true;
-        }
+    });
+  });
+}
+
+/**
+ * Load settings from storage
+ */
+function loadSettings() {
+  chrome.storage.sync.get(null, function(data) {
+    // Extension enabled
+    if (enableToggle) {
+      enableToggle.checked = data.enabled !== undefined ? data.enabled : true;
     }
     
-    // Display options settings
+    // Threshold value
+    if (thresholdSlider && thresholdValue && data.threshold !== undefined) {
+      thresholdSlider.value = data.threshold;
+      thresholdValue.textContent = data.threshold;
+    }
+    
+    // Highlight toxic
+    if (highlightToxic) {
+      highlightToxic.checked = data.highlightToxic !== undefined ? data.highlightToxic : true;
+    }
+    
+    // Platform settings
+    if (data.platforms) {
+      if (platformFacebook) {
+        platformFacebook.checked = data.platforms.facebook !== undefined ? data.platforms.facebook : true;
+      }
+      if (platformYoutube) {
+        platformYoutube.checked = data.platforms.youtube !== undefined ? data.platforms.youtube : true;
+      }
+      if (platformTwitter) {
+        platformTwitter.checked = data.platforms.twitter !== undefined ? data.platforms.twitter : true;
+      }
+    }
+    
+    // Display options
     if (data.displayOptions) {
       if (showClean) {
         showClean.checked = data.displayOptions.showClean !== undefined ? data.displayOptions.showClean : true;
@@ -75,38 +181,26 @@ const showSpam = document.getElementById('show-spam');
         showSpam.checked = data.displayOptions.showSpam !== undefined ? data.displayOptions.showSpam : true;
       }
     }
-    
-    // Statistics
-    loadStatistics(data.stats);
-    });
-  }
-  
-  /**
- * Load statistics from storage data
- * @param {Object} stats - Statistics data from storage
-   */
-function loadStatistics(stats) {
-    const defaultStats = {
-      scanned: 0,
-      clean: 0,
-      offensive: 0,
-      hate: 0,
-      spam: 0
-    };
-    
-    // Use provided stats or defaults
-    const currentStats = stats || defaultStats;
-    
-    // Update UI
-    if (statScanned) statScanned.textContent = currentStats.scanned || 0;
-    if (statClean) statClean.textContent = currentStats.clean || 0;
-    if (statOffensive) statOffensive.textContent = currentStats.offensive || 0;
-    if (statHate) statHate.textContent = currentStats.hate || 0;
-    if (statSpam) statSpam.textContent = currentStats.spam || 0;
-  }
+  });
+}
 
 /**
- * Save all settings to storage
+ * Load statistics from storage
+ */
+function loadStats() {
+  chrome.storage.sync.get('stats', function(data) {
+    if (data.stats) {
+      if (statScanned) statScanned.textContent = data.stats.scanned || 0;
+      if (statClean) statClean.textContent = data.stats.clean || 0;
+      if (statOffensive) statOffensive.textContent = data.stats.offensive || 0;
+      if (statHate) statHate.textContent = data.stats.hate || 0;
+      if (statSpam) statSpam.textContent = data.stats.spam || 0;
+    }
+  });
+}
+
+/**
+ * Save settings to chrome storage
  */
 function saveSettings() {
   const settings = {
@@ -127,118 +221,217 @@ function saveSettings() {
   };
   
   chrome.storage.sync.set(settings, () => {
-    // Notify content scripts that settings have changed
-    chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
-      if (tabs[0]) {
-        chrome.tabs.sendMessage(tabs[0].id, {
-          action: "settingsUpdated",
-          settings: settings
-        }).catch(err => console.log("Could not send settings update to content script", err));
-      }
-    });
+    // Thông báo cho content scripts rằng cài đặt đã thay đổi
+    try {
+      chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
+        if (tabs && tabs.length > 0 && tabs[0].id) {
+          chrome.tabs.sendMessage(tabs[0].id, {
+            action: "settingsUpdated",
+            settings: settings
+          }).catch(err => {
+            console.log("Could not send settings update to content script: ", err);
+          });
+        }
+      });
+    } catch (err) {
+      console.error("Error updating content script: ", err);
+    }
   });
 }
 
 /**
- * Update threshold value display
+ * Setup event handlers
  */
-function updateThresholdValue() {
-  if (thresholdSlider && thresholdValue) {
-    thresholdValue.textContent = thresholdSlider.value;
-  }
-  }
-  
-  /**
-   * Reset all statistics
-   */
-  function resetStats() {
-          // Default statistics
-          const defaultStats = {
-            scanned: 0,
-            clean: 0,
-            offensive: 0,
-            hate: 0,
-            spam: 0
-          };
-          
-  // Send reset message to background script
-  chrome.runtime.sendMessage({ action: "resetStats" }, (response) => {
-    if (response && response.success) {
-          // Update UI with reset stats
-      loadStatistics(defaultStats);
-      }
+function setupEventHandlers() {
+  // Enable toggle
+  if (enableToggle) {
+    enableToggle.addEventListener('change', function() {
+      chrome.storage.sync.set({ enabled: this.checked });
     });
   }
   
-  /**
- * Toggle advanced settings visibility
- */
-function toggleAdvancedSettings() {
-  const advancedSettings = document.getElementById('advanced-settings');
-  if (advancedSettings) {
-    const isHidden = advancedSettings.style.display === 'none';
-    advancedSettings.style.display = isHidden ? 'block' : 'none';
-    
-    // Update toggle button text
-    const toggleBtn = document.getElementById('toggle-advanced');
-    if (toggleBtn) {
-      toggleBtn.textContent = isHidden ? 'Ẩn cài đặt nâng cao' : 'Hiện cài đặt nâng cao';
-    }
+  // Threshold slider
+  if (thresholdSlider && thresholdValue) {
+    thresholdSlider.addEventListener('input', function() {
+      thresholdValue.textContent = this.value;
+      chrome.storage.sync.set({ threshold: parseFloat(this.value) });
+    });
+  }
+  
+  // Highlight toxic checkbox
+  if (highlightToxic) {
+    highlightToxic.addEventListener('change', function() {
+      chrome.storage.sync.set({ highlightToxic: this.checked });
+    });
+  }
+  
+  // Platform checkboxes
+  function updatePlatforms() {
+    if (platformFacebook && platformYoutube && platformTwitter) {
+      chrome.storage.sync.set({
+        platforms: {
+          facebook: platformFacebook.checked,
+          youtube: platformYoutube.checked,
+          twitter: platformTwitter.checked
+        }
+      });
     }
   }
   
-  /**
- * Initialize the popup UI
- */
-function initializePopup() {
-  // Load settings and stats
-  loadSettings();
+  if (platformFacebook) platformFacebook.addEventListener('change', updatePlatforms);
+  if (platformYoutube) platformYoutube.addEventListener('change', updatePlatforms);
+  if (platformTwitter) platformTwitter.addEventListener('change', updatePlatforms);
   
-  // Set up event listeners
-  if (enableToggle) enableToggle.addEventListener('change', saveSettings);
-  
-  if (thresholdSlider) {
-    thresholdSlider.addEventListener('input', updateThresholdValue);
-    thresholdSlider.addEventListener('change', saveSettings);
+  // Display options checkboxes
+  function updateDisplayOptions() {
+    if (showClean && showOffensive && showHate && showSpam) {
+      chrome.storage.sync.set({
+        displayOptions: {
+          showClean: showClean.checked,
+          showOffensive: showOffensive.checked,
+          showHate: showHate.checked,
+          showSpam: showSpam.checked
+        }
+      });
+    }
   }
   
-  if (highlightToxic) highlightToxic.addEventListener('change', saveSettings);
+  if (showClean) showClean.addEventListener('change', updateDisplayOptions);
+  if (showOffensive) showOffensive.addEventListener('change', updateDisplayOptions);
+  if (showHate) showHate.addEventListener('change', updateDisplayOptions);
+  if (showSpam) showSpam.addEventListener('change', updateDisplayOptions);
   
-  // Platform toggles
-  if (platformFacebook) platformFacebook.addEventListener('change', saveSettings);
-  if (platformYoutube) platformYoutube.addEventListener('change', saveSettings);
-  if (platformTwitter) platformTwitter.addEventListener('change', saveSettings);
+  // Reset stats button
+  if (resetStatsBtn) {
+    resetStatsBtn.addEventListener('click', function() {
+      chrome.runtime.sendMessage({ action: "resetStats" }, function(response) {
+        if (response && response.success) {
+          loadStats();
+        }
+      });
+    });
+  }
   
-  // Display option toggles
-  if (showClean) showClean.addEventListener('change', saveSettings);
-  if (showOffensive) showOffensive.addEventListener('change', saveSettings);
-  if (showHate) showHate.addEventListener('change', saveSettings);
-  if (showSpam) showSpam.addEventListener('change', saveSettings);
-  
-  // Reset statistics button
-  if (resetStatsBtn) resetStatsBtn.addEventListener('click', resetStats);
-  
-  // Advanced settings toggle
-  const toggleBtn = document.getElementById('toggle-advanced');
-  if (toggleBtn) toggleBtn.addEventListener('click', toggleAdvancedSettings);
-  
-  // Version display
-  const versionElement = document.getElementById('version');
-  if (versionElement) {
-    chrome.runtime.getManifest().version;
-    versionElement.textContent = `v${chrome.runtime.getManifest().version}`;
+  // Text analysis
+  if (analyzeButton && analyzeText) {
+    analyzeButton.addEventListener('click', function() {
+      const text = analyzeText.value.trim();
+      
+      if (!text) {
+        alert('Vui lòng nhập văn bản cần phân tích!');
+        return;
+      }
+      
+      analyzeButton.disabled = true;
+      analyzeButton.textContent = 'Đang phân tích...';
+      
+      analyzeTextWithAPI(text)
+        .then(result => {
+          displayAnalysisResult(result);
+        })
+        .catch(error => {
+          alert(`Lỗi: ${error.message}`);
+          console.error('Error analyzing text:', error);
+        })
+        .finally(() => {
+          analyzeButton.disabled = false;
+          analyzeButton.textContent = 'Phân tích';
+        });
+    });
   }
 }
 
-// Initialize popup when DOM is loaded
-document.addEventListener('DOMContentLoaded', initializePopup);
-  
-  // Handle real-time updates from other parts of the extension
-  chrome.storage.onChanged.addListener((changes, namespace) => {
-    if (namespace === 'sync') {
-      // If stats changed, update the display
-      if (changes.stats) {
-      loadStatistics(changes.stats.newValue);
+/**
+ * Analyze text using the API
+ * @param {string} text - The text to analyze
+ * @returns {Promise} - Promise with result
+ */
+async function analyzeTextWithAPI(text) {
+  try {
+    const response = await fetch(`${API_ENDPOINT}/extension/detect`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Basic ${BASIC_AUTH_TOKEN}`
+      },
+      body: JSON.stringify({
+        text: text,
+        platform: "extension-popup",
+        save_to_db: false  // Không lưu vào database, chỉ trả về kết quả phân loại
+      })
+    });
+    
+    if (!response.ok) {
+      if (response.status === 401) {
+        throw new Error("Lỗi xác thực. Vui lòng kiểm tra thông tin đăng nhập.");
       }
+      throw new Error(`Lỗi API: ${response.status}`);
     }
+    
+    return await response.json();
+  } catch (error) {
+    console.error("Error analyzing text:", error);
+    throw error;
+  }
+}
+
+/**
+ * Display analysis result
+ * @param {Object} result - API response
+ */
+function displayAnalysisResult(result) {
+  // Show result container
+  if (!resultContainer || !resultCategory || !resultConfidence) return;
+  
+  resultContainer.classList.remove('hidden');
+  
+  // Set category and confidence
+  const categoryName = categoryNames[result.prediction] || "Không xác định";
+  const categoryClass = categoryClasses[result.prediction] || "";
+  
+  resultCategory.textContent = categoryName;
+  resultCategory.className = `result-value ${categoryClass}`;
+  
+  resultConfidence.textContent = `${(result.confidence * 100).toFixed(1)}%`;
+  
+  // Set progress bars
+  const probabilities = result.probabilities || {
+    "clean": result.prediction === 0 ? result.confidence : 0,
+    "offensive": result.prediction === 1 ? result.confidence : 0,
+    "hate": result.prediction === 2 ? result.confidence : 0,
+    "spam": result.prediction === 3 ? result.confidence : 0
+  };
+  
+  const cleanProb = probabilities.clean || 0;
+  const offensiveProb = probabilities.offensive || 0;
+  const hateProb = probabilities.hate || 0;
+  const spamProb = probabilities.spam || 0;
+  
+  if (progressClean) progressClean.style.width = `${cleanProb * 100}%`;
+  if (progressOffensive) progressOffensive.style.width = `${offensiveProb * 100}%`;
+  if (progressHate) progressHate.style.width = `${hateProb * 100}%`;
+  if (progressSpam) progressSpam.style.width = `${spamProb * 100}%`;
+  
+  if (percentClean) percentClean.textContent = `${(cleanProb * 100).toFixed(1)}%`;
+  if (percentOffensive) percentOffensive.textContent = `${(offensiveProb * 100).toFixed(1)}%`;
+  if (percentHate) percentHate.textContent = `${(hateProb * 100).toFixed(1)}%`;
+  if (percentSpam) percentSpam.textContent = `${(spamProb * 100).toFixed(1)}%`;
+  
+  // Log results for debugging
+  console.log("Analysis result:", result);
+}
+
+// Handle real-time updates from other parts of the extension
+chrome.storage.onChanged.addListener((changes, namespace) => {
+  if (namespace === 'sync') {
+    // If stats changed, update the display
+    if (changes.stats) {
+      // Update statistics if they've changed
+      if (statScanned) statScanned.textContent = changes.stats.newValue.scanned || 0;
+      if (statClean) statClean.textContent = changes.stats.newValue.clean || 0;
+      if (statOffensive) statOffensive.textContent = changes.stats.newValue.offensive || 0;
+      if (statHate) statHate.textContent = changes.stats.newValue.hate || 0;
+      if (statSpam) statSpam.textContent = changes.stats.newValue.spam || 0;
+    }
+  }
 });
