@@ -1,0 +1,55 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Vietnamese NLP and Toxicity Detection Rules
+
+## Vietnamese Text Processing
+- Sử dụng thư viện `underthesea` hoặc `pyvi` cho xử lý tiếng Việt
+- Chuẩn hóa dấu câu và ký tự đặc biệt trong tiếng Việt
+- Xử lý các vấn đề về font chữ và encoding UTF-8
+- Tách từ (word segmentation) phù hợp với ngữ cảnh tiếng Việt
+
+## Toxicity Categories in Vietnamese Context
+- **Bình thường** (Clean): Nội dung không có yếu tố độc hại
+- **Xúc phạm** (Offensive): Ngôn từ thô tục, xúc phạm cá nhân
+- **Thù ghét** (Hate): Phân biệt đối xử, kích động thù ghét
+- **Spam** (Spam): Quảng cáo, nội dung rác, lặp lại nhiều lần
+
+## Model Evaluation for Vietnamese
+- Sử dụng metrics phù hợp với đặc thù ngôn ngữ tiếng Việt
+- Đánh giá khả năng nhận diện slang và từ lóng tiếng Việt
+- Kiểm tra hiệu suất trên nhiều phương ngữ vùng miền
+- Xem xét bối cảnh văn hóa khi đánh giá kết quả
+
+## Vietnamese Social Media Specifics
+- Xử lý ngôn ngữ rút gọn phổ biến trên mạng xã hội Việt Nam
+- Nhận diện các cách viết tắt và biến thể của từ ngữ tiếng Việt
+- Phân tích emoji kết hợp với văn bản tiếng Việt
+- Xử lý text tiếng Việt không dấu (VNI)
+
+## Data Collection Guidelines
+- Thu thập dữ liệu từ nhiều nền tảng mạng xã hội Việt Nam
+- Đảm bảo tính đa dạng của dữ liệu theo vùng miền
+- Cân bằng giữa các loại nội dung độc hại
+- Chú ý đến quyền riêng tư khi thu thập dữ liệu
+
+## Cultural Context Awareness
+- Hiểu biết về ngữ cảnh văn hóa Việt Nam
+- Nhận diện các từ ngữ có ý nghĩa tiêu cực trong bối cảnh Việt Nam
+- Phân biệt giữa ngôn từ thông tục và ngôn từ thực sự độc hại
+- Xem xét các yếu tố lịch sử và xã hội đặc thù
+
+## UI/UX for Vietnamese Users
+- Hiển thị thông báo và nhãn bằng tiếng Việt
+- Thiết kế giao diện phù hợp với người dùng Việt Nam
+- Sử dụng thuật ngữ dễ hiểu với người Việt
+- Hỗ trợ hiển thị đúng font chữ tiếng Việt
+
+## Continuous Improvement
+- Cập nhật mô hình với xu hướng ngôn ngữ mạng xã hội Việt Nam
+- Thu thập phản hồi từ người dùng Việt Nam
+- Điều chỉnh mô hình dựa trên đặc thù văn hóa-xã hội Việt Nam
+- Theo dõi hiệu suất trên các nền tảng mạng xã hội phổ biến tại Việt Nam
+

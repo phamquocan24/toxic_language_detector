@@ -115,9 +115,9 @@ class Settings(BaseSettings):
     USE_HUGGINGFACE_API: bool = os.getenv("USE_HUGGINGFACE_API", "False").lower() == "true"
     
     # Social Media API settings
-    FACEBOOK_ACCESS_TOKEN: str = os.getenv("FACEBOOK_ACCESS_TOKEN", "")
-    FACEBOOK_APP_ID: str = os.getenv("FACEBOOK_APP_ID", "")
-    FACEBOOK_APP_SECRET: str = os.getenv("FACEBOOK_APP_SECRET", "")
+    FACEBOOK_ACCESS_TOKEN: str = os.getenv("FACEBOOK_ACCESS_TOKEN", "EAAJmqkktUHABO9VveoWDm4JvVRKrec3Q7EoyZAoWSWZBnMrdLo4hqg1G2oBm2Y5mU1UThZBwEJ2TPR8bjcBiuwJ3mZC5fe8Cq7xxZCCnubZCt3yf6PsGCNbjVfHfM8Ieu9Ymcl36U4Aby0PZCUIXffShW32nOP39DU3PVr8fj0sJPH1GK9lAypsKQE8lAGO7vKxBG7pd9bPj8e7geAC56xvHxXT8TGbLLMJTPgQA6lCDhpcu5KCowthipoTsZA0ycv4ZD")
+    FACEBOOK_APP_ID: str = os.getenv("FACEBOOK_APP_ID", "675831511601264")
+    FACEBOOK_APP_SECRET: str = os.getenv("FACEBOOK_APP_SECRET", "796f4b5ee03dde5c112be6708e0b76eb")
     
     TWITTER_API_KEY: str = os.getenv("TWITTER_API_KEY", "")
     TWITTER_API_SECRET: str = os.getenv("TWITTER_API_SECRET", "")

@@ -4,22 +4,22 @@
  */
 
 // DOM elements
-const enableToggle = document.getElementById('enable-toggle');
-const thresholdSlider = document.getElementById('threshold');
-const thresholdValue = document.getElementById('threshold-value');
-const highlightToxic = document.getElementById('highlight-toxic');
-const platformFacebook = document.getElementById('platform-facebook');
-const platformYoutube = document.getElementById('platform-youtube');
-const platformTwitter = document.getElementById('platform-twitter');
-
-// Statistics elements
-const statScanned = document.getElementById('stat-scanned');
-const statClean = document.getElementById('stat-clean');
-const statOffensive = document.getElementById('stat-offensive');
-const statHate = document.getElementById('stat-hate');
-const statSpam = document.getElementById('stat-spam');
-const resetStatsBtn = document.getElementById('reset-stats');
-
+  const enableToggle = document.getElementById('enable-toggle');
+  const thresholdSlider = document.getElementById('threshold');
+  const thresholdValue = document.getElementById('threshold-value');
+  const highlightToxic = document.getElementById('highlight-toxic');
+  const platformFacebook = document.getElementById('platform-facebook');
+  const platformYoutube = document.getElementById('platform-youtube');
+  const platformTwitter = document.getElementById('platform-twitter');
+  
+  // Statistics elements
+  const statScanned = document.getElementById('stat-scanned');
+  const statClean = document.getElementById('stat-clean');
+  const statOffensive = document.getElementById('stat-offensive');
+  const statHate = document.getElementById('stat-hate');
+  const statSpam = document.getElementById('stat-spam');
+  const resetStatsBtn = document.getElementById('reset-stats');
+  
 // Classification visibility toggles
 const showClean = document.getElementById('show-clean');
 const showOffensive = document.getElementById('show-offensive');
@@ -28,36 +28,36 @@ const showSpam = document.getElementById('show-spam');
 
 /**
  * Load all settings and statistics from storage
- */
-function loadSettings() {
-  chrome.storage.sync.get(null, (data) => {
-    // Extension enabled state
-    if (enableToggle) {
-      enableToggle.checked = data.enabled !== undefined ? data.enabled : true;
-    }
-    
-    // Threshold
+   */
+  function loadSettings() {
+    chrome.storage.sync.get(null, (data) => {
+      // Extension enabled state
+      if (enableToggle) {
+        enableToggle.checked = data.enabled !== undefined ? data.enabled : true;
+      }
+      
+      // Threshold
     if (thresholdSlider && thresholdValue && data.threshold) {
       thresholdSlider.value = data.threshold;
       thresholdValue.textContent = data.threshold;
-    }
-    
-    // Highlight toxic content
-    if (highlightToxic) {
-      highlightToxic.checked = data.highlightToxic !== undefined ? data.highlightToxic : true;
-    }
-    
-    // Platform settings
-    if (data.platforms) {
-      if (platformFacebook) {
-        platformFacebook.checked = data.platforms.facebook !== undefined ? data.platforms.facebook : true;
       }
-      if (platformYoutube) {
-        platformYoutube.checked = data.platforms.youtube !== undefined ? data.platforms.youtube : true;
+      
+      // Highlight toxic content
+      if (highlightToxic) {
+        highlightToxic.checked = data.highlightToxic !== undefined ? data.highlightToxic : true;
       }
-      if (platformTwitter) {
-        platformTwitter.checked = data.platforms.twitter !== undefined ? data.platforms.twitter : true;
-      }
+      
+      // Platform settings
+      if (data.platforms) {
+        if (platformFacebook) {
+          platformFacebook.checked = data.platforms.facebook !== undefined ? data.platforms.facebook : true;
+        }
+        if (platformYoutube) {
+          platformYoutube.checked = data.platforms.youtube !== undefined ? data.platforms.youtube : true;
+        }
+        if (platformTwitter) {
+          platformTwitter.checked = data.platforms.twitter !== undefined ? data.platforms.twitter : true;
+        }
     }
     
     // Display options settings
@@ -78,32 +78,32 @@ function loadSettings() {
     
     // Statistics
     loadStatistics(data.stats);
-  });
-}
-
-/**
+    });
+  }
+  
+  /**
  * Load statistics from storage data
  * @param {Object} stats - Statistics data from storage
- */
+   */
 function loadStatistics(stats) {
-  const defaultStats = {
-    scanned: 0,
-    clean: 0,
-    offensive: 0,
-    hate: 0,
-    spam: 0
-  };
-  
-  // Use provided stats or defaults
-  const currentStats = stats || defaultStats;
-  
-  // Update UI
-  if (statScanned) statScanned.textContent = currentStats.scanned || 0;
-  if (statClean) statClean.textContent = currentStats.clean || 0;
-  if (statOffensive) statOffensive.textContent = currentStats.offensive || 0;
-  if (statHate) statHate.textContent = currentStats.hate || 0;
-  if (statSpam) statSpam.textContent = currentStats.spam || 0;
-}
+    const defaultStats = {
+      scanned: 0,
+      clean: 0,
+      offensive: 0,
+      hate: 0,
+      spam: 0
+    };
+    
+    // Use provided stats or defaults
+    const currentStats = stats || defaultStats;
+    
+    // Update UI
+    if (statScanned) statScanned.textContent = currentStats.scanned || 0;
+    if (statClean) statClean.textContent = currentStats.clean || 0;
+    if (statOffensive) statOffensive.textContent = currentStats.offensive || 0;
+    if (statHate) statHate.textContent = currentStats.hate || 0;
+    if (statSpam) statSpam.textContent = currentStats.spam || 0;
+  }
 
 /**
  * Save all settings to storage
@@ -146,31 +146,31 @@ function updateThresholdValue() {
   if (thresholdSlider && thresholdValue) {
     thresholdValue.textContent = thresholdSlider.value;
   }
-}
-
-/**
- * Reset all statistics
- */
-function resetStats() {
-  // Default statistics
-  const defaultStats = {
-    scanned: 0,
-    clean: 0,
-    offensive: 0,
-    hate: 0,
-    spam: 0
-  };
+  }
   
+  /**
+   * Reset all statistics
+   */
+  function resetStats() {
+          // Default statistics
+          const defaultStats = {
+            scanned: 0,
+            clean: 0,
+            offensive: 0,
+            hate: 0,
+            spam: 0
+          };
+          
   // Send reset message to background script
   chrome.runtime.sendMessage({ action: "resetStats" }, (response) => {
     if (response && response.success) {
-      // Update UI with reset stats
+          // Update UI with reset stats
       loadStatistics(defaultStats);
-    }
-  });
-}
-
-/**
+      }
+    });
+  }
+  
+  /**
  * Toggle advanced settings visibility
  */
 function toggleAdvancedSettings() {
@@ -184,10 +184,10 @@ function toggleAdvancedSettings() {
     if (toggleBtn) {
       toggleBtn.textContent = isHidden ? 'Ẩn cài đặt nâng cao' : 'Hiện cài đặt nâng cao';
     }
+    }
   }
-}
-
-/**
+  
+  /**
  * Initialize the popup UI
  */
 function initializePopup() {
@@ -232,13 +232,13 @@ function initializePopup() {
 
 // Initialize popup when DOM is loaded
 document.addEventListener('DOMContentLoaded', initializePopup);
-
-// Handle real-time updates from other parts of the extension
-chrome.storage.onChanged.addListener((changes, namespace) => {
-  if (namespace === 'sync') {
-    // If stats changed, update the display
-    if (changes.stats) {
+  
+  // Handle real-time updates from other parts of the extension
+  chrome.storage.onChanged.addListener((changes, namespace) => {
+    if (namespace === 'sync') {
+      // If stats changed, update the display
+      if (changes.stats) {
       loadStatistics(changes.stats.newValue);
+      }
     }
-  }
 });

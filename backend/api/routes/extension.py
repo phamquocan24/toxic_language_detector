@@ -115,8 +115,11 @@ async def extension_detect(
     # Ánh xạ dự đoán sang text
     prediction_text = {0: "clean", 1: "offensive", 2: "hate", 3: "spam"}[prediction]
     
-    # Lưu dự đoán trong background nếu người dùng đã xác thực
-    if current_user:
+    # Kiểm tra tham số save_to_db từ request, mặc định là False
+    save_to_db = getattr(request, 'save_to_db', False)
+    
+    # Lưu dự đoán trong background nếu người dùng đã xác thực và save_to_db=True
+    if save_to_db and current_user:
         background_tasks.add_task(
             store_extension_prediction, 
             db=db, 
@@ -152,42 +155,65 @@ async def extension_batch_detect(
     """
     results = []
     
-    for item in request.dict().get('items', []):
+    # Lấy tham số save_to_db từ request, mặc định là False
+    save_to_db = request.dict().get('save_to_db', False)
+    
+    # Kiểm tra và trích xuất items từ request
+    # Hỗ trợ cả 2 cách gửi: comments (từ model) hoặc items (từ extension)
+    items = []
+    request_dict = request.dict()
+    
+    if 'comments' in request_dict and request_dict['comments']:
+        items = request_dict['comments']
+    elif 'items' in request_dict and request_dict['items']:
+        items = request_dict['items']
+    
+    for item in items:
+        # Đảm bảo item có text
+        if not item.get('text'):
+            continue
+            
         # Thực hiện dự đoán
-        prediction, confidence, probabilities = ml_model.predict(item.text)
+        prediction, confidence, probabilities = ml_model.predict(item['text'])
         
         # Ánh xạ dự đoán sang text
         prediction_text = {0: "clean", 1: "offensive", 2: "hate", 3: "spam"}[prediction]
         
-        # Chỉ lưu kết quả nếu không phải là "clean" hoặc nếu yêu cầu lưu tất cả
-        if prediction != 0 or request.store_clean:
+        # Lấy các thông tin khác từ item
+        platform = item.get('platform', 'unknown')
+        source_user_name = item.get('source_user_name')
+        source_url = item.get('source_url')
+        metadata = item.get('metadata')
+        
+        # Chỉ lưu kết quả vào database nếu save_to_db=True và điều kiện phù hợp
+        if save_to_db and (prediction != 0 or getattr(request, 'store_clean', False)):
             # Lưu dự đoán trong background
             background_tasks.add_task(
                 store_extension_prediction, 
                 db=db, 
-                content=item.text, 
-                platform=item.platform, 
-                source_user_name=item.source_user_name,
-                source_url=item.source_url,
+                content=item['text'], 
+                platform=platform, 
+                source_user_name=source_user_name,
+                source_url=source_url,
                 prediction=prediction, 
                 confidence=confidence,
                 user_id=current_user.id if current_user else None,
-                metadata=item.metadata
+                metadata=metadata
             )
         
-        # Thêm kết quả vào danh sách
+        # Thêm kết quả vào danh sách response - luôn trả về kết quả phân loại
         results.append({
-            "text": item.text,
+            "text": item['text'],
             "prediction": prediction,
             "confidence": confidence,
             "probabilities": probabilities,
             "prediction_text": prediction_text
         })
     
-    # Ghi log
+    # Ghi log hoạt động
     log = Log(
         user_id=current_user.id if current_user else None,
-        action=f"Batch prediction: {len(request.dict().get('items', []))} items",
+        action=f"Batch prediction: {len(items)} items" + (", saved to DB" if save_to_db else ", not saved to DB"),
         timestamp=datetime.utcnow()
     )
     db.add(log)

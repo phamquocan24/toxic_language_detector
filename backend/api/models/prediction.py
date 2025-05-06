@@ -118,6 +118,7 @@ class PredictionRequest(BaseModel):
     source_user_name: Optional[str] = None
     source_url: Optional[str] = None
     save_result: Optional[bool] = True
+    save_to_db: Optional[bool] = False  # Thêm tham số để kiểm soát việc lưu vào database
     metadata: Optional[Dict[str, Any]] = None
 
 class PredictionResponse(BaseModel):
@@ -152,8 +153,19 @@ class BatchPredictionItemRequest(BaseModel):
     metadata: Optional[Dict[str, Any]] = None
 
 class BatchPredictionRequest(BaseModel):
-    comments: List[BatchPredictionItemRequest]
+    comments: Optional[List[BatchPredictionItemRequest]] = None
+    items: Optional[List[Dict[str, Any]]] = None  # Hỗ trợ extension gửi dữ liệu dạng items
     save_results: Optional[bool] = True
+    store_clean: Optional[bool] = False
+    save_to_db: Optional[bool] = False  # Thêm tham số để kiểm soát việc lưu vào database
+    
+    @field_validator('comments', 'items')
+    @classmethod
+    def validate_items_or_comments(cls, v, info):
+        # Kiểm tra xem có ít nhất một trường comments hoặc items được cung cấp
+        if 'items' not in info.data and 'comments' not in info.data:
+            raise ValueError('Phải cung cấp hoặc items hoặc comments')
+        return v
 
 class BatchPredictionResponse(BaseModel):
     results: List[PredictionResponse]

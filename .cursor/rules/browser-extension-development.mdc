@@ -1,0 +1,67 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Browser Extension Development Rules
+
+## Extension Architecture
+- Sử dụng Manifest V3 cho tất cả các chức năng
+- Tách biệt rõ ràng các thành phần: background script, content script, popup
+- Tối ưu hóa việc tương tác giữa các thành phần
+- Sử dụng Service Worker cho background script
+
+## Content Script Best Practices
+- Sử dụng DOM selectors hiệu quả và cụ thể
+- Xử lý các thay đổi DOM với MutationObserver
+- Cache các comment đã xử lý để tránh phân tích lặp lại
+- Tối thiểu hóa các DOM manipulations không cần thiết
+
+## Platform-Specific Implementation
+- Tương thích với Facebook, YouTube, Twitter/X
+- Xử lý cấu trúc DOM khác nhau trên từng nền tảng
+- Quản lý việc xác định các bình luận theo cách riêng cho từng nền tảng
+- Kiểm soát biểu thị visual indicator theo tiêu chuẩn từng nền tảng
+
+## API Communication
+- Sử dụng fetch API với proper error handling
+- Cấu hình timeout và retry cho các API calls
+- Xử lý response caching khi thích hợp
+- Đảm bảo bảo mật trong quá trình giao tiếp với API
+
+## Performance Optimization
+- Tránh DOM queries không cần thiết
+- Batch processing cho các comment
+- Lazy loading các resources và scripts
+- Tối ưu hóa MutationObserver configurations
+
+## User Settings & Storage
+- Sử dụng chrome.storage.sync cho user preferences
+- Thiết kế giao diện cài đặt rõ ràng và dễ sử dụng
+- Lưu trữ cài đặt phù hợp cho từng domain/platform
+- Handle settings change events hiệu quả
+
+## UI/UX Guidelines
+- Tạo visual indicators rõ ràng cho các loại toxic content
+- Thiết kế popup interface trực quan và dễ sử dụng
+- Hiển thị thông báo hữu ích cho người dùng
+- Sử dụng các pattern nhất quán trong extension
+
+## Error Handling
+- Ghi log lỗi một cách có hệ thống
+- Xử lý các trường hợp API không phản hồi
+- Triển khai fallback behaviors khi có lỗi
+- Bảo vệ functionality chính khỏi các lỗi không mong muốn
+
+## Testing & Debugging
+- Kiểm tra trên nhiều phiên bản trình duyệt 
+- Testing trên các version khác nhau của mỗi platform
+- Sử dụng Chrome DevTools để debug hiệu quả
+- Xác minh tính năng trên các trường hợp sử dụng thực tế
+
+## Security & Privacy
+- Đảm bảo tuân thủ chính sách bảo mật của Chrome Web Store
+- Xử lý dữ liệu người dùng một cách an toàn
+- Không lưu trữ thông tin nhạy cảm không cần thiết
+- Thông báo rõ ràng về việc thu thập và sử dụng dữ liệu
+

@@ -1,0 +1,60 @@
+---
+description: 
+globs: 
+alwaysApply: false
+---
+# Toxic Language Detector Rules
+
+## Project Structure
+- **Backend**: FastAPI application for toxic language detection
+- **Model**: LSTM-based model for Vietnamese text classification
+- **Extension**: Chrome extension for social media platforms
+- **Database**: SQLite database for storing comments and predictions
+
+## Code Style
+- Use clear and descriptive variable names
+- Add comments in both English and Vietnamese
+- Follow PEP 8 style guidelines for Python code
+- Follow standard JavaScript conventions for extension code
+
+## NLP Processing
+- Preprocess text with Vietnamese-specific tokenization
+- Use appropriate normalization techniques for social media text
+- Handle emojis and special characters properly
+
+## API Endpoints
+- Use clear path naming
+- Include proper validation for all inputs
+- Return appropriate HTTP status codes
+- Document all endpoints with examples
+
+## Extension Development
+- Implement platform-specific comment selectors
+- Handle DOM mutations efficiently
+- Cache processed comments to avoid duplication
+- Use clear visual indicators for toxic comments
+
+## Model Training
+- Validate model performance on Vietnamese text
+- Consider different token embedding approaches
+- Evaluate multi-class classification metrics
+- Balance accuracy and performance
+
+## Security
+- Implement API key authentication
+- Protect against rate limiting and abuse
+- Sanitize all user inputs
+- Handle sensitive data appropriately
+
+## Testing
+- Test API endpoints with sample inputs
+- Test extension on supported platforms
+- Validate model predictions with test data
+- Ensure proper error handling
+
+## Deployment
+- Check compatibility with Hugging Face Spaces
+- Ensure proper environment variable configuration
+- Validate Docker container configuration
+- Test integration between components
+

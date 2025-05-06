@@ -201,7 +201,7 @@ function startObservingComments() {
   });
   
   // Xử lý các comments hiện có
-  processExistingComments();
+    processExistingComments();
 }
 
 /**
@@ -233,8 +233,8 @@ function handleDOMChanges(mutations) {
           // Check if this node is a comment or contains comments
           const comments = node.matches(commentSelectors) ? 
             [node] : Array.from(node.querySelectorAll(commentSelectors));
-          
-          for (const comment of comments) {
+  
+  for (const comment of comments) {
             processComment(comment);
           }
         }
@@ -461,36 +461,36 @@ function applyToxicityIndicator(commentElement, prediction) {
     };
     
     // Get category from prediction
-    const categoryNames = ["clean", "offensive", "hate", "spam"];
+  const categoryNames = ["clean", "offensive", "hate", "spam"];
     const category = categoryNames[prediction.prediction] || "unknown";
-    
+  
     // Check if we should display this category
-    const shouldDisplay = category === "clean" ? displayOptions.showClean :
-                          category === "offensive" ? displayOptions.showOffensive :
-                          category === "hate" ? displayOptions.showHate :
-                          category === "spam" ? displayOptions.showSpam : false;
-    
-    // Only proceed if highlighting is enabled and we should display this category
-    if (!highlightToxic || !shouldDisplay) {
-      return;
-    }
-    
-    // Get style for this category
-    const style = CATEGORY_STYLES[category] || CATEGORY_STYLES.clean;
-    
-    // Create toxicity indicator
-    const indicator = document.createElement('div');
-    indicator.className = `toxic-indicator ${style.className}`;
-    indicator.style.backgroundColor = style.color;
-    indicator.textContent = style.label;
-    
-    // Add tooltip
+  const shouldDisplay = category === "clean" ? displayOptions.showClean :
+                        category === "offensive" ? displayOptions.showOffensive :
+                        category === "hate" ? displayOptions.showHate :
+                        category === "spam" ? displayOptions.showSpam : false;
+  
+  // Only proceed if highlighting is enabled and we should display this category
+  if (!highlightToxic || !shouldDisplay) {
+    return;
+  }
+  
+  // Get style for this category
+  const style = CATEGORY_STYLES[category] || CATEGORY_STYLES.clean;
+  
+  // Create toxicity indicator
+  const indicator = document.createElement('div');
+  indicator.className = `toxic-indicator ${style.className}`;
+  indicator.style.backgroundColor = style.color;
+  indicator.textContent = style.label;
+  
+  // Add tooltip
     indicator.title = `Phân loại: ${style.label} (${(prediction.confidence * 100).toFixed(1)}% độ tin cậy)`;
-    
-    // Add indicator near the comment
+  
+  // Add indicator near the comment
     commentElement.style.position = 'relative';
     commentElement.parentNode.insertBefore(indicator, commentElement.nextSibling);
-    
+  
     // Optional: add a subtle border to the original comment
     commentElement.style.borderLeft = `3px solid ${style.color}`;
     commentElement.style.paddingLeft = '10px';
@@ -511,7 +511,7 @@ function applyToxicityIndicator(commentElement, prediction) {
       commentElement.parentNode.insertBefore(revealBtn, commentElement.nextSibling);
     }
   });
-}
+  }
 /**
  * Generate a simple hash string
  * @param {string} str - Input string
@@ -673,8 +673,8 @@ function initializeVietnameseUI() {
       const elements = document.querySelectorAll(selector);
       elements.forEach(el => {
         el.textContent = text;
-      });
-    });
+  });
+});
   }
 }
 
