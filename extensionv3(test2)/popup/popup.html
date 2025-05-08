@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="script-src 'self'; object-src 'self'">
   <title>Toxic Language Detector</title>
   <link rel="stylesheet" href="popup.css">
 </head>
@@ -23,18 +24,133 @@
     
     <div class="tabs">
       <div class="tab-header">
-        <div class="tab-button active" data-tab="settings">Cài đặt</div>
+        <div class="tab-button active" data-tab="analyze">Phân tích</div>
+        <div class="tab-button" data-tab="settings">Cài đặt</div>
         <div class="tab-button" data-tab="stats">Thống kê</div>
-        <div class="tab-button" data-tab="analyze">Phân tích</div>
+        <div class="tab-button" data-tab="account">Tài khoản</div>
       </div>
       
       <div class="tab-content">
-        <!-- Tab 1: Settings -->
-        <div class="tab-pane active" id="settings-tab">
-          <h2>Settings</h2>
+        <!-- Tab 1: Analyze tab (gộp batch detect) -->
+        <div class="tab-pane active" id="analyze-tab">
+          <h2>Phân tích nội dung</h2>
+          <div class="analyze-mode-switch" style="margin-bottom: 12px;">
+            <button id="single-mode-btn" class="mode-btn active">Phân tích 1 dòng</button>
+            <button id="batch-mode-btn" class="mode-btn">Phân tích hàng loạt</button>
+          </div>
+          <div id="single-analyze-area">
+            <div class="analyze-container">
+              <div class="platform-detection">
+                <span class="label">Nền tảng:</span>
+                <span id="current-platform" class="platform">Chưa xác định</span>
+              </div>
+              <textarea id="analyze-text" placeholder="Nhập văn bản cần phân tích..."></textarea>
+              <div class="analyze-options">
+                <label class="checkbox">
+                  <input type="checkbox" id="anonymous-mode">
+                  <span class="checkmark"></span>
+                  Ẩn danh người gửi
+                </label>
+                <div class="region-select">
+                  <label for="region">Vùng miền:</label>
+                  <select id="region">
+                    <option value="all">Toàn quốc</option>
+                    <option value="north">Miền Bắc</option>
+                    <option value="central">Miền Trung</option>
+                    <option value="south">Miền Nam</option>
+                  </select>
+                </div>
+              </div>
+              <button id="analyze-button" class="action-button">Phân tích</button>
+              <div id="result-container" class="result-container hidden">
+                <h3>Kết quả phân tích:</h3>
+                
+                <div class="result-item">
+                  <div class="result-label">Phân loại:</div>
+                  <div id="result-category" class="result-value"></div>
+                </div>
+                
+                <div class="result-item">
+                  <div class="result-label">Độ tin cậy:</div>
+                  <div id="result-confidence" class="result-value"></div>
+                </div>
+                
+                <div class="result-progress">
+                  <div class="progress-item">
+                    <span>Bình thường:</span>
+                    <div class="progress-bar">
+                      <div id="progress-clean" class="progress-fill" style="width: 0%"></div>
+                    </div>
+                    <span id="percent-clean">0%</span>
+                  </div>
+                  
+                  <div class="progress-item">
+                    <span>Xúc phạm:</span>
+                    <div class="progress-bar">
+                      <div id="progress-offensive" class="progress-fill progress-offensive" style="width: 0%"></div>
+                    </div>
+                    <span id="percent-offensive">0%</span>
+                  </div>
+                  
+                  <div class="progress-item">
+                    <span>Thù ghét:</span>
+                    <div class="progress-bar">
+                      <div id="progress-hate" class="progress-fill progress-hate" style="width: 0%"></div>
+                    </div>
+                    <span id="percent-hate">0%</span>
+                  </div>
+                  
+                  <div class="progress-item">
+                    <span>Spam:</span>
+                    <div class="progress-bar">
+                      <div id="progress-spam" class="progress-fill progress-spam" style="width: 0%"></div>
+                    </div>
+                    <span id="percent-spam">0%</span>
+                  </div>
+                </div>
+                
+                <div class="result-advanced hidden" id="result-advanced">
+                  <div class="result-item">
+                    <div class="result-label">Sắc thái:</div>
+                    <div id="result-emotion"></div>
+                  </div>
+                  
+                  <div class="result-item">
+                    <div class="result-label">Mục đích:</div>
+                    <div id="result-intent"></div>
+                  </div>
+                  
+                  <div class="result-item">
+                    <div class="result-label">Từ khóa:</div>
+                    <div id="result-keywords" class="keywords-container"></div>
+                  </div>
+                </div>
+                
+                <button id="report-button" class="secondary-button">Báo cáo phân tích sai</button>
+              </div>
+            </div>
+          </div>
+          <div id="batch-analyze-area" style="display:none;">
+            <div class="analyze-container">
+              <textarea id="batch-input" placeholder="Nhập mỗi dòng một bình luận..."></textarea>
+              <div class="batch-actions">
+                <button id="batch-detect-btn" class="action-button">Phân tích hàng loạt</button>
+                <input type="file" id="batch-file-input" accept=".txt,.csv" style="margin-top:8px;">
+              </div>
+              <div id="batch-result-container" class="result-container hidden">
+                <h3>Kết quả Batch Detect:</h3>
+                <div id="batch-result-list"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Tab 2: Settings -->
+        <div class="tab-pane" id="settings-tab">
+          <h2>Cài đặt</h2>
           
           <div class="setting-item">
-            <label for="threshold">Sensitivity Threshold:</label>
+            <label for="threshold">Ngưỡng nhạy:</label>
             <input type="range" id="threshold" min="0.5" max="0.9" step="0.05" value="0.7">
             <span id="threshold-value">0.7</span>
           </div>
@@ -43,11 +159,20 @@
             <label class="checkbox">
               <input type="checkbox" id="highlight-toxic" checked>
               <span class="checkmark"></span>
-              Highlight Toxic Content
+              Đánh dấu nội dung độc hại
             </label>
           </div>
           
-          <h3>Enable on Platforms:</h3>
+          <div class="setting-item">
+            <label class="checkbox">
+              <input type="checkbox" id="save-data" checked>
+              <span class="checkmark"></span>
+              Lưu data phân tích
+            </label>
+            <div class="setting-description">Giúp cải thiện mô hình AI của chúng tôi</div>
+          </div>
+          
+          <h3>Hiển thị trên nền tảng:</h3>
           <div class="platforms">
             <label class="checkbox">
               <input type="checkbox" id="platform-facebook" checked>
@@ -66,12 +191,74 @@
               <span class="checkmark"></span>
               Twitter
             </label>
+            
+            <label class="checkbox">
+              <input type="checkbox" id="platform-tiktok">
+              <span class="checkmark"></span>
+              TikTok
+            </label>
+            
+            <label class="checkbox">
+              <input type="checkbox" id="platform-zalo">
+              <span class="checkmark"></span>
+              Zalo
+            </label>
+          </div>
+          
+          <h3>Tùy chọn hiển thị:</h3>
+          <div class="display-options">
+            <label class="checkbox">
+              <input type="checkbox" id="show-clean" checked>
+              <span class="checkmark"></span>
+              Hiện bình thường
+            </label>
+            
+            <label class="checkbox">
+              <input type="checkbox" id="show-offensive" checked>
+              <span class="checkmark"></span>
+              Hiện xúc phạm
+            </label>
+            
+            <label class="checkbox">
+              <input type="checkbox" id="show-hate" checked>
+              <span class="checkmark"></span>
+              Hiện thù ghét
+            </label>
+            
+            <label class="checkbox">
+              <input type="checkbox" id="show-spam" checked>
+              <span class="checkmark"></span>
+              Hiện spam
+            </label>
+          </div>
+          
+          <div class="theme-switch">
+            <span>Giao diện:</span>
+            <div class="theme-buttons">
+              <button id="theme-light" class="theme-button active">Sáng</button>
+              <button id="theme-dark" class="theme-button">Tối</button>
+              <button id="theme-auto" class="theme-button">Tự động</button>
+            </div>
           </div>
         </div>
         
-        <!-- Tab 2: Statistics -->
+        <!-- Tab 3: Statistics -->
         <div class="tab-pane" id="stats-tab">
           <h2>Thống kê</h2>
+          
+          <div class="period-selector">
+            <span>Thời gian:</span>
+            <div class="period-buttons">
+              <button data-period="day" class="period-button">Hôm nay</button>
+              <button data-period="week" class="period-button active">Tuần</button>
+              <button data-period="month" class="period-button">Tháng</button>
+            </div>
+          </div>
+          
+          <div class="chart-container">
+            <canvas id="trend-chart"></canvas>
+          </div>
+          
           <div class="stat-grid">
             <div class="stat-item">
               <div class="stat-value" id="stat-scanned">0</div>
@@ -98,65 +285,169 @@
               <div class="stat-label">Spam</div>
             </div>
           </div>
+          
+          <div class="platforms-stats">
+            <h3>Thống kê theo nền tảng</h3>
+            <div id="platforms-chart-container" class="chart-container">
+              <canvas id="platforms-chart"></canvas>
+            </div>
+          </div>
+          
+          <div class="toxic-keywords">
+            <h3>Từ khóa độc hại phổ biến</h3>
+            <div id="toxic-keywords-list"></div>
+          </div>
+          
+          <div class="recent-comments">
+            <h3>Bình luận gần đây</h3>
+            <div id="recent-comments-list"></div>
+          </div>
+          
           <button id="reset-stats" class="reset-btn">Đặt lại thống kê</button>
         </div>
-
-        <!-- Tab 3: Text Analysis -->
-        <div class="tab-pane" id="analyze-tab">
-          <h2>Phân tích văn bản</h2>
+        
+        <!-- Tab 4: Account -->
+        <div class="tab-pane" id="account-tab">
+          <!-- Login Form - Shown when not logged in -->
+          <div id="login-section" class="auth-section">
+            <h2>Đăng nhập</h2>
+            <form id="login-form" class="auth-form">
+              <div class="form-group">
+                <label for="login-username">Tên đăng nhập:</label>
+                <input type="text" id="login-username" name="username" required>
+              </div>
+              
+              <div class="form-group">
+                <label for="login-password">Mật khẩu:</label>
+                <input type="password" id="login-password" name="password" required>
+              </div>
+              
+              <div class="form-group checkbox-group">
+                <label class="checkbox">
+                  <input type="checkbox" id="login-remember" name="remember_me">
+                  <span class="checkmark"></span>
+                  Ghi nhớ đăng nhập
+                </label>
+              </div>
+              
+              <div class="form-actions">
+                <button type="submit" class="primary-button">Đăng nhập</button>
+                <button type="button" id="show-register" class="secondary-button">Đăng ký mới</button>
+              </div>
+              
+              <div class="form-footer">
+                <a href="#" id="forgot-password">Quên mật khẩu?</a>
+              </div>
+            </form>
+          </div>
           
-          <div class="analyze-container">
-            <textarea id="analyze-text" placeholder="Nhập văn bản cần phân tích..."></textarea>
-            
-            <button id="analyze-button" class="action-button">Phân tích</button>
-            
-            <div id="result-container" class="result-container hidden">
-              <h3>Kết quả phân tích:</h3>
-              
-              <div class="result-item">
-                <div class="result-label">Phân loại:</div>
-                <div id="result-category" class="result-value"></div>
+          <!-- Register Form - Hidden by default -->
+          <div id="register-section" class="auth-section hidden">
+            <h2>Đăng ký tài khoản</h2>
+            <form id="register-form" class="auth-form">
+              <div class="form-group">
+                <label for="register-username">Tên đăng nhập:</label>
+                <input type="text" id="register-username" name="username" required>
               </div>
               
-              <div class="result-item">
-                <div class="result-label">Độ tin cậy:</div>
-                <div id="result-confidence" class="result-value"></div>
+              <div class="form-group">
+                <label for="register-email">Email:</label>
+                <input type="email" id="register-email" name="email" required>
               </div>
               
-              <div class="result-progress">
-                <div class="progress-item">
-                  <span>Bình thường:</span>
-                  <div class="progress-bar">
-                    <div id="progress-clean" class="progress-fill" style="width: 0%"></div>
-                  </div>
-                  <span id="percent-clean">0%</span>
-                </div>
-                
-                <div class="progress-item">
-                  <span>Xúc phạm:</span>
-                  <div class="progress-bar">
-                    <div id="progress-offensive" class="progress-fill progress-offensive" style="width: 0%"></div>
-                  </div>
-                  <span id="percent-offensive">0%</span>
-                </div>
-                
-                <div class="progress-item">
-                  <span>Thù ghét:</span>
-                  <div class="progress-bar">
-                    <div id="progress-hate" class="progress-fill progress-hate" style="width: 0%"></div>
-                  </div>
-                  <span id="percent-hate">0%</span>
-                </div>
-                
-                <div class="progress-item">
-                  <span>Spam:</span>
-                  <div class="progress-bar">
-                    <div id="progress-spam" class="progress-fill progress-spam" style="width: 0%"></div>
-                  </div>
-                  <span id="percent-spam">0%</span>
-                </div>
+              <div class="form-group">
+                <label for="register-name">Họ tên (tùy chọn):</label>
+                <input type="text" id="register-name" name="name">
+              </div>
+              
+              <div class="form-group">
+                <label for="register-password">Mật khẩu:</label>
+                <input type="password" id="register-password" name="password" required>
+              </div>
+              
+              <div class="form-group">
+                <label for="register-confirm-password">Xác nhận mật khẩu:</label>
+                <input type="password" id="register-confirm-password" name="confirm_password" required>
+              </div>
+              
+              <div class="form-actions">
+                <button type="submit" class="primary-button">Đăng ký</button>
+                <button type="button" id="show-login" class="secondary-button">Đã có tài khoản</button>
+              </div>
+            </form>
+          </div>
+          
+          <!-- Reset Password Form - Hidden by default -->
+          <div id="reset-password-section" class="auth-section hidden">
+            <h2>Khôi phục mật khẩu</h2>
+            <form id="reset-password-form" class="auth-form">
+              <div class="form-group">
+                <label for="reset-email">Email:</label>
+                <input type="email" id="reset-email" name="email" required>
+              </div>
+              
+              <div class="form-actions">
+                <button type="submit" class="primary-button">Gửi yêu cầu</button>
+                <button type="button" id="cancel-reset" class="secondary-button">Quay lại</button>
+              </div>
+            </form>
+          </div>
+          
+          <!-- User Profile - Hidden until logged in -->
+          <div id="profile-section" class="auth-section hidden">
+            <h2>Thông tin tài khoản</h2>
+            <div class="profile-info">
+              <div class="profile-field">
+                <div class="profile-label">Tên đăng nhập:</div>
+                <div id="profile-username" class="profile-value"></div>
+              </div>
+              
+              <div class="profile-field">
+                <div class="profile-label">Email:</div>
+                <div id="profile-email" class="profile-value"></div>
+              </div>
+              
+              <div class="profile-field">
+                <div class="profile-label">Họ tên:</div>
+                <div id="profile-name" class="profile-value"></div>
+              </div>
+              
+              <div class="profile-field">
+                <div class="profile-label">Vai trò:</div>
+                <div id="profile-role" class="profile-value"></div>
               </div>
             </div>
+            
+            <div class="profile-actions">
+              <button id="change-password-btn" class="secondary-button">Đổi mật khẩu</button>
+              <button id="logout-btn" class="warning-button">Đăng xuất</button>
+            </div>
+          </div>
+          
+          <!-- Change Password Form - Hidden by default -->
+          <div id="change-password-section" class="auth-section hidden">
+            <h2>Đổi mật khẩu</h2>
+            <form id="change-password-form" class="auth-form">
+              <div class="form-group">
+                <label for="current-password">Mật khẩu hiện tại:</label>
+                <input type="password" id="current-password" name="current_password" required>
+              </div>
+              
+              <div class="form-group">
+                <label for="new-password">Mật khẩu mới:</label>
+                <input type="password" id="new-password" name="new_password" required>
+              </div>
+              
+              <div class="form-group">
+                <label for="confirm-new-password">Xác nhận mật khẩu mới:</label>
+                <input type="password" id="confirm-new-password" name="confirm_new_password" required>
+              </div>
+              
+              <div class="form-actions">
+                <button type="submit" class="primary-button">Cập nhật</button>
+                <button type="button" id="cancel-change-password" class="secondary-button">Hủy bỏ</button>
+              </div>
+            </form>
           </div>
         </div>
       </div>
@@ -166,8 +457,12 @@
       <p>Toxic Language Detector v1.0.0</p>
       <p class="small">Developed for Research</p>
     </div>
+    
+    <!-- Notifications -->
+    <div id="notification" class="notification hidden"></div>
   </div>
   
+  <script src="chart-loader.js"></script>
   <script src="popup.js"></script>
 </body>
 </html>
