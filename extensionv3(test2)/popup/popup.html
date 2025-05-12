@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="script-src 'self'; object-src 'self'">
+  <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline'; object-src 'self'">
   <title>Toxic Language Detector</title>
   <link rel="stylesheet" href="popup.css">
 </head>
@@ -23,11 +23,12 @@
     </div>
     
     <div class="tabs">
-      <div class="tab-header">
-        <div class="tab-button active" data-tab="analyze">Phân tích</div>
-        <div class="tab-button" data-tab="settings">Cài đặt</div>
-        <div class="tab-button" data-tab="stats">Thống kê</div>
-        <div class="tab-button" data-tab="account">Tài khoản</div>
+      <div class="tab-buttons">
+        <button class="tab-button active" data-tab="analyze">Phân tích</button>
+        <button class="tab-button requires-auth" data-tab="stats">Thống kê</button>
+        <button class="tab-button requires-auth" data-tab="settings">Cài đặt</button>
+        <button class="tab-button" data-tab="account">Tài khoản</button>
+        <button class="tab-button requires-auth" data-tab="help">Trợ giúp</button>
       </div>
       
       <div class="tab-content">
@@ -137,9 +138,9 @@
                 <button id="batch-detect-btn" class="action-button">Phân tích hàng loạt</button>
                 <input type="file" id="batch-file-input" accept=".txt,.csv" style="margin-top:8px;">
               </div>
-              <div id="batch-result-container" class="result-container hidden">
+              <div id="batch-result-container" class="result-container hidden" style="background: yellow; border: 2px solid red; min-height: 100px; margin-top: 15px; padding: 10px;">
                 <h3>Kết quả Batch Detect:</h3>
-                <div id="batch-result-list"></div>
+                <div id="batch-result-list" style="padding: 10px; background: white; min-height: 50px;"></div>
               </div>
             </div>
           </div>
@@ -163,7 +164,7 @@
             </label>
           </div>
           
-          <div class="setting-item">
+          <div class="setting-item requires-auth">
             <label class="checkbox">
               <input type="checkbox" id="save-data" checked>
               <span class="checkmark"></span>
@@ -303,7 +304,9 @@
             <div id="recent-comments-list"></div>
           </div>
           
-          <button id="reset-stats" class="reset-btn">Đặt lại thống kê</button>
+          <div class="reset-stats requires-auth">
+            <button id="reset-stats" class="reset-btn">Đặt lại thống kê</button>
+          </div>
         </div>
         
         <!-- Tab 4: Account -->
@@ -450,6 +453,14 @@
             </form>
           </div>
         </div>
+        
+        <!-- Tab 5: Help -->
+        <div class="tab-pane" id="help-tab">
+          <div class="help-section">
+            <h2>Trợ giúp</h2>
+            <p>Đây là trang trợ giúp của ứng dụng. Nếu bạn cần trợ giúp, vui lòng liên hệ với chúng tôi.</p>
+          </div>
+        </div>
       </div>
     </div>
     
@@ -462,6 +473,7 @@
     <div id="notification" class="notification hidden"></div>
   </div>
   
+  <!-- Scripts -->
   <script src="chart-loader.js"></script>
   <script src="popup.js"></script>
 </body>

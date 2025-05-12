@@ -3,8 +3,21 @@
  * Handles user settings, analysis, and account management
  */
 
-// Extension API Endpoint
-const API_ENDPOINT = "http://localhost:7860";
+/**
+ * API Endpoint configuration
+ * - For production, inject window.TOXIC_API_ENDPOINT in popup.html or set in chrome.storage.sync
+ * - For dev, fallback to localhost
+ */
+let API_ENDPOINT = "http://localhost:7860";
+if (typeof window !== 'undefined' && window.TOXIC_API_ENDPOINT) {
+  API_ENDPOINT = window.TOXIC_API_ENDPOINT;
+} else if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.sync) {
+  chrome.storage.sync.get('api_endpoint', (data) => {
+    if (data.api_endpoint) {
+      API_ENDPOINT = data.api_endpoint;
+    }
+  });
+}
 // Authentication storage key
 const AUTH_STORAGE_KEY = "toxicDetector_auth";
 
@@ -34,6 +47,10 @@ let showRegisterBtn, showLoginBtn, forgotPasswordBtn, cancelResetBtn, cancelChan
 let logoutBtn, changePasswordBtn;
 let profileUsername, profileEmail, profileName, profileRole;
 
+// Batch Analyze UI elements
+let singleModeBtn, batchModeBtn, singleAnalyzeArea, batchAnalyzeArea;
+let batchInput, batchDetectBtn, batchFileInput, batchResultContainer, batchResultList;
+
 // Category mappings
 const categoryNames = {
   0: "Bình thường",
@@ -56,46 +73,62 @@ function initializePopup() {
   // Get DOM references for all elements
   initializeDOMReferences();
   
-  // Setup tab navigation
-  setupTabNavigation();
-  
-  // Load settings and statistics
-  loadSettings();
-  loadStats();
-  
-  // Setup event handlers for all UI interactions
-  setupEventHandlers();
-  
-  // Check authentication status and update UI
-  checkAuthStatus();
-  
-  // Detect current platform from active tab
-  detectCurrentPlatform();
-  
-  // Setup batch detect UI and stats tab
-  setupBatchDetectUI();
-  setupStatsTab();
-  
-  // Setup analyze mode switch
-  const singleBtn = document.getElementById('single-mode-btn');
-  const batchBtn = document.getElementById('batch-mode-btn');
-  const singleArea = document.getElementById('single-analyze-area');
-  const batchArea = document.getElementById('batch-analyze-area');
-  if (singleBtn && batchBtn && singleArea && batchArea) {
-    singleBtn.onclick = function() {
-      singleBtn.classList.add('active');
-      batchBtn.classList.remove('active');
-      singleArea.style.display = '';
-      batchArea.style.display = 'none';
-    };
-    batchBtn.onclick = function() {
-      batchBtn.classList.add('active');
-      singleBtn.classList.remove('active');
-      singleArea.style.display = 'none';
-      batchArea.style.display = '';
-    };
-  }
+  // Check authentication status and update UI accordingly FIRST
+  checkAuthStatus().then(() => {
+    // Setup tab navigation AFTER checking auth (to potentially hide tabs)
+    setupTabNavigation();
+
+    // Load settings and statistics
+    loadSettings();
+    loadStats(); // Local stats for anonymous, API stats for logged in
+
+    // Setup event handlers for all UI interactions
+    setupEventHandlers();
+
+    // Detect current platform from active tab
+    detectCurrentPlatform();
+
+    // Setup batch detect UI and stats tab AFTER checking auth
+    setupBatchDetectUI();
+    setupStatsTab(); // Load stats for logged-in user if applicable
+
+    // Setup analyze mode switch AFTER checking auth
+    setupAnalyzeModeSwitch();
+  });
 }
+
+// Đánh dấu các tab cần đăng nhập
+document.addEventListener('DOMContentLoaded', function() {
+  // Đánh dấu các tab yêu cầu đăng nhập
+  const authRequiredTabs = document.querySelectorAll('.tab-button[data-tab="stats"], .tab-button[data-tab="settings"]');
+  authRequiredTabs.forEach(tab => {
+    tab.classList.add('requires-auth');
+  });
+  
+  // Đánh dấu phần settings "Lưu dữ liệu phân tích" là yêu cầu đăng nhập
+  const saveDataCheckbox = document.getElementById('save-data');
+  if (saveDataCheckbox) {
+    const saveDataItem = saveDataCheckbox.closest('.setting-item');
+    if (saveDataItem) {
+      saveDataItem.classList.add('requires-auth');
+    }
+  }
+  
+  // Đánh dấu batch mode là yêu cầu đăng nhập
+  const batchModeBtn = document.getElementById('batch-mode-btn');
+  if (batchModeBtn) {
+    batchModeBtn.classList.add('requires-auth');
+  }
+  
+  // Đánh dấu nút reset stats là yêu cầu đăng nhập
+  const resetStatsBtn = document.getElementById('reset-stats');
+  if (resetStatsBtn) {
+    const container = resetStatsBtn.parentElement;
+    if (container) {
+      container.classList.add('requires-auth');
+    }
+  }
+});
 
 /**
  * Initialize all DOM references
@@ -186,6 +219,17 @@ function initializeDOMReferences() {
   profileEmail = document.getElementById('profile-email');
   profileName = document.getElementById('profile-name');
   profileRole = document.getElementById('profile-role');
+
+  // Batch Analyze elements
+  singleModeBtn = document.getElementById('single-mode-btn');
+  batchModeBtn = document.getElementById('batch-mode-btn');
+  singleAnalyzeArea = document.getElementById('single-analyze-area');
+  batchAnalyzeArea = document.getElementById('batch-analyze-area');
+  batchInput = document.getElementById('batch-input');
+  batchDetectBtn = document.getElementById('batch-detect-btn');
+  batchFileInput = document.getElementById('batch-file-input');
+  batchResultContainer = document.getElementById('batch-result-container');
+  batchResultList = document.getElementById('batch-result-list');
 }
 
 /**
@@ -194,7 +238,25 @@ function initializeDOMReferences() {
 function setupTabNavigation() {
   if (!tabButtons || !tabButtons.length) return;
   
+  const isLoggedIn = document.body.classList.contains('logged-in');
+  
   tabButtons.forEach(button => {
+    const requiresAuth = button.classList.contains('requires-auth');
+    
+    // Hide tabs that require auth if not logged in
+    if (requiresAuth && !isLoggedIn) {
+      button.style.display = 'none';
+      const tabName = button.getAttribute('data-tab');
+      const tabPane = document.getElementById(`${tabName}-tab`);
+      if (tabPane) {
+        tabPane.style.display = 'none'; // Hide the pane content as well
+      }
+      return; // Skip adding click listener for hidden tabs
+    } else {
+      // Ensure visible otherwise
+      button.style.display = '';
+    }
+
     button.addEventListener('click', () => {
       // Remove active class from all buttons and panes
       tabButtons.forEach(btn => btn.classList.remove('active'));
@@ -208,9 +270,19 @@ function setupTabNavigation() {
       const tabPane = document.getElementById(`${tabName}-tab`);
       if (tabPane) {
         tabPane.classList.add('active');
+        // Special handling for stats tab to load data when activated
+        if (tabName === 'stats' && isLoggedIn) {
+           setupStatsTab(); // Reload stats data when tab is clicked
+        }
       }
     });
   });
+
+  // Activate the first visible tab by default
+  const firstVisibleTab = Array.from(tabButtons).find(btn => btn.style.display !== 'none');
+  if (firstVisibleTab) {
+    firstVisibleTab.click();
+  }
 }
 
 /**
@@ -328,18 +400,34 @@ async function loadSettings() {
  * Load statistics from storage
  */
 function loadStats() {
-  chrome.storage.sync.get('stats', function(data) {
-    if (data.stats) {
-      if (statScanned) statScanned.textContent = data.stats.scanned || 0;
-      if (statClean) statClean.textContent = data.stats.clean || 0;
-      if (statOffensive) statOffensive.textContent = data.stats.offensive || 0;
-      if (statHate) statHate.textContent = data.stats.hate || 0;
-      if (statSpam) statSpam.textContent = data.stats.spam || 0;
-      
-      // Initialize statistics charts
-      initStatsCharts(data.stats);
-    }
-  });
+  const isLoggedIn = document.body.classList.contains('logged-in');
+  
+  if (isLoggedIn) {
+    // Load stats from API for the default period (e.g., 'week')
+    loadStatsForPeriod('week'); 
+  } else {
+    // Load local stats from chrome.storage for anonymous users
+    chrome.storage.sync.get('stats', function(data) {
+      if (data.stats) {
+        if (statScanned) statScanned.textContent = data.stats.scanned || 0;
+        if (statClean) statClean.textContent = data.stats.clean || 0;
+        if (statOffensive) statOffensive.textContent = data.stats.offensive || 0;
+        if (statHate) statHate.textContent = data.stats.hate || 0;
+        if (statSpam) statSpam.textContent = data.stats.spam || 0;
+        
+        // Initialize statistics charts with local data
+        initStatsCharts(data.stats);
+      } else {
+         // Initialize with zeros if no local stats found
+         if (statScanned) statScanned.textContent = 0;
+         if (statClean) statClean.textContent = 0;
+         if (statOffensive) statOffensive.textContent = 0;
+         if (statHate) statHate.textContent = 0;
+         if (statSpam) statSpam.textContent = 0;
+         initStatsCharts({ scanned: 0, clean: 0, offensive: 0, hate: 0, spam: 0 });
+      }
+    });
+  }
 }
 
 /**
@@ -452,19 +540,6 @@ function getActiveTheme() {
   }
 }
 
-// Helper: Show/hide loading spinner
-function showLoading(id) {
-  const el = document.getElementById(id);
-  if (el) {
-    el.innerHTML = '<div class="loading-spinner"></div> Đang tải...';
-    el.style.display = '';
-  }
-}
-function hideLoading(id) {
-  const el = document.getElementById(id);
-  if (el) el.innerHTML = '';
-}
-
 /**
  * Analyze text using the API
  */
@@ -479,7 +554,22 @@ async function processAnalyzeText() {
   try {
     analyzeButton.disabled = true;
     analyzeButton.textContent = 'Đang phân tích...';
-    showLoading('result-container');
+    
+    // Hiển thị indicator loading nhỏ
+    const loadingIndicator = document.createElement('div');
+    loadingIndicator.id = 'analysis-loading-indicator';
+    loadingIndicator.innerHTML = '<div class="spinner"></div> <span>Đang phân tích...</span>';
+    loadingIndicator.style.padding = '10px';
+    loadingIndicator.style.textAlign = 'center';
+    loadingIndicator.style.color = '#0288d1';
+    analyzeButton.after(loadingIndicator);
+    
+    // Hiển thị sẵn container kết quả
+    const resultContainer = document.getElementById('result-container');
+    if (resultContainer) {
+      resultContainer.classList.remove('hidden');
+      resultContainer.style.display = 'block'; // Force show
+    }
     
     // Get platform from current tab
     let platform = 'unknown';
@@ -490,6 +580,7 @@ async function processAnalyzeText() {
     // Get authentication token
     const authData = await getAuthData();
     const token = authData ? authData.access_token : null;
+    const isLoggedIn = !!token; // Check if logged in
     
     // Create request headers
     const headers = {
@@ -501,14 +592,25 @@ async function processAnalyzeText() {
       headers['Authorization'] = `Bearer ${token}`;
     }
     
-    // Get save data setting
-    const saveData = saveDataCheckbox ? saveDataCheckbox.checked : false;
+    // Determine if data should be saved (only if logged in and setting is checked)
+    const shouldSaveData = isLoggedIn && saveDataCheckbox && saveDataCheckbox.checked;
     
     // Get anonymization option
     const isAnonymous = anonymousMode ? anonymousMode.checked : false;
     
     // Get region context
     const region = regionSelect ? regionSelect.value : 'all';
+    
+    console.log('[DEBUG] API Request:', {
+      text: textToAnalyze,
+      platform: platform,
+      save_to_db: shouldSaveData,
+      metadata: {
+        anonymous: isAnonymous,
+        region: region,
+        source: 'extension-popup'
+      }
+    });
     
     // Make API request
     const response = await fetch(`${API_ENDPOINT}/extension/detect`, {
@@ -517,7 +619,7 @@ async function processAnalyzeText() {
       body: JSON.stringify({
         text: textToAnalyze,
         platform: platform,
-        save_to_db: saveData,
+        save_to_db: shouldSaveData, // Use calculated value
         metadata: {
           anonymous: isAnonymous,
           region: region,
@@ -527,10 +629,17 @@ async function processAnalyzeText() {
     });
     
     if (!response.ok) {
-      throw new Error(`API error: ${response.status}`);
+      // Handle potential 401 if token is required but missing/invalid for some reason
+      if (response.status === 401) {
+         clearAuthData(); // Clear invalid token data
+         checkAuthStatus(); // Re-run auth check to update UI
+         throw new Error(`Yêu cầu xác thực. Vui lòng đăng nhập lại.`);
+      }
+      throw new Error(`Lỗi API: ${response.status}`);
     }
     
     const result = await response.json();
+    console.log('[DEBUG] API Response:', result);
     
     // Display analysis result
     displayAnalysisResult(result);
@@ -540,11 +649,29 @@ async function processAnalyzeText() {
     
   } catch (error) {
     console.error('Error analyzing text:', error);
-    showNotification(`Lỗi: ${error.message}`, 'error');
+    showNotification(error.message, 'error');
+    
+    // Hiển thị lỗi trong khu vực kết quả
+    const resultContainer = document.getElementById('result-container');
+    if (resultContainer) {
+      resultContainer.classList.remove('hidden');
+      resultContainer.style.display = 'block';
+      resultContainer.innerHTML = `<div style="color:#d32f2f; padding: 15px;">
+        <h3>Lỗi phân tích</h3>
+        <p>${error.message}</p>
+        <p>Vui lòng thử lại sau hoặc kiểm tra kết nối mạng.</p>
+      </div>`;
+    }
+    
   } finally {
     analyzeButton.disabled = false;
     analyzeButton.textContent = 'Phân tích';
-    hideLoading('result-container');
+    
+    // Xóa indicator loading
+    const loadingIndicator = document.getElementById('analysis-loading-indicator');
+    if (loadingIndicator) {
+      loadingIndicator.remove();
+    }
   }
 }
 
@@ -552,69 +679,117 @@ async function processAnalyzeText() {
  * Display the analysis result in the UI
  */
 function displayAnalysisResult(result) {
-  if (!resultContainer || !resultCategory || !resultConfidence) return;
+  console.log('[DEBUG] displayAnalysisResult input:', result);
+  
+  // Make sure we are using the single-mode result container
+  const resultContainer = document.getElementById('result-container');
+  const resultCategory = document.getElementById('result-category'); 
+  const resultConfidence = document.getElementById('result-confidence');
+  
+  if (!resultContainer) {
+    console.error('[ERROR] resultContainer not found');
+    return;
+  }
+  
+  // Kiểm tra dữ liệu đầu vào
+  if (typeof result.prediction === 'undefined' || typeof result.confidence === 'undefined') {
+    resultContainer.classList.remove('hidden');
+    resultContainer.style.display = 'block'; // Force show for debug
+    resultContainer.innerHTML = '<div style="color:#d32f2f;">Không có kết quả phân tích hợp lệ từ API.<br>Chi tiết: ' + JSON.stringify(result) + '</div>';
+    console.log('[DEBUG] resultContainer.innerHTML (error):', resultContainer.innerHTML);
+    return;
+  }
   
   // Show result container
   resultContainer.classList.remove('hidden');
+  resultContainer.style.display = 'block'; // Force show for debug
   
-  // Set category and confidence
-  const predictionClass = categoryClasses[result.prediction] || 'unknown';
-  const predictionText = categoryNames[result.prediction] || 'Không xác định';
+  // Render kết quả vào DOM elements từ popup.html
+  // Cập nhật category và confidence
+  const category = document.getElementById('result-category');
+  const confidence = document.getElementById('result-confidence');
   
-  resultCategory.textContent = predictionText;
-  resultCategory.className = `result-value ${predictionClass}`;
-  
-  // Format confidence as percentage
-  const confidencePercent = Math.round(result.confidence * 100);
-  resultConfidence.textContent = `${confidencePercent}%`;
-  
-  // Update progress bars
-  if (result.probabilities) {
-    // Set progress bars from probabilities
-    setProgressBar(progressClean, percentClean, result.probabilities[0] || 0);
-    setProgressBar(progressOffensive, percentOffensive, result.probabilities[1] || 0);
-    setProgressBar(progressHate, percentHate, result.probabilities[2] || 0);
-    setProgressBar(progressSpam, percentSpam, result.probabilities[3] || 0);
+  if (category && confidence) {
+    // Cập nhật category
+    category.textContent = categoryNames[result.prediction] || 'Không xác định';
+    // Xóa tất cả các CSS class cũ và thêm class mới
+    category.className = 'result-value ' + (categoryClasses[result.prediction] || 'unknown');
+    // Cập nhật confidence
+    confidence.textContent = Math.round(result.confidence * 100) + '%';
   } else {
-    // If no probabilities, set only the predicted class to high value
-    setProgressBar(progressClean, percentClean, result.prediction === 0 ? result.confidence : 0.1);
-    setProgressBar(progressOffensive, percentOffensive, result.prediction === 1 ? result.confidence : 0.1);
-    setProgressBar(progressHate, percentHate, result.prediction === 2 ? result.confidence : 0.1);
-    setProgressBar(progressSpam, percentSpam, result.prediction === 3 ? result.confidence : 0.1);
+    console.error('[ERROR] result-category or result-confidence elements not found');
   }
   
-  // Show advanced analysis section if data is available
-  if (resultAdvanced && (result.keywords || result.sentiment)) {
+  // Cập nhật các progress bar
+  let p = result.probabilities;
+  let clean = 0, offensive = 0, hate = 0, spam = 0;
+  
+  if (p) {
+    if (typeof p === 'object' && !Array.isArray(p)) {
+      clean = p.clean || 0;
+      offensive = p.offensive || 0;
+      hate = p.hate || 0;
+      spam = p.spam || 0;
+    } else if (Array.isArray(p)) {
+      clean = p[0] || 0;
+      offensive = p[1] || 0;
+      hate = p[2] || 0;
+      spam = p[3] || 0;
+    }
+  } else {
+    clean = result.prediction === 0 ? result.confidence : 0.1;
+    offensive = result.prediction === 1 ? result.confidence : 0.1;
+    hate = result.prediction === 2 ? result.confidence : 0.1;
+    spam = result.prediction === 3 ? result.confidence : 0.1;
+  }
+  
+  // Update progress bars using the existing setProgressBar function
+  setProgressBar(document.getElementById('progress-clean'), document.getElementById('percent-clean'), clean);
+  setProgressBar(document.getElementById('progress-offensive'), document.getElementById('percent-offensive'), offensive);
+  setProgressBar(document.getElementById('progress-hate'), document.getElementById('percent-hate'), hate);
+  setProgressBar(document.getElementById('progress-spam'), document.getElementById('percent-spam'), spam);
+  
+  // Update advanced result section if available
+  const resultAdvanced = document.getElementById('result-advanced');
+  if (resultAdvanced) {
     resultAdvanced.classList.remove('hidden');
     
-    // Set emotion/sentiment if available
-    if (resultEmotion && result.sentiment) {
-      resultEmotion.textContent = result.sentiment.label || 'Không xác định';
+    const resultEmotion = document.getElementById('result-emotion');
+    const resultIntent = document.getElementById('result-intent');
+    const resultKeywords = document.getElementById('result-keywords');
+    
+    if (resultEmotion) {
+      resultEmotion.textContent = result.sentiment && result.sentiment.label ? result.sentiment.label : 'Không xác định';
     }
     
-    // Set intent if available
-    if (resultIntent && result.intent) {
+    if (resultIntent) {
       resultIntent.textContent = result.intent || 'Không xác định';
     }
     
-    // Set keywords if available
-    if (resultKeywords && result.keywords && result.keywords.length > 0) {
-      // Clear existing keywords
+    if (resultKeywords) {
       resultKeywords.innerHTML = '';
-      
-      // Add each keyword as a chip
-      result.keywords.forEach(keyword => {
-        const keywordChip = document.createElement('span');
-        keywordChip.className = 'keyword-chip';
-        keywordChip.textContent = keyword;
-        resultKeywords.appendChild(keywordChip);
-      });
-    } else if (resultKeywords) {
-      resultKeywords.textContent = 'Không có từ khóa nổi bật';
+      if (result.keywords && Array.isArray(result.keywords) && result.keywords.length > 0) {
+        result.keywords.forEach(keyword => {
+          const chip = document.createElement('span');
+          chip.className = 'keyword-chip';
+          chip.textContent = keyword;
+          resultKeywords.appendChild(chip);
+        });
+      } else {
+        resultKeywords.innerHTML = '<span style="color:#888">Không có từ khóa nổi bật</span>';
+      }
     }
-  } else if (resultAdvanced) {
-    resultAdvanced.classList.add('hidden');
   }
+  
+  // Re-attach event listeners if needed
+  const reportButton = document.getElementById('report-button');
+  if (reportButton) {
+    reportButton.onclick = reportIncorrectAnalysis;
+  }
+  
+  // Log after UI update
+  console.log('[DEBUG] Result displayed successfully');
+  console.log('[DEBUG] resultContainer.classList:', resultContainer.classList.value, '| style.display:', resultContainer.style.display);
 }
 
 /**
@@ -632,15 +807,19 @@ function setProgressBar(progressElement, percentElement, value) {
  * Update local statistics based on prediction
  */
 function updateLocalStats(prediction) {
+  // Only update local stats for anonymous users
+  const isLoggedIn = document.body.classList.contains('logged-in');
+  if (isLoggedIn) return;
+
   chrome.storage.sync.get('stats', function(data) {
     const stats = data.stats || {
-      scanned: 0,
-      clean: 0,
-      offensive: 0,
-      hate: 0,
-      spam: 0
-    };
-    
+            scanned: 0,
+            clean: 0,
+            offensive: 0,
+            hate: 0,
+            spam: 0
+          };
+          
     // Increment scanned count
     stats.scanned += 1;
     
@@ -706,14 +885,14 @@ async function reportIncorrectAnalysis() {
     });
     
     if (!response.ok) {
-      throw new Error(`API error: ${response.status}`);
+      throw new Error(`Lỗi API: ${response.status}`);
     }
     
     showNotification('Đã gửi báo cáo phân tích sai. Cảm ơn bạn đã giúp cải thiện hệ thống!', 'success');
     
   } catch (error) {
     console.error('Error reporting analysis:', error);
-    showNotification(`Lỗi: ${error.message}`, 'error');
+    showNotification(error.message, 'error');
   }
 }
 
@@ -804,15 +983,23 @@ function setupEventHandlers() {
     resetStatsBtn.addEventListener('click', resetStats);
   }
   
-  // Analysis button
+  // Analysis button for single text
   if (analyzeButton) {
     analyzeButton.addEventListener('click', processAnalyzeText);
   }
   
-  // Report button
-  if (reportButton) {
-    reportButton.addEventListener('click', reportIncorrectAnalysis);
+  // Analysis button for batch text
+  const batchDetectBtn = document.getElementById('batch-detect-btn');
+  if (batchDetectBtn) {
+    batchDetectBtn.addEventListener('click', processBatchText);
   }
+  
+  // Report button - using event delegation because it might be dynamically created
+  document.addEventListener('click', function(event) {
+    if (event.target && event.target.id === 'report-button') {
+      reportIncorrectAnalysis();
+    }
+  });
   
   // Period selector buttons
   const periodButtons = document.querySelectorAll('.period-button');
@@ -968,21 +1155,105 @@ async function checkAuthStatus() {
       
       if (response.ok) {
         // Token is valid, show profile section
+        document.body.classList.add('logged-in');
+        document.body.classList.remove('not-logged-in');
         const userData = await response.json();
         updateProfileUI(userData);
         showAuthSection('profile');
+        return true;
       } else {
         // Token expired or invalid, show login screen
+        document.body.classList.remove('logged-in');
+        document.body.classList.add('not-logged-in');
         showAuthSection('login');
         clearAuthData();
+        return false;
       }
     } else {
       // No token, show login screen
+      document.body.classList.remove('logged-in');
+      document.body.classList.add('not-logged-in');
       showAuthSection('login');
+      return false;
     }
   } catch (error) {
     console.error('Error checking auth status:', error);
+    document.body.classList.remove('logged-in');
+    document.body.classList.add('not-logged-in');
     showAuthSection('login');
+    return false;
+  }
+}
+
+/**
+ * Apply simple UI updates based on authentication state
+ */
+function updateAuthDependentUI(isLoggedIn) {
+  console.log("Cập nhật UI dựa trên đăng nhập:", isLoggedIn);
+  
+  // Quản lý hiển thị tab
+  const tabButtons = document.querySelectorAll('.tab-button');
+  tabButtons.forEach(button => {
+    const tabName = button.getAttribute('data-tab');
+    const isAuthRequired = button.classList.contains('requires-auth');
+    
+    if (isAuthRequired) {
+      button.style.display = isLoggedIn ? '' : 'none';
+      
+      // Ẩn/hiện nội dung tab tương ứng
+      const tabPane = document.getElementById(`${tabName}-tab`);
+      if (tabPane) {
+        tabPane.style.display = isLoggedIn ? '' : 'none';
+      }
+    }
+  });
+  
+  // Kích hoạt tab hợp lệ đầu tiên
+  let activeTabButton = document.querySelector('.tab-button.active');
+  // Nếu tab đang kích hoạt không khả dụng, chuyển sang tab đầu tiên khả dụng
+  if (!activeTabButton || (activeTabButton.classList.contains('requires-auth') && !isLoggedIn)) {
+    const firstVisibleTab = Array.from(tabButtons).find(btn => btn.style.display !== 'none');
+    if (firstVisibleTab) {
+      // Bỏ active khỏi tất cả tab và pane
+      tabButtons.forEach(btn => btn.classList.remove('active'));
+      const tabPanes = document.querySelectorAll('.tab-pane');
+      tabPanes.forEach(pane => pane.classList.remove('active'));
+      
+      // Kích hoạt tab đầu tiên khả dụng
+      firstVisibleTab.classList.add('active');
+      const tabName = firstVisibleTab.getAttribute('data-tab');
+      const tabPane = document.getElementById(`${tabName}-tab`);
+      if (tabPane) tabPane.classList.add('active');
+    }
+  }
+  
+  // Chế độ phân tích
+  const batchModeBtn = document.getElementById('batch-mode-btn');
+  if (batchModeBtn) {
+    batchModeBtn.style.display = isLoggedIn ? '' : 'none';
+    
+    if (!isLoggedIn) {
+      // Nếu đang ở chế độ batch mà đăng xuất, chuyển về chế độ single
+      const singleModeBtn = document.getElementById('single-mode-btn');
+      if (singleModeBtn && !singleModeBtn.classList.contains('active')) {
+        singleModeBtn.click();
+      }
+    }
+  }
+  
+  // Checkbox "lưu dữ liệu"
+  const saveDataCheckbox = document.getElementById('save-data');
+  if (saveDataCheckbox) {
+    // Vô hiệu hóa nếu chưa đăng nhập
+    saveDataCheckbox.disabled = !isLoggedIn;
+    // Bỏ chọn nếu chưa đăng nhập
+    if (!isLoggedIn) saveDataCheckbox.checked = false;
+  }
+  
+  // Nút reset thống kê
+  const resetStatsBtn = document.getElementById('reset-stats');
+  if (resetStatsBtn) {
+    resetStatsBtn.style.display = isLoggedIn ? '' : 'none';
   }
 }
 
@@ -1046,8 +1317,30 @@ async function login() {
     
     if (userDataResponse.ok) {
       const userData = await userDataResponse.json();
+      
+      // Add logged-in class to body
+      document.body.classList.add('logged-in');
+      document.body.classList.remove('not-logged-in');
+      
+      // Update profile info
       updateProfileUI(userData);
+      
+      // Show profile section
       showAuthSection('profile');
+      
+      // Update UI based on authenticated state
+      updateAuthDependentUI(true);
+      
+      // Initialize tab navigation again with new auth status
+      setupTabNavigation();
+      
+      // Switch to analyze tab
+      const analyzeTab = document.querySelector('.tab-button[data-tab="analyze"]');
+      if (analyzeTab) {
+        analyzeTab.click();
+      }
+      
+      // Show notification
       showNotification('Đăng nhập thành công', 'success');
     }
   } catch (error) {
@@ -1232,14 +1525,33 @@ async function logout() {
     // Clear local authentication data
     clearAuthData();
     
-    // Show login screen
+    // Update UI for logged-out state
+    document.body.classList.remove('logged-in');
+    document.body.classList.add('not-logged-in');
+    
+    // Show login section
     showAuthSection('login');
+    
+    // Show notification
     showNotification('Đăng xuất thành công', 'success');
+    
+    // Switch to analyze tab
+    const analyzeTabButton = document.querySelector('.tab-button[data-tab="analyze"]');
+    if (analyzeTabButton) {
+      analyzeTabButton.click();
+    }
+    
+    // Ensure single mode is active
+    const singleModeBtn = document.getElementById('single-mode-btn');
+    if (singleModeBtn) {
+      singleModeBtn.click();
+    }
   } catch (error) {
     console.error('Logout error:', error);
     
-    // Force logout locally even if API call failed
-    clearAuthData();
+    // Force logout UI update on error
+    document.body.classList.remove('logged-in');
+    document.body.classList.add('not-logged-in');
     showAuthSection('login');
   }
 }
@@ -1290,13 +1602,26 @@ async function loadStatsForPeriod(period) {
   try {
     // Get authentication token
     const authData = await getAuthData();
+    const isLoggedIn = document.body.classList.contains('logged-in');
     
-    if (!authData || !authData.access_token) {
+    if (!authData || !authData.access_token || !isLoggedIn) {
       // Use local stats if not authenticated
       return;
     }
     
-    // Make API request to get stats for selected period
+    // Show loading indicator
+    const batchResultList = document.getElementById('batch-result-list');
+    if (batchResultList) {
+      const loadingIndicator = document.createElement('div');
+      loadingIndicator.id = 'batch-loading-indicator';
+      loadingIndicator.innerHTML = '<div class="spinner"></div> <span>Đang tải thống kê...</span>';
+      loadingIndicator.style.padding = '10px';
+      loadingIndicator.style.textAlign = 'center';
+      batchResultList.innerHTML = '';
+      batchResultList.appendChild(loadingIndicator);
+    }
+    
+    // Make API request for stats
     const response = await fetch(`${API_ENDPOINT}/extension/stats?period=${period}`, {
       headers: {
         'Authorization': `Bearer ${authData.access_token}`
@@ -1304,361 +1629,81 @@ async function loadStatsForPeriod(period) {
     });
     
     if (!response.ok) {
-      throw new Error(`API error: ${response.status}`);
+      throw new Error(`API Error: ${response.status}`);
     }
     
     const stats = await response.json();
     
-    // Update stats UI
-    updateStatsUI(stats);
+    // Update UI with stats data
+    if (stats) {
+      // Update statistics for the current period
+      if (statScanned) statScanned.textContent = stats.total || 0;
+      if (statClean) statClean.textContent = stats.clean || 0;
+      if (statOffensive) statOffensive.textContent = stats.offensive || 0;
+      if (statHate) statHate.textContent = stats.hate || 0;
+      if (statSpam) statSpam.textContent = stats.spam || 0;
+      
+      // Update charts if they exist
+      if (typeof updateTrendChart === 'function' && stats.trend) {
+        updateTrendChart(stats.trend, period);
+      }
+      
+      updateAdvancedStats(period);
+      updateRecentComments(period);
+    }
     
   } catch (error) {
     console.error('Error loading stats:', error);
-  }
-}
-
-/**
- * Update statistics UI with data from API
- */
-function updateStatsUI(statsData) {
-  // Update counters
-  if (statScanned) statScanned.textContent = statsData.total_count || 0;
-  if (statClean) statClean.textContent = statsData.clean_count || 0;
-  if (statOffensive) statOffensive.textContent = statsData.offensive_count || 0;
-  if (statHate) statHate.textContent = statsData.hate_count || 0;
-  if (statSpam) statSpam.textContent = statsData.spam_count || 0;
-  
-  // Update platform chart if exists
-  updatePlatformChart(statsData.platforms);
-}
-
-/**
- * Update platform distribution chart
- */
-function updatePlatformChart(platformData) {
-  // Skip if Chart.js isn't loaded
-  if (typeof Chart === 'undefined') return;
-  
-  const platformsChartElement = document.getElementById('platforms-chart');
-  if (!platformsChartElement) return;
-  
-  // Get existing chart instance
-  const existingChart = Chart.getChart(platformsChartElement);
-  if (existingChart) {
-    existingChart.destroy();
-  }
-  
-  // Format data for chart
-  const labels = [];
-  const data = [];
-  const colors = {
-    facebook: '#4267B2',
-    youtube: '#FF0000',
-    twitter: '#1DA1F2',
-    tiktok: '#000000',
-    zalo: '#0068FF',
-    other: '#999999'
-  };
-  const backgroundColor = [];
-  
-  // Process platform data
-  for (const [platform, count] of Object.entries(platformData)) {
-    labels.push(platform.charAt(0).toUpperCase() + platform.slice(1));
-    data.push(count);
-    backgroundColor.push(colors[platform.toLowerCase()] || colors.other);
-  }
-  
-  // Create new chart
-  new Chart(platformsChartElement, {
-    type: 'doughnut',
-    data: {
-      labels: labels,
-      datasets: [{
-        data: data,
-        backgroundColor: backgroundColor
-      }]
-    },
-    options: {
-      responsive: true,
-      legend: {
-        position: 'right',
-        labels: {
-          fontColor: '#666',
-          boxWidth: 12
-        }
-      }
-    }
-  });
-}
-
-/**
- * Reset statistics
- */
-function resetStats() {
-  if (confirm('Bạn có chắc muốn đặt lại thống kê?')) {
-    chrome.runtime.sendMessage({ action: "resetStats" }, function(response) {
-      if (response && response.success) {
-        // Reset UI stats
-        if (statScanned) statScanned.textContent = '0';
-        if (statClean) statClean.textContent = '0';
-        if (statOffensive) statOffensive.textContent = '0';
-        if (statHate) statHate.textContent = '0';
-        if (statSpam) statSpam.textContent = '0';
-        
-        showNotification('Đã đặt lại thống kê', 'success');
-      }
-    });
-  }
-}
-
-// 1. SETTINGS SYNC
-async function fetchServerSettings() {
-  const authData = await getAuthData();
-  if (!authData || !authData.access_token) return null;
-  const res = await fetch(`${API_ENDPOINT}/extension/settings`, {
-    headers: { 'Authorization': `Bearer ${authData.access_token}` }
-  });
-  if (!res.ok) return null;
-  const data = await res.json();
-  return data.settings;
-}
-async function saveServerSettings(settings) {
-  const authData = await getAuthData();
-  if (!authData || !authData.access_token) return;
-  await fetch(`${API_ENDPOINT}/extension/settings`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${authData.access_token}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(settings)
-  });
-}
-
-// 2. STATISTICS ADVANCED
-async function fetchTrend(period = 'week') {
-  const authData = await getAuthData();
-  if (!authData || !authData.access_token) return null;
-  const res = await fetch(`${API_ENDPOINT}/extension/trend?period=${period}`, {
-    headers: { 'Authorization': `Bearer ${authData.access_token}` }
-  });
-  if (!res.ok) return null;
-  return await res.json();
-}
-async function fetchToxicKeywords(limit = 20) {
-  const authData = await getAuthData();
-  if (!authData || !authData.access_token) return null;
-  const res = await fetch(`${API_ENDPOINT}/extension/toxic-keywords?limit=${limit}`, {
-    headers: { 'Authorization': `Bearer ${authData.access_token}` }
-  });
-  if (!res.ok) return null;
-  return await res.json();
-}
-// Hiển thị trend chart và toxic keywords
-async function updateAdvancedStats(period = 'week') {
-  const trend = await fetchTrend(period);
-  console.log('[DEBUG] Trend API response:', trend);
-  if (trend && trend.dates && trend.series) {
-    // Vẽ lại trend chart
-    const trendChartElement = document.getElementById('trend-chart');
-    if (trendChartElement && typeof Chart !== 'undefined') {
-      // Xóa chart cũ nếu có
-      if (window.trendChartInstance) {
-        window.trendChartInstance.destroy();
-      }
-      // Chuẩn bị datasets
-      const datasets = [
-        {
-          label: 'Bình thường',
-          data: trend.series.clean,
-          borderColor: '#4CAF50',
-          backgroundColor: 'rgba(76, 175, 80, 0.1)',
-          borderWidth: 2,
-          fill: true
-        },
-        {
-          label: 'Xúc phạm',
-          data: trend.series.offensive,
-          borderColor: '#FF9800',
-          backgroundColor: 'rgba(255, 152, 0, 0.1)',
-          borderWidth: 2,
-          fill: true
-        },
-        {
-          label: 'Thù ghét',
-          data: trend.series.hate,
-          borderColor: '#F44336',
-          backgroundColor: 'rgba(244, 67, 54, 0.1)',
-          borderWidth: 2,
-          fill: true
-        },
-        {
-          label: 'Spam',
-          data: trend.series.spam,
-          borderColor: '#9C27B0',
-          backgroundColor: 'rgba(156, 39, 176, 0.1)',
-          borderWidth: 2,
-          fill: true
-        }
-      ];
-      window.trendChartInstance = new Chart(trendChartElement, {
-        type: 'line',
-        data: {
-          labels: trend.dates,
-          datasets: datasets
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: { display: true, position: 'top' }
-          },
-          scales: {
-            y: {
-              beginAtZero: true
-            }
-          }
-        }
-      });
+    showNotification(error.message, 'error');
+  } finally {
+    // Remove loading indicator
+    const loadingIndicator = document.getElementById('batch-loading-indicator');
+    if (loadingIndicator) {
+      loadingIndicator.remove();
     }
   }
-  const keywords = await fetchToxicKeywords();
-  if (keywords && keywords.keywords) {
-    const kwList = document.getElementById('toxic-keywords-list');
-    kwList.innerHTML = '';
-    keywords.keywords.forEach(k => {
-      const span = document.createElement('span');
-      span.className = 'keyword-chip';
-      span.textContent = `${k.word} (${k.count})`;
-      kwList.appendChild(span);
-    });
-  }
 }
-// 3. RECENT COMMENTS + DELETE
-async function fetchRecentComments(period = 'week') {
-  const authData = await getAuthData();
-  if (!authData || !authData.access_token) return [];
-  const res = await fetch(`${API_ENDPOINT}/extension/stats?period=${period}`, {
-    headers: { 'Authorization': `Bearer ${authData.access_token}` }
-  });
-  if (!res.ok) return [];
-  const data = await res.json();
-  return data.recent || [];
-}
-async function deleteComment(commentId) {
-  const authData = await getAuthData();
-  if (!authData || !authData.access_token) throw new Error('Chưa đăng nhập');
-  const res = await fetch(`${API_ENDPOINT}/extension/comments/${commentId}`, {
-    method: 'DELETE',
-    headers: { 'Authorization': `Bearer ${authData.access_token}` }
-  });
-  if (!res.ok) throw new Error('Xóa thất bại');
-  return await res.json();
-}
-async function updateRecentComments(period = 'week') {
-  const list = document.getElementById('recent-comments-list');
-  list.innerHTML = 'Đang tải...';
-  const comments = await fetchRecentComments(period);
-  list.innerHTML = '';
-  comments.forEach(c => {
-    const div = document.createElement('div');
-    div.className = 'recent-comment-item';
-    div.innerHTML = `<span>${c.content}</span> <span class="label ${categoryClasses[c.prediction]}">${categoryNames[c.prediction]}</span> <button class="delete-comment-btn" data-id="${c.id}">Xóa</button>`;
-    list.appendChild(div);
-  });
-  // Gán sự kiện xóa
-  list.querySelectorAll('.delete-comment-btn').forEach(btn => {
-    btn.onclick = async (e) => {
-      const id = btn.getAttribute('data-id');
-      try {
-        await deleteComment(id);
-        showNotification('Đã xóa bình luận', 'success');
-        updateRecentComments(period);
-      } catch {
-        showNotification('Xóa thất bại', 'error');
-      }
-    };
-  });
-}
-// 4. BATCH DETECT
-async function batchDetect(comments) {
-  const authData = await getAuthData();
-  const headers = { 'Content-Type': 'application/json' };
-  if (authData && authData.access_token) {
-    headers['Authorization'] = `Bearer ${authData.access_token}`;
-  }
-  const res = await fetch(`${API_ENDPOINT}/extension/batch-detect`, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify({ items: comments, save_to_db: false })
-  });
-  if (!res.ok) throw new Error('Batch detect thất bại');
-  return await res.json();
-}
-// Xử lý UI batch detect
-function setupBatchDetectUI() {
-  const input = document.getElementById('batch-input');
-  const btn = document.getElementById('batch-detect-btn');
-  const fileInput = document.getElementById('batch-file-input');
-  const resultContainer = document.getElementById('batch-result-container');
-  const resultList = document.getElementById('batch-result-list');
-  btn.onclick = async () => {
-    const lines = input.value.split('\n').map(l => l.trim()).filter(l => l);
-    if (!lines.length) return showNotification('Nhập ít nhất 1 dòng', 'error');
-    btn.disabled = true;
-    showLoading('batch-result-list');
-    try {
-      const comments = lines.map(text => ({ text, platform: 'unknown' }));
-      const res = await batchDetect(comments);
-      resultList.innerHTML = '';
-      res.results.forEach(r => {
-        const div = document.createElement('div');
-        div.innerHTML = `<span>${r.text}</span> <span class="label ${categoryClasses[r.prediction]}">${categoryNames[r.prediction]}</span> <span>${Math.round(r.confidence*100)}%</span>`;
-        resultList.appendChild(div);
-      });
-      resultContainer.classList.remove('hidden');
-    } catch (e) {
-      showNotification(e.message, 'error');
-    } finally {
-      btn.disabled = false;
-      hideLoading('batch-result-list');
-    }
-  };
-  fileInput.onchange = async (e) => {
-    const file = fileInput.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = async function(ev) {
-      const content = ev.target.result;
-      const lines = content.split('\n').map(l => l.trim()).filter(l => l);
-      if (!lines.length) return showNotification('File rỗng', 'error');
-      btn.disabled = true;
-      showLoading('batch-result-list');
-      try {
-        const comments = lines.map(text => ({ text, platform: 'unknown' }));
-        const res = await batchDetect(comments);
-        resultList.innerHTML = '';
-        res.results.forEach(r => {
-          const div = document.createElement('div');
-          div.innerHTML = `<span>${r.text}</span> <span class="label ${categoryClasses[r.prediction]}">${categoryNames[r.prediction]}</span> <span>${Math.round(r.confidence*100)}%</span>`;
-          resultList.appendChild(div);
-        });
-        resultContainer.classList.remove('hidden');
-      } catch (e) {
-        showNotification(e.message, 'error');
-      } finally {
-        btn.disabled = false;
-        hideLoading('batch-result-list');
-      }
-    };
-    reader.readAsText(file);
-  };
-}
+
 // Gọi các hàm update khi chuyển tab statistics
 function setupStatsTab() {
   const periodBtns = document.querySelectorAll('.period-button');
   let currentPeriod = 'week';
+  const isLoggedIn = document.body.classList.contains('logged-in');
+  const statsTabContent = document.getElementById('stats-tab-content'); // Assume stats tab content has this ID
+
+  // Disable period buttons and hide content if not logged in
+  periodBtns.forEach(btn => {
+      btn.disabled = !isLoggedIn;
+      if (!isLoggedIn) {
+          btn.classList.add('disabled'); // Add class for styling disabled state
+      } else {
+          btn.classList.remove('disabled');
+      }
+  });
+
+  if (statsTabContent) {
+      statsTabContent.style.display = isLoggedIn ? '' : 'none';
+      const loginPrompt = document.getElementById('stats-login-prompt');
+      if (!isLoggedIn) {
+          if (!loginPrompt) {
+              const promptDiv = document.createElement('div');
+              promptDiv.id = 'stats-login-prompt';
+              promptDiv.textContent = 'Vui lòng đăng nhập để xem thống kê chi tiết.';
+              promptDiv.style.textAlign = 'center';
+              promptDiv.style.padding = '20px';
+              promptDiv.style.color = '#888';
+              statsTabContent.parentNode.insertBefore(promptDiv, statsTabContent);
+          } else {
+             loginPrompt.style.display = '';
+          }
+      } else if (loginPrompt) {
+         loginPrompt.style.display = 'none';
+      }
+  }
+
   periodBtns.forEach(btn => {
     btn.onclick = () => {
+      if (!isLoggedIn) return; // Do nothing if not logged in
       periodBtns.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       currentPeriod = btn.getAttribute('data-period');
@@ -1673,18 +1718,464 @@ function setupStatsTab() {
   loadStatsForPeriod(currentPeriod);
 }
 
-document.getElementById('single-mode-btn').onclick = function() {
-  this.classList.add('active');
-  document.getElementById('batch-mode-btn').classList.remove('active');
-  document.getElementById('single-analyze-area').style.display = '';
-  document.getElementById('batch-analyze-area').style.display = 'none';
-};
-document.getElementById('batch-mode-btn').onclick = function() {
-  this.classList.add('active');
-  document.getElementById('single-mode-btn').classList.remove('active');
-  document.getElementById('single-analyze-area').style.display = 'none';
-  document.getElementById('batch-analyze-area').style.display = '';
-};
+// Setup Analyze Mode Switch
+function setupAnalyzeModeSwitch() {
+  const isLoggedIn = document.body.classList.contains('logged-in');
+
+  if (singleModeBtn && batchModeBtn && singleAnalyzeArea && batchAnalyzeArea) {
+    // Always show single mode button and area
+    singleModeBtn.style.display = '';
+    singleAnalyzeArea.style.display = '';
+
+    // Show/hide batch mode button and area based on login status
+    batchModeBtn.style.display = isLoggedIn ? '' : 'none';
+    if (!isLoggedIn && batchInput) {
+      // Add login prompt to batch area if not logged in
+      if (!document.getElementById('batch-login-prompt')) {
+        const loginPrompt = document.createElement('div');
+        loginPrompt.id = 'batch-login-prompt';
+        loginPrompt.className = 'login-prompt';
+        loginPrompt.innerHTML = `
+          <p>Đăng nhập để sử dụng tính năng phân tích hàng loạt.</p>
+          <button id="batch-login-btn" class="secondary-button">Đăng nhập</button>
+        `;
+        // Insert before batchAnalyzeArea
+        if (batchAnalyzeArea.parentNode) {
+          batchAnalyzeArea.parentNode.insertBefore(loginPrompt, batchAnalyzeArea);
+        }
+        
+        // Add event listener to the login button
+        const batchLoginBtn = document.getElementById('batch-login-btn');
+        if (batchLoginBtn) {
+          batchLoginBtn.addEventListener('click', () => {
+            // Switch to account tab
+            document.querySelector('.tab-button[data-tab="account"]').click();
+          });
+        }
+      }
+    } else {
+      // Remove login prompt if logged in
+      const batchLoginPrompt = document.getElementById('batch-login-prompt');
+      if (batchLoginPrompt) {
+        batchLoginPrompt.remove();
+      }
+    }
+
+    // Ensure batch button is disabled if not logged in (redundant but safe)
+    if (!isLoggedIn) {
+       batchModeBtn.classList.add('disabled'); // Style as disabled
+       batchModeBtn.disabled = true;
+    } else {
+       batchModeBtn.classList.remove('disabled');
+       batchModeBtn.disabled = false;
+    }
+
+    // Default to single mode active
+    singleModeBtn.classList.add('active');
+    batchModeBtn.classList.remove('active');
+    singleAnalyzeArea.style.display = '';
+    batchAnalyzeArea.style.display = 'none'; // Initially hide batch area
+
+    singleModeBtn.onclick = function() {
+      singleModeBtn.classList.add('active');
+      batchModeBtn.classList.remove('active');
+      singleAnalyzeArea.style.display = '';
+      batchAnalyzeArea.style.display = 'none';
+      // Hide the batch login prompt if it exists
+      const batchLoginPrompt = document.getElementById('batch-login-prompt');
+      if (batchLoginPrompt) {
+        batchLoginPrompt.style.display = 'none';
+      }
+      // Ensure batch result container is hidden when switching to single mode
+      if (batchResultContainer) batchResultContainer.classList.add('hidden');
+    };
+
+    // Only attach click handler to batch button if logged in
+    if (isLoggedIn) {
+        batchModeBtn.onclick = function() {
+          batchModeBtn.classList.add('active');
+          singleModeBtn.classList.remove('active');
+          singleAnalyzeArea.style.display = 'none';
+          batchAnalyzeArea.style.display = '';
+          // Restore batch results visibility if they exist
+          if (batchResultContainer && batchResultList && batchResultList.children.length > 0 && !batchResultList.innerHTML.includes('Không có kết quả phân tích')) {
+              batchResultContainer.classList.remove('hidden');
+          }
+        };
+    }
+  }
+}
+
+// Auth state change observer - monitor login/logout changes
+document.addEventListener('DOMContentLoaded', function() {
+  // Cấu hình thông báo khi class của body thay đổi
+  const observer = new MutationObserver(function(mutations) {
+    mutations.forEach(function(mutation) {
+      if (mutation.attributeName === 'class') {
+        const isLoggedIn = document.body.classList.contains('logged-in');
+        // Cập nhật UI dựa trên trạng thái đăng nhập
+        updateAuthDependentUI(isLoggedIn);
+      }
+    });
+  });
+  
+  // Bắt đầu theo dõi thay đổi trên body
+  observer.observe(document.body, { attributes: true });
+  
+  // Kiểm tra trạng thái ban đầu
+  const isLoggedIn = document.body.classList.contains('logged-in');
+  updateAuthDependentUI(isLoggedIn);
+});
+
+// Kiểm tra auth ngay khi trang tải
+(function checkInitialAuth() {
+  const AUTH_STORAGE_KEY = "toxicDetector_auth";
+  
+  // Kiểm tra token từ local storage
+  chrome.storage.local.get([AUTH_STORAGE_KEY], function(localData) {
+    if (localData && localData[AUTH_STORAGE_KEY]) {
+      document.body.classList.add('logged-in');
+    } else {
+      // Thử kiểm tra từ sync storage
+      chrome.storage.sync.get([AUTH_STORAGE_KEY], function(syncData) {
+        if (syncData && syncData[AUTH_STORAGE_KEY]) {
+          document.body.classList.add('logged-in');
+        } else {
+          document.body.classList.add('not-logged-in');
+        }
+      });
+    }
+  });
+})();
 
 // Initialize the extension
 initializePopup();
+
+/**
+ * Reset user statistics
+ */
+async function resetStats() {
+  if (!confirm("Bạn có chắc muốn đặt lại tất cả thống kê không?")) {
+    return;
+  }
+  
+  try {
+    // Get authentication token
+    const authData = await getAuthData();
+    const token = authData ? authData.access_token : null;
+    
+    if (!token) {
+      showNotification('Vui lòng đăng nhập để đặt lại thống kê', 'warning');
+      return;
+    }
+    
+    // Make API request to reset stats endpoint
+    const response = await fetch(`${API_ENDPOINT}/user/stats/reset`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Lỗi API: ${response.status}`);
+    }
+    
+    showNotification('Đã đặt lại thống kê thành công', 'success');
+    
+    // Reload stats
+    loadStats();
+    
+  } catch (error) {
+    console.error('Error resetting stats:', error);
+    showNotification(error.message, 'error');
+  }
+}
+
+/**
+ * Update advanced statistics based on period
+ */
+async function updateAdvancedStats(period) {
+  const isLoggedIn = document.body.classList.contains('logged-in');
+  if (!isLoggedIn) return;
+  
+  try {
+    const authData = await getAuthData();
+    if (!authData || !authData.access_token) return;
+    
+    // Fetch platform statistics
+    const response = await fetch(`${API_ENDPOINT}/toxic-detection/statistics?period=${period}`, {
+      headers: {
+        'Authorization': `Bearer ${authData.access_token}`
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`API Error: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    
+    // Update platform stats if available
+    const platformsChartContainer = document.getElementById('platforms-chart-container');
+    if (platformsChartContainer && data.platforms && Object.keys(data.platforms).length > 0) {
+      // Implementation depends on your chart library
+      console.log("Platform stats data:", data.platforms);
+      // You would add chart rendering code here
+    }
+    
+    // Update toxic keywords if available
+    const keywordsContainer = document.getElementById('toxic-keywords-list');
+    if (keywordsContainer) {
+      // Clear current content
+      keywordsContainer.innerHTML = '';
+      
+      // If we have toxic keywords data, populate it
+      if (data.toxic_keywords && Array.isArray(data.toxic_keywords) && data.toxic_keywords.length > 0) {
+        // Add each keyword to the container
+        data.toxic_keywords.forEach(kw => {
+          const keywordDiv = document.createElement('div');
+          keywordDiv.className = 'keyword-item';
+          keywordDiv.innerHTML = `
+            <span class="keyword-text">${kw.word}</span>
+            <span class="keyword-count">${kw.count}</span>
+          `;
+          keywordsContainer.appendChild(keywordDiv);
+        });
+      } else {
+        keywordsContainer.innerHTML = '<div class="no-data">Không có dữ liệu</div>';
+      }
+    }
+  } catch (error) {
+    console.error("Error updating advanced stats:", error);
+  }
+}
+
+/**
+ * Update recent comments based on period
+ */
+async function updateRecentComments(period) {
+  const isLoggedIn = document.body.classList.contains('logged-in');
+  if (!isLoggedIn) return;
+  
+  const commentsContainer = document.getElementById('recent-comments-list');
+  if (!commentsContainer) return;
+  
+  try {
+    const authData = await getAuthData();
+    if (!authData || !authData.access_token) return;
+    
+    // Show loading
+    commentsContainer.innerHTML = '<div class="loading">Đang tải...</div>';
+    
+    // Fetch recent comments
+    const response = await fetch(`${API_ENDPOINT}/extension/stats?period=${period}`, {
+      headers: {
+        'Authorization': `Bearer ${authData.access_token}`
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`API Error: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    
+    // Clear container
+    commentsContainer.innerHTML = '';
+    
+    // If we have recent comments, display them
+    if (data.recent && Array.isArray(data.recent) && data.recent.length > 0) {
+      data.recent.forEach(comment => {
+        const commentDiv = document.createElement('div');
+        commentDiv.className = 'recent-comment-item';
+        commentDiv.innerHTML = `
+          <div class="comment-content">${comment.content}</div>
+          <div class="comment-meta">
+            <span class="label ${categoryClasses[comment.prediction] || 'unknown'}">${categoryNames[comment.prediction] || 'Unknown'}</span>
+            <span class="comment-platform">${comment.platform || 'Unknown'}</span>
+            <span class="comment-date">${new Date(comment.created_at).toLocaleString()}</span>
+          </div>
+        `;
+        commentsContainer.appendChild(commentDiv);
+      });
+    } else {
+      commentsContainer.innerHTML = '<div class="no-data">Không có bình luận gần đây</div>';
+    }
+  } catch (error) {
+    console.error("Error updating recent comments:", error);
+    commentsContainer.innerHTML = '<div class="error">Không thể tải bình luận gần đây</div>';
+  }
+}
+
+/**
+ * Phân tích văn bản hàng loạt
+ */
+async function processBatchText() {
+  // Lấy văn bản từ textarea
+  const batchText = batchInput.value.trim();
+  
+  // Kiểm tra nếu không có văn bản
+  if (!batchText) {
+    showNotification('Vui lòng nhập văn bản cần phân tích', 'error');
+    return;
+  }
+
+  // Tách thành từng dòng
+  const lines = batchText.split('\n').filter(line => line.trim().length > 0);
+  
+  if (lines.length === 0) {
+    showNotification('Không có dòng nào để phân tích', 'warning');
+    return;
+  }
+  
+  try {
+    // Hiển thị trạng thái loading
+    const batchDetectBtn = document.getElementById('batch-detect-btn');
+    batchDetectBtn.disabled = true;
+    batchDetectBtn.textContent = 'Đang phân tích...';
+    
+    // Hiển thị container kết quả và đặt loading
+    const batchResultContainer = document.getElementById('batch-result-container');
+    const batchResultList = document.getElementById('batch-result-list');
+    
+    if (batchResultContainer && batchResultList) {
+      batchResultContainer.classList.remove('hidden');
+      batchResultContainer.style.display = 'block'; // Force show
+      
+      // Tạo loading indicator
+      const loadingIndicator = document.createElement('div');
+      loadingIndicator.id = 'batch-loading-indicator';
+      loadingIndicator.innerHTML = '<div class="spinner"></div> <span>Đang phân tích ${lines.length} dòng...</span>';
+      loadingIndicator.style.padding = '10px';
+      loadingIndicator.style.textAlign = 'center';
+      batchResultList.innerHTML = '';
+      batchResultList.appendChild(loadingIndicator);
+    }
+    
+    // Get authentication token
+    const authData = await getAuthData();
+    const token = authData ? authData.access_token : null;
+    
+    if (!token) {
+      throw new Error('Bạn cần đăng nhập để sử dụng tính năng này');
+    }
+    
+    // Get platform from current tab
+    let platform = 'unknown';
+    if (currentPlatform && currentPlatform.textContent) {
+      platform = currentPlatform.textContent.toLowerCase();
+    }
+    
+    // Tạo mảng comments
+    const comments = lines.map((line) => ({
+      content: line,
+      platform: platform
+    }));
+    
+    // Thực hiện gọi API
+    console.log('[DEBUG] Batch detect API request:', { comments: comments });
+    
+    const response = await fetch(`${API_ENDPOINT}/extension/batch-detect`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({
+        comments: comments,
+        save_to_db: saveDataCheckbox && saveDataCheckbox.checked,
+        metadata: {
+          source: 'extension-batch'
+        }
+      })
+    });
+    
+    if (!response.ok) {
+      throw new Error(`API Error: ${response.status}`);
+    }
+    
+    const results = await response.json();
+    console.log('[DEBUG] Batch detect API response:', results);
+    
+    // Hiển thị kết quả
+    if (batchResultList) {
+      batchResultList.innerHTML = ''; // Xóa loading indicator
+      
+      if (!results || !Array.isArray(results) || results.length === 0) {
+        batchResultList.innerHTML = '<div style="padding:10px;text-align:center;color:#d32f2f;">Không có kết quả</div>';
+        return;
+      }
+      
+      // Tạo kết quả cho mỗi dòng
+      results.forEach((result, index) => {
+        const item = document.createElement('div');
+        item.className = 'batch-result-item';
+        
+        const classification = result.prediction !== undefined ? result.prediction : 0;
+        const confidencePercent = Math.round((result.confidence || 0.5) * 100);
+        
+        item.innerHTML = `
+          <div class="result-text">${result.text || comments[index].content}</div>
+          <div class="result-meta">
+            <span class="label ${categoryClasses[classification] || 'unknown'}">
+              ${categoryNames[classification] || 'Unknown'} (${confidencePercent}%)
+            </span>
+          </div>
+        `;
+        
+        batchResultList.appendChild(item);
+      });
+      
+      // Thêm thông tin tổng hợp
+      const totalResults = results.length;
+      const cleanCount = results.filter(r => r.prediction === 0).length;
+      const offensiveCount = results.filter(r => r.prediction === 1).length;
+      const hateCount = results.filter(r => r.prediction === 2).length;
+      const spamCount = results.filter(r => r.prediction === 3).length;
+      
+      const summary = document.createElement('div');
+      summary.className = 'batch-summary';
+      summary.innerHTML = `
+        <h4>Tổng kết:</h4>
+        <div class="summary-stats">
+          <div>Tổng số: <strong>${totalResults}</strong></div>
+          <div>Bình thường: <strong class="clean">${cleanCount}</strong></div>
+          <div>Xúc phạm: <strong class="offensive">${offensiveCount}</strong></div>
+          <div>Thù ghét: <strong class="hate">${hateCount}</strong></div>
+          <div>Spam: <strong class="spam">${spamCount}</strong></div>
+        </div>
+      `;
+      
+      batchResultList.prepend(summary);
+    }
+    
+    // Cập nhật thống kê nếu đăng nhập
+    if (authData && authData.access_token) {
+      setupStatsTab(); // Reload stats
+    }
+    
+  } catch (error) {
+    console.error('Batch detection error:', error);
+    showNotification(error.message, 'error');
+    
+    // Hiển thị lỗi trong container kết quả
+    const batchResultList = document.getElementById('batch-result-list');
+    if (batchResultList) {
+      batchResultList.innerHTML = `
+        <div style="color:#d32f2f; padding:15px; text-align:center;">
+          <h3>Lỗi phân tích hàng loạt</h3>
+          <p>${error.message}</p>
+          <p>Vui lòng thử lại hoặc kiểm tra kết nối.</p>
+        </div>
+      `;
+    }
+  } finally {
+    // Khôi phục trạng thái button
+    const batchDetectBtn = document.getElementById('batch-detect-btn');
+    if (batchDetectBtn) {
+      batchDetectBtn.disabled = false;
+      batchDetectBtn.textContent = 'Phân tích hàng loạt';
+    }
+  }
+}

@@ -549,31 +549,38 @@ input:checked + .slider:before {
   cursor: not-allowed;
 }
 
+/* --- Result Container --- */
 .result-container {
-  margin-top: 20px;
-  padding-top: 16px;
-  border-top: 1px dashed var(--border-color);
+  background-color: var(--card-bg);
+  border-radius: 8px;
+  padding: 15px;
+  margin-top: 15px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  display: none; /* Mặc định ẩn */
 }
 
-.result-container.hidden {
-  display: none;
+/* Khi không còn class hidden */
+.result-container:not(.hidden) {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
 }
 
+/* Định dạng cho mục kết quả */
 .result-item {
   display: flex;
-  margin-bottom: 12px;
-  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
 }
 
 .result-label {
-  width: 100px;
+  font-weight: 500;
   color: var(--text-light);
-  font-size: 14px;
+  width: 100px;
 }
 
 .result-value {
-  font-weight: 500;
-  color: var(--text-color);
+  font-weight: 600;
 }
 
 .result-value.clean {
@@ -666,20 +673,83 @@ input:checked + .slider:before {
   color: var(--text-color);
 }
 
-.secondary-button {
-  padding: 8px 16px;
-  background-color: transparent;
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-  color: var(--text-color);
-  cursor: pointer;
-  font-size: 13px;
-  margin-top: 16px;
-  transition: all 0.3s ease;
+/* --- Batch Result Container --- */
+#batch-result-container {
+  background-color: var(--card-bg);
+  border-radius: 8px;
+  padding: 15px;
+  margin-top: 15px;
+  box-shadow: 0 2px 8px rgba(33,150,243,0.1);
+  display: none; /* Mặc định ẩn */
 }
 
-.secondary-button:hover {
-  background-color: var(--bg-color);
+/* Khi không còn class hidden */
+#batch-result-container:not(.hidden) {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+#batch-result-list {
+  max-height: 300px;
+  overflow-y: auto;
+  margin-top: 10px;
+  padding: 5px;
+}
+
+.batch-result-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid var(--border-color);
+  background-color: rgba(255, 255, 255, 0.5);
+  border-radius: 4px;
+}
+
+.result-text {
+  flex: 2;
+  margin-right: 10px;
+  word-break: break-word;
+}
+
+.result-meta {
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+/* Style for labels in batch results */
+.batch-result-item .label {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-weight: 500;
+  font-size: 12px;
+  color: white;
+}
+
+.batch-result-item .label.clean {
+  background-color: var(--clean-color);
+}
+
+.batch-result-item .label.offensive {
+  background-color: var(--offensive-color);
+}
+
+.batch-result-item .label.hate {
+  background-color: var(--hate-color);
+}
+
+.batch-result-item .label.spam {
+  background-color: var(--spam-color);
+}
+
+.batch-result-item .confidence {
+  margin-left: 8px;
+  min-width: 40px;
+  text-align: right;
+  font-weight: 500;
 }
 
 /* Authentication forms */
@@ -725,95 +795,6 @@ input:checked + .slider:before {
   margin-top: 16px;
 }
 
-
-
-.primary-button:hover {
-  background-color: var(--primary-dark);
-}
-
-.warning-button {
-  padding: 8px 16px;
-  background-color: var(--danger-color);
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
-}
-
-.warning-button:hover {
-  background-color: #d32f2f;
-}
-
-.form-footer {
-  margin-top: 16px;
-  text-align: center;
-  font-size: 13px;
-}
-
-.form-footer a {
-  color: var(--primary-color);
-  text-decoration: none;
-}
-
-.form-footer a:hover {
-  text-decoration: underline;
-}
-
-/* Profile section */
-.profile-info {
-  background-color: var(--card-bg);
-  border-radius: 8px;
-  padding: 16px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  margin-bottom: 16px;
-}
-
-.profile-field {
-  display: flex;
-  margin-bottom: 12px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid var(--border-color);
-}
-
-.profile-field:last-child {
-  border-bottom: none;
-  padding-bottom: 0;
-  margin-bottom: 0;
-}
-
-.profile-label {
-  width: 120px;
-  color: var(--text-light);
-  font-size: 14px;
-}
-
-.profile-value {
-  flex: 1;
-  color: var(--text-color);
-  font-weight: 500;
-}
-
-.profile-actions {
-  display: flex;
-  justify-content: space-between;
-}
-
-/* Footer */
-.footer {
-  margin-top: 24px;
-  font-size: 12px;
-  color: var(--text-light);
-  text-align: center;
-  border-top: 1px solid var(--border-color);
-  padding-top: 12px;
-}
-
-.small {
-  font-size: 10px;
-  margin-top: 4px;
-}
-
 /* Notification */
 .notification {
   position: fixed;
@@ -852,282 +833,148 @@ input:checked + .slider:before {
   background-color: var(--info-color);
 }
 
-.loading-spinner {
-  display: inline-block;
-  width: 18px;
-  height: 18px;
-  border: 3px solid var(--primary-color);
-  border-radius: 50%;
-  border-top: 3px solid #fff;
-  animation: spin 1s linear infinite;
-  margin-right: 6px;
-  vertical-align: middle;
-}
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+/* Auth-based visibility */
+body.not-logged-in .requires-auth,
+body.not-logged-in [data-requires-auth="true"],
+body.not-logged-in .tab-button[data-tab="stats"], 
+body.not-logged-in .tab-button[data-tab="settings"],
+body.not-logged-in #batch-mode-btn,
+body.not-logged-in #batch-analyze-area,
+body.not-logged-in #reset-stats {
+  display: none !important;
 }
 
-.analyze-mode-switch {
-  display: flex;
-  justify-content: center;
-  gap: 8px;
-  margin-bottom: 16px;
-}
-.mode-btn {
-  padding: 8px 18px;
-  border: 1.5px solid var(--primary-color);
-  background: var(--card-bg);
-  color: var(--primary-color);
-  border-radius: 20px;
-  font-size: 15px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background 0.2s, color 0.2s, border 0.2s;
-  outline: none;
-}
-.mode-btn.active {
-  background: var(--primary-color);
-  color: #fff;
-  border-color: var(--primary-color);
-  box-shadow: 0 2px 8px rgba(33,150,243,0.08);
-}
-.mode-btn:not(.active):hover {
-  background: #e3f2fd;
-  color: var(--primary-dark);
-}
-#single-analyze-area, #batch-analyze-area {
-  margin-top: 0;
-}
-#batch-analyze-area .analyze-container,
-#single-analyze-area .analyze-container {
-  margin-top: 0;
-  margin-bottom: 0;
-  padding: 18px 14px 14px 14px;
-  border-radius: 10px;
-  background: var(--card-bg);
-  box-shadow: 0 2px 8px rgba(33,150,243,0.04);
-}
-#batch-input, #analyze-text {
-  width: 100%;
-  min-height: 80px;
-  padding: 10px;
-  border: 1.5px solid var(--border-color);
-  border-radius: 6px;
-  font-size: 14px;
-  margin-bottom: 14px;
-  background: var(--bg-color);
-  color: var(--text-color);
-  resize: vertical;
-}
-.batch-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-bottom: 10px;
-}
-#batch-detect-btn, #analyze-button {
-  margin-bottom: 0;
-}
-#batch-file-input {
-  border: none;
-  background: none;
-  font-size: 13px;
-  color: var(--primary-color);
-  margin-top: 2px;
-}
-@media (max-width: 480px) {
-  .analyze-mode-switch { flex-direction: column; gap: 4px; }
-  .mode-btn { width: 100%; }
-  #batch-input, #analyze-text { font-size: 13px; }
+body.not-logged-in #save-data {
+  opacity: 0.5;
+  pointer-events: none;
+  cursor: not-allowed;
 }
 
-/* --- General Card/Container Style --- */
-.card, .analyze-container, .profile-info, .auth-form, .chart-container, .platforms-stats, .toxic-keywords, .recent-comments {
-  background: var(--card-bg);
-  border-radius: 10px;
-  box-shadow: 0 2px 8px rgba(33,150,243,0.04);
-  padding: 18px 14px 14px 14px;
-  margin-bottom: 18px;
+body.not-logged-in #batch-input {
+  background-color: #f5f5f5;
+  opacity: 0.7;
+  pointer-events: none;
+  cursor: not-allowed;
 }
-/* --- Form Group --- */
-.form-group {
-  margin-bottom: 18px;
-}
-.form-group label {
-  font-size: 14px;
-  color: var(--text-color);
-  margin-bottom: 6px;
+
+/* Login prompt for tab content that requires auth */
+body.not-logged-in #stats-tab::before,
+body.not-logged-in #settings-tab .requires-auth::before {
+  content: "Vui lòng đăng nhập để sử dụng tính năng này";
   display: block;
+  padding: 20px;
+  text-align: center;
+  color: #666;
+  font-style: italic;
+  background-color: #f9f9f9;
+  border-radius: 5px;
+  margin: 20px 0;
 }
-input[type="text"], input[type="email"], input[type="password"], select {
-  width: 100%;
-  padding: 8px 12px;
-  border: 1.5px solid var(--border-color);
-  border-radius: 6px;
-  font-size: 14px;
-  background: var(--bg-color);
-  color: var(--text-color);
-  margin-top: 2px;
-  margin-bottom: 2px;
-  transition: border 0.2s;
+
+/* Default to single mode when not logged in */
+body.not-logged-in #single-mode-btn {
+  opacity: 1 !important;
 }
-input[type="text"]:focus, input[type="email"]:focus, input[type="password"]:focus, select:focus {
-  border-color: var(--primary-color);
-  outline: none;
+
+/* Styling for disabled elements */
+.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
 }
-.checkbox {
-  margin-bottom: 10px;
-}
-/* CSS cho các nút */
-.primary-button, .secondary-button, .warning-button {
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-size: 15px;
-  font-weight: 500;
-  border: none;
-  cursor: pointer;
-  transition: background 0.2s, color 0.2s;
+
+/* --- Add spinner styles --- */
+.spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  border-top-color: var(--primary-color);
+  border-radius: 50%;
+  animation: spin 1s ease-in-out infinite;
   margin-right: 8px;
-  height: 38px; /* Thêm chiều cao cố định */
-  line-height: 24px; /* Căn giữa text theo chiều dọc */
-  box-sizing: border-box; /* Đảm bảo padding không ảnh hưởng đến kích thước tổng */
-  display: inline-flex; /* Sử dụng flex để căn chỉnh nội dung */
-  align-items: center; /* Căn giữa theo chiều dọc */
-  justify-content: center; /* Căn giữa theo chiều ngang */
-  min-width: 100px; /* Đặt chiều rộng tối thiểu cho các nút */
 }
 
-/* Nếu có nút nào không cần margin-right */
-.warning-button {
-  margin-right: 0;
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
-/* Hoặc tốt hơn nên nhóm các nút trong một container */
-.form-actions {
-  margin: auto;
-  padding: 0 33px;
-}
-
-.primary-button {
-  background: var(--primary-color);
-  color: #fff;
-}
-.primary-button:hover {
-  background: var(--primary-dark);
-}
-.secondary-button {
-  background: #e3f2fd;
-  color: var(--primary-color);
-  border: 1.5px solid var(--primary-color);
-}
-.secondary-button:hover {
-  background: var(--primary-color);
-  color: #fff;
-}
-.warning-button {
-  background: var(--danger-color);
-  color: #fff;
-}
-.warning-button:hover {
-  background: #b71c1c;
-}
-/* --- Profile/Account --- */
-.profile-info {
-  margin-bottom: 18px;
-  border-radius: 10px;
-  background: var(--card-bg);
-  box-shadow: 0 2px 8px rgba(33,150,243,0.04);
-  padding: 18px 14px 14px 14px;
-}
-.profile-field {
-  display: flex;
-  margin-bottom: 12px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid var(--border-color);
-}
-.profile-label {
-  width: 120px;
-  color: var(--text-light);
-  font-size: 14px;
-}
-.profile-value {
-  flex: 1;
-  color: var(--text-color);
-  font-weight: 500;
-}
-.profile-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-}
-/* --- Auth Form --- */
-.auth-form {
-  background: var(--card-bg);
-  border-radius: 10px;
-  box-shadow: 0 2px 8px rgba(33,150,243,0.04);
-  padding: 18px 14px 14px 14px;
-}
-
-/* --- Statistics --- */
-.chart-container {
-  background: var(--card-bg);
-  border-radius: 10px;
-  box-shadow: 0 2px 8px rgba(33,150,243,0.04);
-  padding: 14px 10px 10px 10px;
-  margin-bottom: 18px;
-}
-.stat-grid {
-  margin-bottom: 18px;
-}
-.platforms-stats, .toxic-keywords, .recent-comments {
-  background: var(--card-bg);
-  border-radius: 10px;
-  box-shadow: 0 2px 8px rgba(33,150,243,0.04);
-  padding: 14px 10px 10px 10px;
-  margin-bottom: 18px;
-}
-.toxic-keywords h3, .recent-comments h3 {
-  margin-bottom: 10px;
-}
-#toxic-keywords-list, #recent-comments-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-.recent-comment-item {
+#analysis-loading-indicator {
   display: flex;
   align-items: center;
-  gap: 8px;
-  background: var(--bg-color);
-  border-radius: 6px;
-  padding: 6px 10px;
-  margin-bottom: 6px;
+  justify-content: center;
+  margin: 10px 0;
   font-size: 14px;
+  color: var(--text-light);
 }
-.recent-comment-item .label {
-  font-weight: 500;
-  padding: 2px 8px;
+
+/* -- Fix result container visibility -- */
+.result-container.hidden {
+  display: none !important;
+}
+
+.result-container:not(.hidden) {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* -- Ensure other elements respect visibility -- */
+.tab-pane {
+  visibility: visible !important;
+}
+
+.tab-pane.active {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.batch-summary {
+  background-color: var(--bg-color);
   border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 15px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.batch-summary h4 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-size: 16px;
+  color: var(--text-color);
+}
+
+.summary-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
   font-size: 13px;
 }
-.delete-comment-btn {
-  background: var(--danger-color);
-  color: #fff;
-  border: none;
-  border-radius: 6px;
-  padding: 4px 10px;
-  font-size: 13px;
-  cursor: pointer;
-  margin-left: 8px;
-  transition: background 0.2s;
+
+.summary-stats div {
+  background-color: rgba(255, 255, 255, 0.5);
+  padding: 4px 8px;
+  border-radius: 4px;
 }
-.delete-comment-btn:hover {
-  background: #b71c1c;
+
+.summary-stats strong {
+  font-weight: 600;
+  margin-left: 4px;
 }
-@media (max-width: 480px) {
-  .card, .analyze-container, .profile-info, .auth-form, .chart-container, .platforms-stats, .toxic-keywords, .recent-comments {
-    padding: 10px 4px 8px 4px;
-  }
-  .profile-label { width: 90px; }
+
+.summary-stats strong.clean {
+  color: var(--clean-color);
+}
+
+.summary-stats strong.offensive {
+  color: var(--offensive-color);
+}
+
+.summary-stats strong.hate {
+  color: var(--hate-color);
+}
+
+.summary-stats strong.spam {
+  color: var(--spam-color);
 }

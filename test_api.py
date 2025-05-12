@@ -9,6 +9,11 @@ import requests
 import json
 import sys
 import time
+import pytest
+from fastapi.testclient import TestClient
+from main import app  # Đảm bảo import đúng app FastAPI
+
+client = TestClient(app)
 
 def test_health_endpoint():
     """
@@ -139,6 +144,88 @@ def test_gradio_interface():
     except Exception as e:
         print(f"Error testing Gradio interface: {str(e)}")
         return False
+
+def get_token():
+    # Đăng nhập và lấy token hợp lệ
+    resp = client.post("/auth/token", data={"username": "testuser", "password": "testpass"})
+    assert resp.status_code == 200
+    return resp.json()["access_token"]
+
+def test_detect_success():
+    token = get_token()
+    resp = client.post(
+        "/extension/detect",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"text": "Bạn thật tuyệt vời!", "platform": "facebook"}
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert "prediction" in data and "confidence" in data
+
+def test_detect_no_text():
+    token = get_token()
+    resp = client.post(
+        "/extension/detect",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"platform": "facebook"}
+    )
+    assert resp.status_code == 422
+
+def test_batch_detect_empty():
+    token = get_token()
+    resp = client.post(
+        "/extension/batch-detect",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"items": []}
+    )
+    assert resp.status_code == 200
+    assert resp.json()["count"] == 0
+
+def test_stats_periods():
+    token = get_token()
+    for period in ["day", "week", "month", "all"]:
+        resp = client.get(
+            f"/extension/stats?period={period}",
+            headers={"Authorization": f"Bearer {token}"}
+        )
+        assert resp.status_code == 200
+        assert "total_count" in resp.json()
+
+def test_settings_get_post():
+    token = get_token()
+    # GET
+    resp = client.get("/extension/settings", headers={"Authorization": f"Bearer {token}"})
+    assert resp.status_code == 200
+    # POST
+    new_settings = {"enabled_platforms": ["facebook"], "threshold": 0.8}
+    resp = client.post("/extension/settings", headers={"Authorization": f"Bearer {token}"}, json=new_settings)
+    assert resp.status_code == 200
+
+def test_trend_and_keywords():
+    token = get_token()
+    resp = client.get("/toxic/trend?period=week", headers={"Authorization": f"Bearer {token}"})
+    assert resp.status_code == 200
+    assert "dates" in resp.json()
+    resp = client.get("/toxic/toxic-keywords?limit=10", headers={"Authorization": f"Bearer {token}"})
+    assert resp.status_code == 200
+    assert "keywords" in resp.json()
+
+def test_delete_comment():
+    token = get_token()
+    # Tạo comment mới trước khi xóa
+    resp = client.post(
+        "/extension/detect",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"text": "Test comment", "platform": "facebook", "save_to_db": True}
+    )
+    assert resp.status_code == 200
+    # Lấy id comment vừa tạo (giả sử backend trả về id)
+    # Nếu không, cần lấy id từ /extension/stats recent
+    stats = client.get("/extension/stats", headers={"Authorization": f"Bearer {token}"}).json()
+    comment_id = stats["recent"][0]["id"]
+    # Xóa
+    resp = client.delete(f"/extension/comments/{comment_id}", headers={"Authorization": f"Bearer {token}"})
+    assert resp.status_code == 200
 
 if __name__ == "__main__":
     print("Starting API test...")
