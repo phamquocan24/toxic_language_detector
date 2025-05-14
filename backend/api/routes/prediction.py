@@ -119,6 +119,7 @@ from io import StringIO
 import csv
 import pandas as pd
 import json
+import numpy as np
 from backend.db.models import get_db, Comment, User, Log
 from backend.api.models.prediction import (
     PredictionRequest, 
@@ -395,8 +396,26 @@ async def get_similar_comments(
     
     # Lấy vector đặc trưng của comment gốc
     source_vector = source_comment.get_vector()
-    if not source_vector:
-        raise HTTPException(status_code=400, detail="Comment không có vector đặc trưng")
+    
+    # Nếu comment không có vector, tạo vector mới
+    if source_vector is None:
+        try:
+            from backend.utils.vector_utils import extract_features
+            # Ưu tiên sử dụng processed_content nếu có
+            if source_comment.processed_content:
+                source_vector = extract_features(source_comment.processed_content)
+            else:
+                source_vector = extract_features(source_comment.content)
+                
+            # Lưu vector vào database
+            source_comment.set_vector(source_vector)
+            db.commit()
+            
+            # Kiểm tra lại sau khi tạo
+            if source_vector is None:
+                raise HTTPException(status_code=400, detail="Không thể tạo vector đặc trưng cho comment")
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Lỗi khi tạo vector: {str(e)}")
     
     # Tìm các comment tương tự
     similar_comments = []

@@ -419,6 +419,16 @@ def get_comments(
     
     # Thực hiện query
     comments = query.order_by(Comment.created_at.desc()).offset(skip).limit(limit).all()
+    
+    # Đảm bảo probabilities là dict trước khi trả về
+    for comment in comments:
+        if comment.probabilities and isinstance(comment.probabilities, str):
+            import json
+            try:
+                comment.probabilities = json.loads(comment.probabilities)
+            except json.JSONDecodeError:
+                comment.probabilities = None   
+                             
     return comments
 
 @router.delete("/comments/{comment_id}", status_code=status.HTTP_204_NO_CONTENT)

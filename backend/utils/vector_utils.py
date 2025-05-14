@@ -360,7 +360,14 @@ def extract_features(text: str, reduce_dim: bool = False) -> np.ndarray:
         return np.zeros(10000)
 
     try:
-        vector = vectorizer.fit_transform([processed_text]).toarray()[0]
+#        vector = vectorizer.fit_transform([processed_text]).toarray()[0]
+        # Thay vì fit_transform, chỉ sử dụng transform
+        # Nếu vectorizer chưa được fit, hãy trả về vector 0
+        if not hasattr(vectorizer, 'vocabulary_'):
+            logger.warning("Vectorizer chưa được huấn luyện, sử dụng vector 0")
+            return np.zeros(10000)
+            
+        vector = vectorizer.transform([processed_text]).toarray()[0]
     except ValueError as e:
         logging.error("Error in vectorizer.fit_transform: %s. Returning zero vector.", e)
         vector = np.zeros(10000)
