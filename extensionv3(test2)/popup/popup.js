@@ -123,8 +123,8 @@ function initializeDOMReferences() {
   platformTwitter = document.getElementById('platform-twitter');
   platformTiktok = document.getElementById('platform-tiktok');
   platformZalo = document.getElementById('platform-zalo');
-
-  // Classification visibility toggles
+  
+// Classification visibility toggles
   showClean = document.getElementById('show-clean');
   showOffensive = document.getElementById('show-offensive');
   showHate = document.getElementById('show-hate');
@@ -332,7 +332,7 @@ async function loadSettings() {
     }
     const settings = serverSettings || data;
     // Extension enabled
-    if (enableToggle) {
+      if (enableToggle) {
       enableToggle.checked = settings.enabled !== undefined ? settings.enabled : true;
     }
     
@@ -343,24 +343,24 @@ async function loadSettings() {
     }
     
     // Highlight toxic
-    if (highlightToxic) {
+      if (highlightToxic) {
       highlightToxic.checked = settings.highlightToxic !== undefined ? settings.highlightToxic : true;
     }
     
     // Save data option
     if (saveDataCheckbox) {
       saveDataCheckbox.checked = settings.saveData !== undefined ? settings.saveData : true;
-    }
-    
-    // Platform settings
+      }
+      
+      // Platform settings
     if (settings.platforms) {
-      if (platformFacebook) {
+        if (platformFacebook) {
         platformFacebook.checked = settings.platforms.facebook !== undefined ? settings.platforms.facebook : true;
-      }
-      if (platformYoutube) {
+        }
+        if (platformYoutube) {
         platformYoutube.checked = settings.platforms.youtube !== undefined ? settings.platforms.youtube : true;
-      }
-      if (platformTwitter) {
+        }
+        if (platformTwitter) {
         platformTwitter.checked = settings.platforms.twitter !== undefined ? settings.platforms.twitter : true;
       }
       if (platformTiktok) {
@@ -394,10 +394,10 @@ async function loadSettings() {
       // Default to auto
       setTheme('auto');
     }
-  });
-}
-
-/**
+    });
+  }
+  
+  /**
  * Load statistics for the selected period
  */
 async function loadStatsForPeriod(period) {
@@ -890,6 +890,15 @@ async function reportIncorrectAnalysis() {
   const textContent = analyzeText.value.trim();
   if (!textContent) return;
   
+  // Get the report button
+  const reportBtn = document.getElementById('report-button');
+  
+  // Show loading state
+  if (reportBtn) {
+    reportBtn.classList.add('loading');
+    reportBtn.disabled = true;
+  }
+  
   try {
     // Get authentication token
     const authData = await getAuthData();
@@ -922,9 +931,23 @@ async function reportIncorrectAnalysis() {
     
     showNotification('Đã gửi báo cáo phân tích sai. Cảm ơn bạn đã giúp cải thiện hệ thống!', 'success');
     
+    // Keep 'clicked' state to show button was successfully activated
+    if (reportBtn) {
+      reportBtn.classList.remove('loading');
+      reportBtn.disabled = false;
+      // Keep the clicked class to maintain visual feedback
+    }
+    
   } catch (error) {
     console.error('Error reporting analysis:', error);
     showNotification(error.message, 'error');
+    
+    // Reset button on error
+    if (reportBtn) {
+      reportBtn.classList.remove('loading');
+      reportBtn.classList.remove('clicked');
+      reportBtn.disabled = false;
+    }
   }
 }
 
@@ -1034,6 +1057,8 @@ function setupEventHandlers() {
   // Report button - using event delegation because it might be dynamically created
   document.addEventListener('click', function(event) {
     if (event.target && event.target.id === 'report-button') {
+      // Add 'clicked' class to the button
+      event.target.classList.add('clicked');
       reportIncorrectAnalysis();
     }
   });
@@ -1780,13 +1805,13 @@ function setupStatsTab() {
     // Get stats from chrome.storage
     chrome.storage.sync.get('stats', (data) => {
       const stats = data.stats || {
-        scanned: 0,
-        clean: 0,
-        offensive: 0,
-        hate: 0,
-        spam: 0
-      };
-      
+            scanned: 0,
+            clean: 0,
+            offensive: 0,
+            hate: 0,
+            spam: 0
+          };
+          
       // Update the UI with the stats
       const tabStatScanned = document.getElementById('tab-stat-scanned');
       const tabStatClean = document.getElementById('tab-stat-clean');

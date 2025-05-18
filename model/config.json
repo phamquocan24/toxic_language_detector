@@ -1,0 +1,18 @@
+{
+  "model_type": "lstm",
+  "vocab_size": 20000,
+  "embedding_dim": 128,
+  "lstm_units": 128,
+  "max_length": 100,
+  "num_classes": 4,
+  "dropout_rate": 0.2,
+  "hidden_layer_size": 64,
+  "use_bidirectional": false,
+  "model_name": "LSTM",
+  "labels": [
+    "clean",
+    "offensive",
+    "hate",
+    "spam"
+  ]
+}

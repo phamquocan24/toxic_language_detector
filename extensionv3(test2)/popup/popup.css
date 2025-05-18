@@ -1235,6 +1235,47 @@ select:disabled {
   display: flex;
   align-items: center;
   margin-left: auto;
+  position: relative;
+  overflow: hidden;
+  color: var(--text-color);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--button-radius);
+  transition: all 0.2s ease;
+}
+
+#report-button:hover {
+  background-color: var(--bg-color);
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+#report-button:active,
+#report-button:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.4);
+  background-color: var(--primary-lighter);
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+  transform: translateY(1px);
+}
+
+#report-button::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  background: rgba(33, 150, 243, 0.3);
+  opacity: 0;
+  border-radius: 100%;
+  transform: scale(1, 1) translate(-50%, -50%);
+  transform-origin: 50% 50%;
+}
+
+#report-button:focus:not(:active)::after {
+  animation: ripple 0.8s ease-out;
 }
 
 #report-button::before {
@@ -1729,6 +1770,47 @@ body.not-logged-in #single-mode-btn {
   display: flex;
   align-items: center;
   margin-left: auto;
+  position: relative;
+  overflow: hidden;
+  color: var(--text-color);
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--button-radius);
+  transition: all 0.2s ease;
+}
+
+#report-button:hover {
+  background-color: var(--bg-color);
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+#report-button:active,
+#report-button:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.4);
+  background-color: var(--primary-lighter);
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+  transform: translateY(1px);
+}
+
+#report-button::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  background: rgba(33, 150, 243, 0.3);
+  opacity: 0;
+  border-radius: 100%;
+  transform: scale(1, 1) translate(-50%, -50%);
+  transform-origin: 50% 50%;
+}
+
+#report-button:focus:not(:active)::after {
+  animation: ripple 0.8s ease-out;
 }
 
 #report-button::before {
@@ -2947,4 +3029,36 @@ input:checked + .slider:after {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+#report-button:visited,
+#report-button:focus-visible,
+#report-button.clicked {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.4);
+  background-color: var(--primary-lighter);
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+#report-button.loading {
+  position: relative;
+  color: transparent !important;
+  pointer-events: none;
+}
+
+#report-button.loading::after {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  top: 50%;
+  left: 50%;
+  margin-top: -8px;
+  margin-left: -8px;
+  border-radius: 50%;
+  border: 2px solid rgba(33, 150, 243, 0.3);
+  border-top-color: var(--primary-color);
+  animation: spin 0.8s linear infinite;
+  box-sizing: border-box;
 }

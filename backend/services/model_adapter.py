@@ -520,6 +520,9 @@ class ModelAdapter:
             embedding_dim = 128
             lstm_units = 128
             num_classes = len(settings.MODEL_LABELS)
+            hidden_layer_size = 64
+            dropout_rate = 0.2
+            use_bidirectional = False
         else:
             # Lấy thông tin từ cấu hình
             max_length = model_config.get('max_length', 100)
@@ -527,16 +530,39 @@ class ModelAdapter:
             embedding_dim = model_config.get('embedding_dim', 128)
             lstm_units = model_config.get('lstm_units', 128)
             num_classes = model_config.get('num_classes', len(settings.MODEL_LABELS))
+            hidden_layer_size = model_config.get('hidden_layer_size', 64)
+            dropout_rate = model_config.get('dropout_rate', 0.2)
+            use_bidirectional = model_config.get('use_bidirectional', False)
         
-        # Tạo model với kiến trúc tương thích
-        inputs = tf.keras.Input(shape=(max_length,))
-        x = tf.keras.layers.Embedding(input_dim=vocab_size, output_dim=embedding_dim, input_length=max_length)(inputs)
-        x = tf.keras.layers.LSTM(lstm_units)(x)
-        x = tf.keras.layers.Dense(64, activation='relu')(x)
-        x = tf.keras.layers.Dropout(0.2)(x)
-        outputs = tf.keras.layers.Dense(num_classes, activation='softmax')(x)
+        # Tạo model với kiến trúc tương thích - sử dụng tên layer chính xác 
+        # để phù hợp với weights trong file safetensors
+        inputs = tf.keras.Input(shape=(max_length,), name='input')
         
-        model = tf.keras.Model(inputs=inputs, outputs=outputs)
+        # Embedding layer
+        x = tf.keras.layers.Embedding(
+            input_dim=vocab_size,
+            output_dim=embedding_dim,
+            input_length=max_length,
+            name='embedding'
+        )(inputs)
+        
+        # LSTM layer
+        if use_bidirectional:
+            x = tf.keras.layers.Bidirectional(
+                tf.keras.layers.LSTM(lstm_units, name='lstm'),
+                name='bidirectional'
+            )(x)
+        else:
+            x = tf.keras.layers.LSTM(lstm_units, name='lstm')(x)
+        
+        # Dense layer
+        x = tf.keras.layers.Dense(hidden_layer_size, activation='relu', name='dense')(x)
+        x = tf.keras.layers.Dropout(dropout_rate, name='dropout')(x)
+        
+        # Output layer
+        outputs = tf.keras.layers.Dense(num_classes, activation='softmax', name='dense_1')(x)
+        
+        model = tf.keras.Model(inputs=inputs, outputs=outputs, name='vietnamese_hate_speech_model')
         return model
     
     @staticmethod
@@ -550,50 +576,169 @@ class ModelAdapter:
         """
         import tensorflow as tf
         
+        # Load config to get layer mappings
+        config_path = "model/config.json"
+        try:
+            if os.path.exists(config_path):
+                with open(config_path, 'r', encoding='utf-8') as f:
+                    config = json.load(f)
+                logger.info(f"Loaded configuration from {config_path}")
+        except Exception as e:
+            logger.warning(f"Could not load configuration: {e}")
+            config = {}
+        
+        # Lấy danh sách layer name từ model
+        layer_names = [layer.name for layer in model.layers]
+        logger.info(f"Model layers: {layer_names}")
+        
+        # Lấy danh sách key từ weights_dict
+        weight_keys = list(weights_dict.keys())
+        logger.info(f"Available weight keys: {weight_keys[:5]}... (total {len(weight_keys)} keys)")
+        
+        # Check if we have a converted model available - if so, use it instead
+        converted_model_path = "model/converted_model.h5"
+        if os.path.exists(converted_model_path):
+            logger.info(f"Found converted model at {converted_model_path}. Using it instead.")
+            try:
+                import tensorflow as tf
+                converted_model = tf.keras.models.load_model(converted_model_path)
+                return converted_model
+            except Exception as e:
+                logger.warning(f"Error loading converted model: {e}")
+                # Continue with the original approach
+        
+        # Try to find a mapping between layer names and weight keys
+        embedding_keys = [k for k in weight_keys if 'embed' in k.lower()]
+        lstm_keys = [k for k in weight_keys if 'lstm' in k.lower() or 'rnn' in k.lower()]
+        dense_keys = [k for k in weight_keys if 'dense' in k.lower() or 'linear' in k.lower() or 'fc' in k.lower()]
+        
+        # Log found keys
+        logger.info(f"Found embedding keys: {embedding_keys}")
+        logger.info(f"Found LSTM keys: {lstm_keys}")
+        logger.info(f"Found dense keys: {dense_keys}")
+        
         # Áp dụng weights cho từng layer
         for layer in model.layers:
             layer_name = layer.name
-            weights = layer.get_weights()
             
-            # Skip layer nếu không có weights
-            if not weights:
+            # Skip layer nếu không có weights hoặc không cần áp dụng (như Input layer)
+            if not layer.get_weights():
+                continue
+            
+            try:
+                if layer_name == 'embedding' and embedding_keys:
+                    # Find a compatible embedding weight
+                    for key in embedding_keys:
+                        embedding_tensor = weights_dict[key]
+                        expected_shape = layer.get_weights()[0].shape
+                        
+                        if embedding_tensor.shape == expected_shape:
+                            layer.set_weights([embedding_tensor])
+                            logger.info(f"Đã áp dụng embedding weight từ {key}")
+                            break
+                    else:
+                        logger.warning(f"Không tìm thấy embedding weight phù hợp cho {layer_name}")
+                    
+                elif layer_name == 'lstm' and lstm_keys:
+                    # For LSTM we need more complex mapping
+                    # Try to identify weight_ih, weight_hh, bias_ih, bias_hh keys
+                    found = False
+                    
+                    # If there are exactly 4 LSTM keys, try to map them
+                    if len(lstm_keys) == 4:
+                        # Guess which is which based on tensor shapes
+                        lstm_tensors = [weights_dict[k] for k in lstm_keys]
+                        lstm_shapes = [t.shape for t in lstm_tensors]
+                        
+                        # Sort by shape and try to apply
+                        weight_ih_idx = weight_hh_idx = bias_ih_idx = bias_hh_idx = -1
+                        
+                        for i, shape in enumerate(lstm_shapes):
+                            if len(shape) == 2:  # 2D tensor is weight
+                                if weight_ih_idx == -1:
+                                    weight_ih_idx = i
+                                else:
+                                    weight_hh_idx = i
+                            elif len(shape) == 1:  # 1D tensor is bias
+                                if bias_ih_idx == -1:
+                                    bias_ih_idx = i
+                                else:
+                                    bias_hh_idx = i
+                        
+                        if all(idx != -1 for idx in [weight_ih_idx, weight_hh_idx, bias_ih_idx, bias_hh_idx]):
+                            # Convert weights to TensorFlow format
+                            weight_ih = lstm_tensors[weight_ih_idx]
+                            weight_hh = lstm_tensors[weight_hh_idx]
+                            bias_ih = lstm_tensors[bias_ih_idx]
+                            bias_hh = lstm_tensors[bias_hh_idx]
+                            
+                            # Transpose weights
+                            weight_ih_tf = tf.transpose(weight_ih, [1, 0])
+                            weight_hh_tf = tf.transpose(weight_hh, [1, 0])
+                            
+                            # Combine biases
+                            bias_tf = bias_ih + bias_hh
+                            
+                            # Try to apply weights
+                            try:
+                                layer.set_weights([weight_ih_tf.numpy(), weight_hh_tf.numpy(), bias_tf.numpy()])
+                                logger.info(f"Đã áp dụng LSTM weights")
+                                found = True
+                            except Exception as e:
+                                logger.error(f"Error applying LSTM weights: {e}")
+                    
+                    if not found:
+                        logger.warning(f"Không thể áp dụng LSTM weights tự động")
+                    
+                elif layer_name.startswith('dense') and dense_keys:
+                    # For dense layers, try to find matching weight and bias
+                    # Look for keys that might match this specific dense layer
+                    layer_number = layer_name.replace('dense', '') if 'dense' in layer_name else ''
+                    if layer_number:
+                        specific_dense_keys = [k for k in dense_keys if f"dense{layer_number}" in k.lower() 
+                                               or f"linear{layer_number}" in k.lower() 
+                                               or f"fc{layer_number}" in k.lower()]
+                    else:
+                        specific_dense_keys = [k for k in dense_keys if 'dense' in k.lower() and not any(c.isdigit() for c in k)
+                                               or 'linear' in k.lower() and not any(c.isdigit() for c in k)
+                                               or 'fc' in k.lower() and not any(c.isdigit() for c in k)]
+                    
+                    # If we have specific keys for this layer
+                    if specific_dense_keys:
+                        # Try to identify weight and bias
+                        weight_key = next((k for k in specific_dense_keys if 'weight' in k.lower()), None)
+                        bias_key = next((k for k in specific_dense_keys if 'bias' in k.lower()), None)
+                        
+                        if weight_key and bias_key:
+                            # Get tensors
+                            weight = weights_dict[weight_key]
+                            bias = weights_dict[bias_key]
+                            
+                            # Check if shapes match what the layer expects
+                            expected_shapes = [w.shape for w in layer.get_weights()]
+                            transposed_weight = tf.transpose(weight, [1, 0]).numpy()
+                            
+                            if transposed_weight.shape == expected_shapes[0] and bias.shape == expected_shapes[1]:
+                                # Apply weights
+                                layer.set_weights([transposed_weight, bias])
+                                logger.info(f"Đã áp dụng dense weights từ {weight_key}, {bias_key}")
+                            else:
+                                logger.warning(f"Shape mismatch for layer {layer_name}: expected {expected_shapes}, got {transposed_weight.shape}, {bias.shape}")
+                        else:
+                            logger.warning(f"Không tìm thấy weight hoặc bias cho {layer_name}")
+                    else:
+                        logger.warning(f"Không tìm thấy keys phù hợp cho {layer_name}")
+                
+            except Exception as e:
+                logger.error(f"Lỗi khi áp dụng weights cho layer {layer_name}: {str(e)}")
                 continue
                 
-            # Tìm tensor tương ứng cho mỗi weight
-            new_weights = []
-            for i, old_weight in enumerate(weights):
-                # Thông thường, i=0 là kernel, i=1 là bias
-                weight_type = "kernel" if i == 0 else "bias"
-                
-                # Các key name khả dĩ
-                possible_keys = [
-                    f"{layer_name}.{weight_type}",
-                    f"{layer_name}/{weight_type}",
-                    f"{layer_name}.weight" if i == 0 else f"{layer_name}.bias",
-                    layer_name if i == 0 else f"{layer_name}_bias"
-                ]
-                
-                # Tìm key trong weights_dict
-                found = False
-                for key in possible_keys:
-                    if key in weights_dict:
-                        tensor = weights_dict[key]
-                        if tensor.shape == old_weight.shape:
-                            new_weights.append(tensor)
-                            found = True
-                            break
-                
-                if not found:
-                    # Nếu không tìm thấy, giữ nguyên weight cũ
-                    logger.warning(f"Không tìm thấy weights cho {layer_name} (index {i})")
-                    new_weights.append(old_weight)
-            
-            # Áp dụng weights mới
-            if len(new_weights) == len(weights):
-                try:
-                    layer.set_weights(new_weights)
-                except Exception as e:
-                    logger.error(f"Lỗi khi áp dụng weights cho layer {layer_name}: {str(e)}")
+        # Fall back to using converted model if needed
+        if all(len(layer.get_weights()) > 0 and any(w.sum() == 0 for w in layer.get_weights()) 
+               for layer in model.layers if len(layer.get_weights()) > 0):
+            logger.warning("Some layers have zero weights. Creating a new model with random weights.")
+            # Create a fallback model
+            return ModelAdapter._create_compatible_tf_model()
     
     @staticmethod
     def _create_pytorch_model(model_config: Optional[Dict[str, Any]] = None) -> Any:
