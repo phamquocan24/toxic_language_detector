@@ -207,20 +207,20 @@
           <div class="tab-pane" id="settings-tab" role="tabpanel" aria-labelledby="settings-tab">
             <h2>Cài đặt</h2>
       
-      <div class="setting-item">
+            <div class="setting-item">
               <label for="threshold">Ngưỡng nhạy:</label>
               <input type="range" id="threshold" min="0.5" max="0.9" step="0.05" value="0.7" aria-valuemin="0.5" aria-valuemax="0.9" aria-valuenow="0.7">
-        <span id="threshold-value">0.7</span>
-      </div>
-      
-      <div class="setting-item">
-        <label class="checkbox">
-          <input type="checkbox" id="highlight-toxic" checked>
-          <span class="checkmark"></span>
+              <span id="threshold-value">0.7</span>
+            </div>
+            
+            <div class="setting-item">
+              <label class="checkbox">
+                <input type="checkbox" id="highlight-toxic" checked>
+                <span class="checkmark"></span>
                 Đánh dấu nội dung độc hại
-        </label>
-      </div>
-      
+              </label>
+            </div>
+            
             <div class="setting-item requires-auth">
               <label class="checkbox">
                 <input type="checkbox" id="save-data" checked>
@@ -230,26 +230,40 @@
               <div class="setting-description">Giúp cải thiện mô hình AI của chúng tôi</div>
             </div>
             
+            <!-- Model selection setting -->
+            <div class="setting-item model-selection">
+              <label for="model-type">Chọn mô hình AI phân tích:</label>
+              <select id="model-type" aria-label="Chọn mô hình AI phân tích">
+                <option value="lstm">LSTM (nhanh, nhẹ)</option>
+                <option value="cnn">CNN (độ chính xác cao hơn)</option>
+                <option value="bert">BERT (chính xác nhất)</option>
+                <option value="phobert">PhoBERT (tối ưu cho tiếng Việt)</option>
+                <option value="bert4news">BERT4News (cho văn bản tin tức)</option>
+                <option value="grn">GRN (tiết kiệm tài nguyên)</option>
+              </select>
+              <div class="setting-description">Mô hình càng phức tạp thì độ chính xác càng cao nhưng tốc độ sẽ chậm hơn</div>
+            </div>
+            
             <h3>Hiển thị trên nền tảng:</h3>
-      <div class="platforms">
-        <label class="checkbox">
-          <input type="checkbox" id="platform-facebook" checked>
-          <span class="checkmark"></span>
-          Facebook
-        </label>
-        
-        <label class="checkbox">
-          <input type="checkbox" id="platform-youtube" checked>
-          <span class="checkmark"></span>
-          YouTube
-        </label>
-        
-        <label class="checkbox">
-          <input type="checkbox" id="platform-twitter" checked>
-          <span class="checkmark"></span>
-          Twitter
-        </label>
+            <div class="platforms">
+              <label class="checkbox">
+                <input type="checkbox" id="platform-facebook" checked>
+                <span class="checkmark"></span>
+                Facebook
+              </label>
               
+              <label class="checkbox">
+                <input type="checkbox" id="platform-youtube" checked>
+                <span class="checkmark"></span>
+                YouTube
+              </label>
+              
+              <label class="checkbox">
+                <input type="checkbox" id="platform-twitter" checked>
+                <span class="checkmark"></span>
+                Twitter
+              </label>
+                    
               <label class="checkbox">
                 <input type="checkbox" id="platform-tiktok">
                 <span class="checkmark"></span>
@@ -291,41 +305,41 @@
                 <button id="theme-dark" class="theme-button">Tối</button>
                 <button id="theme-auto" class="theme-button">Tự động</button>
               </div>
-      </div>
-    </div>
+            </div>
+          </div>
     
           <!-- Tab 3: Statistics -->
           <div class="tab-pane" id="stats-tab">
-      <h2>Thống kê</h2>
+            <h2>Thống kê</h2>
             
             <div class="simple-stats-info">
               <p>Thống kê đơn giản (biểu đồ đã được tắt)</p>
             </div>
             
-      <div class="stat-grid">
-        <div class="stat-item">
+            <div class="stat-grid">
+              <div class="stat-item">
                 <div class="stat-value" id="tab-stat-scanned">0</div>
-          <div class="stat-label">Đã quét</div>
-        </div>
-        
-        <div class="stat-item clean">
+                <div class="stat-label">Đã quét</div>
+              </div>
+              
+              <div class="stat-item clean">
                 <div class="stat-value" id="tab-stat-clean">0</div>
-          <div class="stat-label">Bình thường</div>
-        </div>
-        
-        <div class="stat-item offensive">
+                <div class="stat-label">Bình thường</div>
+              </div>
+              
+              <div class="stat-item offensive">
                 <div class="stat-value" id="tab-stat-offensive">0</div>
-          <div class="stat-label">Xúc phạm</div>
-        </div>
-        
-        <div class="stat-item hate">
+                <div class="stat-label">Xúc phạm</div>
+              </div>
+              
+              <div class="stat-item hate">
                 <div class="stat-value" id="tab-stat-hate">0</div>
-          <div class="stat-label">Thù ghét</div>
-        </div>
-        
-        <div class="stat-item spam">
+                <div class="stat-label">Thù ghét</div>
+              </div>
+              
+              <div class="stat-item spam">
                 <div class="stat-value" id="tab-stat-spam">0</div>
-          <div class="stat-label">Spam</div>
+                <div class="stat-label">Spam</div>
               </div>
             </div>
             

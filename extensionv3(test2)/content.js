@@ -52,7 +52,7 @@ let highlightToxic = true;
 let platformEnabled = true;
 let displayOptions = {
   showClean: true,
-  showOffensive: true, 
+  showOffensive: true,
   showHate: true,
   showSpam: true
 };
@@ -461,35 +461,94 @@ function applyToxicityIndicator(commentElement, prediction) {
     };
     
     // Get category from prediction
-  const categoryNames = ["clean", "offensive", "hate", "spam"];
+    const categoryNames = ["clean", "offensive", "hate", "spam"];
     const category = categoryNames[prediction.prediction] || "unknown";
   
     // Check if we should display this category
-  const shouldDisplay = category === "clean" ? displayOptions.showClean :
+    const shouldDisplay = category === "clean" ? displayOptions.showClean :
                         category === "offensive" ? displayOptions.showOffensive :
                         category === "hate" ? displayOptions.showHate :
                         category === "spam" ? displayOptions.showSpam : false;
   
-  // Only proceed if highlighting is enabled and we should display this category
-  if (!highlightToxic || !shouldDisplay) {
-    return;
-  }
+    // Only proceed if highlighting is enabled and we should display this category
+    if (!highlightToxic || !shouldDisplay) {
+      return;
+    }
   
-  // Get style for this category
-  const style = CATEGORY_STYLES[category] || CATEGORY_STYLES.clean;
+    // Get style for this category
+    const style = CATEGORY_STYLES[category] || CATEGORY_STYLES.clean;
   
-  // Create toxicity indicator
-  const indicator = document.createElement('div');
-  indicator.className = `toxic-indicator ${style.className}`;
-  indicator.style.backgroundColor = style.color;
-  indicator.textContent = style.label;
+    // Create container for all indicators
+    const indicatorContainer = document.createElement('div');
+    indicatorContainer.className = 'toxic-indicator-container';
+    indicatorContainer.style.display = 'flex';
+    indicatorContainer.style.alignItems = 'center';
+    indicatorContainer.style.gap = '8px';
+    indicatorContainer.style.marginTop = '5px';
   
-  // Add tooltip
+    // Create toxicity indicator
+    const indicator = document.createElement('div');
+    indicator.className = `toxic-indicator ${style.className}`;
+    indicator.style.backgroundColor = style.color;
+    indicator.textContent = style.label;
+    indicator.style.display = 'inline-block';
+  
+    // Add tooltip
     indicator.title = `Phân loại: ${style.label} (${(prediction.confidence * 100).toFixed(1)}% độ tin cậy)`;
+    
+    // Create report button
+    const reportBtn = document.createElement('button');
+    reportBtn.className = 'report-incorrect-btn';
+    reportBtn.textContent = 'Báo cáo phân tích sai';
+    reportBtn.style.fontSize = '12px';
+    reportBtn.style.padding = '2px 8px';
+    reportBtn.style.backgroundColor = '#e0e0e0';
+    reportBtn.style.border = '1px solid #999';
+    reportBtn.style.borderRadius = '4px';
+    reportBtn.style.cursor = 'pointer';
+    reportBtn.style.marginLeft = '5px';
+    reportBtn.style.color = '#333';
+    
+    // Add tooltip to report button
+    reportBtn.title = 'Báo cáo nếu phân loại nội dung này không chính xác';
+    
+    // Add report functionality
+    reportBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      // Get comment text
+      const commentText = getCommentText(commentElement);
+      
+      // Send report to background
+      chrome.runtime.sendMessage({
+        action: "reportIncorrectAnalysis",
+        text: commentText,
+        predictedCategory: category,
+        commentId: getCommentId(commentElement) || `comment-${hashString(commentText)}`
+      }, (response) => {
+        if (response && response.success) {
+          // Visual feedback for successful report
+          reportBtn.textContent = 'Đã báo cáo';
+          reportBtn.disabled = true;
+          reportBtn.style.backgroundColor = '#e0e0e0';
+          reportBtn.style.cursor = 'default';
+        } else {
+          console.error("Error reporting incorrect analysis:", response ? response.error : "No response");
+        }
+      });
+      
+      // Visual feedback while waiting for response
+      reportBtn.textContent = 'Đang gửi...';
+    });
+    
+    // Add components to container
+    indicatorContainer.appendChild(indicator);
+    indicatorContainer.appendChild(reportBtn);
   
-  // Add indicator near the comment
+    // Add indicator container near the comment
     commentElement.style.position = 'relative';
-    commentElement.parentNode.insertBefore(indicator, commentElement.nextSibling);
+    commentElement.parentNode.insertBefore(indicatorContainer, commentElement.nextSibling);
   
     // Optional: add a subtle border to the original comment
     commentElement.style.borderLeft = `3px solid ${style.color}`;
@@ -508,10 +567,11 @@ function applyToxicityIndicator(commentElement, prediction) {
         revealBtn.remove();
       };
       
-      commentElement.parentNode.insertBefore(revealBtn, commentElement.nextSibling);
+      indicatorContainer.appendChild(revealBtn);
     }
   });
-  }
+}
+
 /**
  * Generate a simple hash string
  * @param {string} str - Input string
@@ -526,6 +586,7 @@ function hashString(str) {
   }
   return hash.toString(16);
 }
+
 /**
  * Vietnamese toxicity labels for UI display
  */
@@ -591,6 +652,17 @@ function applyVietnameseToxicityIndicator(commentElement, prediction) {
     return;
   }
   
+  // Định nghĩa categoryNames cho hàm này
+  const categoryNames = ["clean", "offensive", "hate", "spam"];
+  
+  // Create container for indicators
+  const indicatorContainer = document.createElement('div');
+  indicatorContainer.className = 'toxic-indicator-container';
+  indicatorContainer.style.display = 'flex';
+  indicatorContainer.style.alignItems = 'center';
+  indicatorContainer.style.gap = '8px';
+  indicatorContainer.style.marginTop = '5px';
+  
   // Create toxicity indicator with Vietnamese label
   const indicator = document.createElement('div');
   indicator.className = 'toxic-indicator';
@@ -620,9 +692,56 @@ function applyVietnameseToxicityIndicator(commentElement, prediction) {
   // Add tooltip in Vietnamese
   indicator.title = VI_TEXTS.tooltipPrefix + label.toLowerCase();
   
-  // Add indicator near the comment
+  // Create report button
+  const reportBtn = document.createElement('button');
+  reportBtn.className = 'report-incorrect-btn';
+  reportBtn.textContent = 'Báo cáo phân tích sai';
+  reportBtn.style.fontSize = '12px';
+  reportBtn.style.padding = '2px 8px';
+  reportBtn.style.backgroundColor = '#e0e0e0';
+  reportBtn.style.border = '1px solid #999';
+  reportBtn.style.borderRadius = '4px';
+  reportBtn.style.cursor = 'pointer';
+  reportBtn.style.marginLeft = '5px';
+  reportBtn.style.color = '#333';
+  
+  // Add report functionality
+  reportBtn.addEventListener('click', function(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Get comment text
+    const commentText = getCommentText(commentElement);
+    
+    // Send report to background
+    chrome.runtime.sendMessage({
+      action: "reportIncorrectAnalysis",
+      text: commentText,
+      predictedCategory: categoryNames[prediction.prediction] || "unknown",
+      commentId: getCommentId(commentElement) || `comment-${hashString(commentText)}`
+    }, (response) => {
+      if (response && response.success) {
+        // Visual feedback for successful report
+        reportBtn.textContent = 'Đã báo cáo';
+        reportBtn.disabled = true;
+        reportBtn.style.backgroundColor = '#e0e0e0';
+        reportBtn.style.cursor = 'default';
+      } else {
+        console.error("Error reporting incorrect analysis:", response ? response.error : "No response");
+      }
+    });
+    
+    // Visual feedback while waiting for response
+    reportBtn.textContent = 'Đang gửi...';
+  });
+  
+  // Add components to container
+  indicatorContainer.appendChild(indicator);
+  indicatorContainer.appendChild(reportBtn);
+  
+  // Add indicator container near the comment
   commentElement.style.position = 'relative';
-  commentElement.parentNode.insertBefore(indicator, commentElement.nextSibling);
+  commentElement.parentNode.insertBefore(indicatorContainer, commentElement.nextSibling);
   
   // Optional: blur toxic content
   if (prediction.prediction === 2) { // Only blur hate speech
@@ -638,7 +757,7 @@ function applyVietnameseToxicityIndicator(commentElement, prediction) {
       revealBtn.remove();
     };
     
-    commentElement.parentNode.insertBefore(revealBtn, commentElement.nextSibling);
+    indicatorContainer.appendChild(revealBtn);
   }
 }
 

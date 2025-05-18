@@ -39,6 +39,7 @@ let percentClean, percentOffensive, percentHate, percentSpam;
 let anonymousMode, regionSelect, reportButton, resultAdvanced, resultEmotion, resultIntent, resultKeywords;
 let themeLight, themeDark, themeAuto;
 let currentPlatform;
+let modelTypeSelect; // Added variable for model selection
 
 // Authentication UI elements
 let loginSection, registerSection, profileSection, resetPasswordSection, changePasswordSection;
@@ -66,6 +67,215 @@ const categoryClasses = {
   3: "spam"
 };
 
+// Global variables for Direct Analyze
+let directAnalyzeText;
+let directAnalyzeButton;
+let directResultContainer;
+let directResultCategory;
+let directResultConfidence;
+let directProgressClean;
+let directProgressOffensive;
+let directProgressHate;
+let directProgressSpam;
+let directPercentClean;
+let directPercentOffensive;
+let directPercentHate;
+let directPercentSpam;
+let directResultKeywords;
+
+/**
+ * Initialize DOM references for direct analyze
+ */
+function initializeDirectAnalyzeReferences() {
+  directAnalyzeText = document.getElementById('direct-analyze-text');
+  directAnalyzeButton = document.getElementById('direct-analyze-button');
+  directResultContainer = document.getElementById('direct-result-container');
+  directResultCategory = document.getElementById('direct-result-category');
+  directResultConfidence = document.getElementById('direct-result-confidence');
+  directProgressClean = document.getElementById('direct-progress-clean');
+  directProgressOffensive = document.getElementById('direct-progress-offensive');
+  directProgressHate = document.getElementById('direct-progress-hate');
+  directProgressSpam = document.getElementById('direct-progress-spam');
+  directPercentClean = document.getElementById('direct-percent-clean');
+  directPercentOffensive = document.getElementById('direct-percent-offensive');
+  directPercentHate = document.getElementById('direct-percent-hate');
+  directPercentSpam = document.getElementById('direct-percent-spam');
+  directResultKeywords = document.getElementById('direct-result-keywords');
+}
+
+/**
+ * Setup Direct Analyze UI elements and event listeners
+ */
+function setupDirectAnalyzeUI() {
+  // Verify direct analyze UI elements exist
+  if (!directAnalyzeText || !directAnalyzeButton || !directResultContainer) {
+    console.warn('Direct analyze UI elements not found');
+    return;
+  }
+
+  // Add click event listener for the analyze button
+  directAnalyzeButton.addEventListener('click', analyzeDirectText);
+
+  // Clear results when input changes
+  directAnalyzeText.addEventListener('input', function() {
+    if (directResultContainer) {
+      directResultContainer.classList.add('hidden');
+    }
+  });
+}
+
+/**
+ * Analyze the text entered in the direct analysis tab
+ */
+async function analyzeDirectText() {
+  // Check if text exists
+  if (!directAnalyzeText || !directAnalyzeText.value.trim()) {
+    showNotification('Vui lòng nhập văn bản cần phân tích', 'error');
+    return;
+  }
+
+  // Get the text to analyze
+  const text = directAnalyzeText.value.trim();
+  
+  // Show loading state
+  directAnalyzeButton.disabled = true;
+  directAnalyzeButton.innerHTML = '<span class="spinner"></span> Đang phân tích...';
+  
+  try {
+    // Prepare API URL and headers
+    const apiUrl = `${API_ENDPOINT}/predict`;
+    
+    // Check if token exists
+    const token = getToken();
+    const headers = {
+      'Content-Type': 'application/json'
+    };
+    
+    // Add token if available
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    
+    // Make the API request
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: headers,
+      body: JSON.stringify({
+        text: text,
+        save_to_db: false // Don't save to database
+      })
+    });
+    
+    if (!response.ok) {
+      throw new Error(`API Error: ${response.status}`);
+    }
+    
+    // Parse the result
+    const result = await response.json();
+    
+    // Display results
+    displayDirectAnalysisResults(result);
+    
+  } catch (error) {
+    console.error('Error analyzing text:', error);
+    showNotification(`Lỗi: ${error.message}`, 'error');
+  } finally {
+    // Reset button state
+    directAnalyzeButton.disabled = false;
+    directAnalyzeButton.innerHTML = '<span class="icon">🔍</span> Phân tích';
+  }
+}
+
+/**
+ * Display direct analysis results in the UI
+ */
+function displayDirectAnalysisResults(result) {
+  if (!directResultContainer) return;
+  
+  // Show the results container
+  directResultContainer.classList.remove('hidden');
+  
+  // Map prediction numbers to category text
+  const categoryNames = {
+    0: "Bình thường",
+    1: "Xúc phạm",
+    2: "Thù ghét",
+    3: "Spam"
+  };
+  
+  // Get category label
+  const category = result.prediction !== undefined ? result.prediction : 0;
+  const categoryText = result.prediction_text || categoryNames[category] || "Không xác định";
+  
+  // Get confidence
+  const confidence = result.confidence !== undefined ? result.confidence : 0;
+  
+  // Set category and confidence UI
+  if (directResultCategory) {
+    directResultCategory.textContent = categoryText;
+    directResultCategory.className = 'result-value ' + Object.keys(categoryNames)[category].toLowerCase();
+  }
+  
+  if (directResultConfidence) {
+    directResultConfidence.textContent = `${Math.round(confidence * 100)}%`;
+  }
+  
+  // Get probabilities
+  const probabilities = result.probabilities || {};
+  
+  // Default probabilities if not provided
+  const defaultProbs = {
+    "bình thường": 0,
+    "xúc phạm": 0,
+    "thù ghét": 0,
+    "spam": 0
+  };
+  
+  // Mix default with actual probabilities
+  const probs = {...defaultProbs, ...probabilities};
+  
+  // Set progress bars
+  updateProgressBar(directProgressClean, directPercentClean, probs["bình thường"] || probs["clean"] || 0);
+  updateProgressBar(directProgressOffensive, directPercentOffensive, probs["xúc phạm"] || probs["offensive"] || 0);
+  updateProgressBar(directProgressHate, directPercentHate, probs["thù ghét"] || probs["hate"] || 0);
+  updateProgressBar(directProgressSpam, directPercentSpam, probs["spam"] || 0);
+  
+  // Display keywords if available
+  if (directResultKeywords && result.keywords && Array.isArray(result.keywords)) {
+    directResultKeywords.innerHTML = '';
+    result.keywords.forEach(keyword => {
+      const tag = document.createElement('span');
+      tag.className = 'keyword-tag';
+      tag.textContent = keyword;
+      directResultKeywords.appendChild(tag);
+    });
+  } else if (directResultKeywords) {
+    directResultKeywords.innerHTML = '<span class="no-keywords">Không có từ khóa</span>';
+  }
+}
+
+/**
+ * Update a progress bar with the given value
+ */
+function updateProgressBar(progressBar, percentElement, value) {
+  if (!progressBar || !percentElement) return;
+  
+  // Calculate percentage
+  const percent = Math.round(value * 100);
+  
+  // Update progress bar width
+  progressBar.style.width = `${percent}%`;
+  
+  // Update percent text
+  percentElement.textContent = `${percent}%`;
+  
+  // Update ARIA attributes for accessibility
+  const parentBar = progressBar.parentElement;
+  if (parentBar) {
+    parentBar.setAttribute('aria-valuenow', percent);
+  }
+}
+
 /**
  * Initialize the popup UI - Enhanced with UX improvements
  */
@@ -76,14 +286,16 @@ function initializePopup() {
   // Apply theme immediately to avoid FOUC (Flash of Unstyled Content)
   setTheme('auto');
   
-  // Check authentication status and update UI accordingly FIRST
+  // Load settings FIRST, before checking authentication
+  loadSettings();
+  
+  // Load local statistics
+  loadStats();
+  
+  // Check authentication status and update UI accordingly AFTER loading settings
   checkAuthStatus().then(() => {
     // Setup tab navigation AFTER checking auth (to potentially hide tabs)
     setupTabNavigation();
-
-    // Load settings and statistics
-    loadSettings();
-    loadStats(); // Local stats for anonymous, API stats for logged in
 
     // Setup event handlers for all UI interactions
     setupEventHandlers();
@@ -116,6 +328,7 @@ function initializeDOMReferences() {
   thresholdValue = document.getElementById('threshold-value');
   highlightToxic = document.getElementById('highlight-toxic');
   saveDataCheckbox = document.getElementById('save-data');
+  modelTypeSelect = document.getElementById('model-type'); // Added reference for model selection
   
   // Platform settings
   platformFacebook = document.getElementById('platform-facebook');
@@ -124,7 +337,7 @@ function initializeDOMReferences() {
   platformTiktok = document.getElementById('platform-tiktok');
   platformZalo = document.getElementById('platform-zalo');
   
-// Classification visibility toggles
+  // Classification visibility toggles
   showClean = document.getElementById('show-clean');
   showOffensive = document.getElementById('show-offensive');
   showHate = document.getElementById('show-hate');
@@ -136,11 +349,11 @@ function initializeDOMReferences() {
   themeAuto = document.getElementById('theme-auto');
   
   // Statistics elements
-  statScanned = document.getElementById('stat-scanned');
-  statClean = document.getElementById('stat-clean');
-  statOffensive = document.getElementById('stat-offensive');
-  statHate = document.getElementById('stat-hate');
-  statSpam = document.getElementById('stat-spam');
+  statScanned = document.getElementById('tab-stat-scanned');
+  statClean = document.getElementById('tab-stat-clean');
+  statOffensive = document.getElementById('tab-stat-offensive');
+  statHate = document.getElementById('tab-stat-hate');
+  statSpam = document.getElementById('tab-stat-spam');
   resetStatsBtn = document.getElementById('reset-stats');
   
   // Text analysis elements
@@ -206,6 +419,9 @@ function initializeDOMReferences() {
   batchFileInput = document.getElementById('batch-file-input');
   batchResultContainer = document.getElementById('batch-result-container');
   batchResultList = document.getElementById('batch-result-list');
+  
+  // Direct Analyze elements
+  initializeDirectAnalyzeReferences();
 }
 
 /**
@@ -325,14 +541,11 @@ function detectCurrentPlatform() {
  */
 async function loadSettings() {
   chrome.storage.sync.get(null, async function(data) {
-    let serverSettings = null;
-    const authData = await getAuthData();
-    if (authData && authData.access_token) {
-      serverSettings = await fetchServerSettings();
-    }
-    const settings = serverSettings || data;
+    // First try to get settings from storage, regardless of authentication status
+    const settings = data || {};
+    
     // Extension enabled
-      if (enableToggle) {
+    if (enableToggle) {
       enableToggle.checked = settings.enabled !== undefined ? settings.enabled : true;
     }
     
@@ -343,24 +556,29 @@ async function loadSettings() {
     }
     
     // Highlight toxic
-      if (highlightToxic) {
+    if (highlightToxic) {
       highlightToxic.checked = settings.highlightToxic !== undefined ? settings.highlightToxic : true;
     }
     
     // Save data option
     if (saveDataCheckbox) {
       saveDataCheckbox.checked = settings.saveData !== undefined ? settings.saveData : true;
-      }
+    }
+    
+    // Model type - ensure this persists after reload
+    if (modelTypeSelect && settings.modelType) {
+      modelTypeSelect.value = settings.modelType;
+    }
       
-      // Platform settings
+    // Platform settings
     if (settings.platforms) {
-        if (platformFacebook) {
+      if (platformFacebook) {
         platformFacebook.checked = settings.platforms.facebook !== undefined ? settings.platforms.facebook : true;
-        }
-        if (platformYoutube) {
+      }
+      if (platformYoutube) {
         platformYoutube.checked = settings.platforms.youtube !== undefined ? settings.platforms.youtube : true;
-        }
-        if (platformTwitter) {
+      }
+      if (platformTwitter) {
         platformTwitter.checked = settings.platforms.twitter !== undefined ? settings.platforms.twitter : true;
       }
       if (platformTiktok) {
@@ -394,10 +612,25 @@ async function loadSettings() {
       // Default to auto
       setTheme('auto');
     }
-    });
-  }
-  
-  /**
+    
+    // After loading from storage, check if user is authenticated to potentially get server settings
+    const authData = await getAuthData();
+    if (authData && authData.access_token) {
+      // Try to get settings from server, but keep local settings if server fetch fails
+      try {
+        const serverSettings = await fetchServerSettings();
+        if (serverSettings) {
+          // Apply server settings, but don't overwrite local settings that were just loaded
+          // This is just a fallback and won't usually be needed
+        }
+      } catch (error) {
+        console.log("Could not fetch server settings, using local settings instead", error);
+      }
+    }
+  });
+}
+
+/**
  * Load statistics for the selected period
  */
 async function loadStatsForPeriod(period) {
@@ -462,6 +695,7 @@ async function saveSettings() {
     threshold: thresholdSlider ? parseFloat(thresholdSlider.value) : 0.7,
     highlightToxic: highlightToxic ? highlightToxic.checked : true,
     saveData: saveDataCheckbox ? saveDataCheckbox.checked : true,
+    modelType: modelTypeSelect ? modelTypeSelect.value : 'lstm',
     platforms: {
       facebook: platformFacebook ? platformFacebook.checked : true,
       youtube: platformYoutube ? platformYoutube.checked : true,
@@ -477,6 +711,8 @@ async function saveSettings() {
     },
     theme: getActiveTheme()
   };
+  
+  console.log("Saving settings:", settings);
   
   chrome.storage.sync.set(settings, async () => {
     notifyContentScripts(settings);
@@ -617,10 +853,14 @@ async function processAnalyzeText() {
     // Get region context
     const region = regionSelect ? regionSelect.value : 'all';
     
+    // Get selected model type - make sure it's retrieved correctly
+    const modelType = modelTypeSelect ? modelTypeSelect.value : 'lstm';
+    
     console.log('[DEBUG] API Request:', {
       text: textToAnalyze,
       platform: platform,
       save_to_db: shouldSaveData,
+      model_type: modelType,
       metadata: {
         anonymous: isAnonymous,
         region: region,
@@ -635,7 +875,8 @@ async function processAnalyzeText() {
       body: JSON.stringify({
         text: textToAnalyze,
         platform: platform,
-        save_to_db: shouldSaveData, // Use calculated value
+        save_to_db: shouldSaveData,
+        model_type: modelType,
         metadata: {
           anonymous: isAnonymous,
           region: region,
@@ -1007,6 +1248,11 @@ function setupEventHandlers() {
   
   if (saveDataCheckbox) {
     saveDataCheckbox.addEventListener('change', saveSettings);
+  }
+  
+  // Model type selection
+  if (modelTypeSelect) {
+    modelTypeSelect.addEventListener('change', saveSettings);
   }
   
   // Platform checkboxes
@@ -2384,6 +2630,10 @@ async function processBatchText() {
       platform = currentPlatform.textContent.toLowerCase();
     }
     
+    // Get selected model type - ensure it's retrieved correctly
+    const modelType = modelTypeSelect ? modelTypeSelect.value : 'lstm';
+    console.log('Using model type for batch analysis:', modelType);
+    
     // Create a progress indicator in the batch result container
     if (batchResultContainer) {
       batchResultContainer.classList.remove('hidden');
@@ -2443,7 +2693,8 @@ async function processBatchText() {
           body: JSON.stringify({
             items: items,
             save_to_db: isLoggedIn, // Only save if logged in
-            store_clean: false // Don't store clean comments
+            store_clean: false, // Don't store clean comments
+            model_type: modelType // Make sure model type is included
           })
         });
         

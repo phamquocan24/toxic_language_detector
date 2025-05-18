@@ -109,6 +109,19 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     }
     return true;
   }
+  
+  if (message.action === "reportIncorrectAnalysis") {
+    // Xử lý báo cáo phân tích sai từ người dùng
+    reportIncorrectAnalysis(
+      message.text, 
+      message.predictedCategory,
+      message.commentId,
+      sender.tab?.url
+    )
+      .then(result => sendResponse(result))
+      .catch(error => sendResponse({ error: error.message }));
+    return true; // Required for async sendResponse
+  }
 });
 
 /**
@@ -430,5 +443,54 @@ async function analyzeText(text, platform, commentId, sourceUrl) {
   } catch (error) {
     console.error("Error analyzing text:", error);
     throw error;
+  }
+}
+
+/**
+ * Gửi báo cáo phân tích sai đến API
+ * @param {string} text - Nội dung comment được phân tích
+ * @param {string} predictedCategory - Loại đã phân tích (clean, offensive, hate, spam)
+ * @param {string} commentId - ID của comment
+ * @param {string} sourceUrl - URL của trang web
+ * @returns {Promise} - Kết quả từ API
+ */
+async function reportIncorrectAnalysis(text, predictedCategory, commentId, sourceUrl) {
+  try {
+    console.log(`Reporting incorrect analysis: "${text.substring(0, 50)}..." - Predicted as ${predictedCategory}`);
+    
+    const response = await fetch(`${API_ENDPOINT}/extension/report`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Basic ${BASIC_AUTH_TOKEN}`
+      },
+      body: JSON.stringify({
+        text: text,
+        predicted_category: predictedCategory,
+        comment_id: commentId,
+        source_url: sourceUrl,
+        metadata: {
+          source: "extension",
+          browser: navigator.userAgent,
+          timestamp: new Date().toISOString(),
+          version: chrome.runtime.getManifest().version
+        }
+      })
+    });
+    
+    if (!response.ok) {
+      if (response.status === 401) {
+        throw new Error("Authentication failed. Please check your credentials.");
+      }
+      throw new Error(`API error: ${response.status}`);
+    }
+    
+    const result = await response.json();
+    console.log("Report submitted successfully:", result);
+    
+    return { success: true, message: "Báo cáo đã được gửi thành công" };
+  } catch (error) {
+    console.error("Error submitting report:", error);
+    return { success: false, error: error.message };
   }
 }

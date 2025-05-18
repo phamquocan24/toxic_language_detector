@@ -113,13 +113,15 @@ class CommentResponse(CommentBase):
     }
 
 class PredictionRequest(BaseModel):
+    """Schema yêu cầu phân tích một comment"""
     text: str
-    platform: Optional[str] = "unknown"
+    platform: str = "unknown"
     source_user_name: Optional[str] = None
     source_url: Optional[str] = None
-    save_result: Optional[bool] = True
-    save_to_db: Optional[bool] = False  # Thêm tham số để kiểm soát việc lưu vào database
+    platform_id: Optional[str] = None
     metadata: Optional[Dict[str, Any]] = None
+    save_to_db: bool = False
+    model_type: Optional[str] = None
 
 class PredictionResponse(BaseModel):
     text: str
@@ -153,11 +155,12 @@ class BatchPredictionItemRequest(BaseModel):
     metadata: Optional[Dict[str, Any]] = None
 
 class BatchPredictionRequest(BaseModel):
-    comments: Optional[List[BatchPredictionItemRequest]] = None
-    items: Optional[List[Dict[str, Any]]] = None  # Hỗ trợ extension gửi dữ liệu dạng items
-    save_results: Optional[bool] = True
-    store_clean: Optional[bool] = False
-    save_to_db: Optional[bool] = False  # Thêm tham số để kiểm soát việc lưu vào database
+    """Schema yêu cầu phân tích nhiều comments cùng lúc"""
+    comments: Optional[List[Dict[str, Any]]] = None  # Danh sách các comments cần phân tích
+    items: Optional[List[Dict[str, Any]]] = None  # Tên thay thế cho tương thích extension
+    save_to_db: bool = False  # Có lưu vào DB không
+    store_clean: bool = False  # Có lưu comments sạch không
+    model_type: Optional[str] = None  # Loại model muốn sử dụng
     
     @field_validator('comments', 'items')
     @classmethod

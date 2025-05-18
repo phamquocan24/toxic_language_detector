@@ -168,295 +168,380 @@ class MLModel:
         self.device = settings.MODEL_DEVICE
         self.labels = settings.MODEL_LABELS
         self.loaded = False
+        self.model_type = "lstm"  # Mặc định là LSTM
+        
+        # Tải cấu hình model nếu có
+        self._load_config()
         
         # Tải mô hình nếu cài đặt cho phép preload
         if settings.MODEL_PRELOAD:
             self.load_model()
     
-    def load_model(self):
-        """Tải mô hình đã được huấn luyện trên dữ liệu mạng xã hội tiếng Việt"""
+    def _load_config(self):
+        """Tải cấu hình model từ file config.json"""
         try:
-            if os.path.exists(self.model_path):
-                # Sử dụng ModelAdapter để tải model từ bất kỳ định dạng nào
-                self.model = ModelAdapter.load_model(self.model_path, device=self.device)
-                logger.info(f"Đã tải model tiếng Việt từ {self.model_path}")
+            if os.path.exists(self.config_path):
+                with open(self.config_path, 'r', encoding='utf-8') as f:
+                    config = json.load(f)
                 
-                # Tải cấu hình model nếu có
-                if os.path.exists(self.config_path):
-                    try:
-                        with open(self.config_path, 'r', encoding='utf-8') as f:
-                            config = json.load(f)
-                            if 'max_length' in config:
-                                self.max_length = config['max_length']
-                            if 'max_words' in config:
-                                self.max_words = config['max_words']
-                        logger.info(f"Đã tải cấu hình model từ {self.config_path}")
-                    except Exception as e:
-                        logger.warning(f"Lỗi khi tải cấu hình model: {e}")
-            else:
-                logger.warning(f"Không tìm thấy model tại {self.model_path}. Sử dụng dummy model.")
-                self.model = self._create_dummy_model()
-        except Exception as e:
-            logger.error(f"Lỗi khi tải model: {e}")
-            self.model = self._create_dummy_model()
-        
-        # Tải tokenizer
-        try:
-            # Tìm tokenizer phù hợp với model
-            tokenizer_path = self.vocab_path
-            
-            # Nếu không có đường dẫn cụ thể, thử các đường dẫn thông thường
-            if not tokenizer_path or not os.path.exists(tokenizer_path):
-                potential_paths = [
-                    os.path.join(os.path.dirname(self.model_path), "tokenizer.pkl"),
-                    os.path.join(os.path.dirname(self.model_path), "vietnamese_tokenizer.pkl"),
-                    self.model_path.replace('.h5', '_tokenizer.pkl'),
-                    self.model_path.replace('.safetensors', '_tokenizer.pkl'),
-                    "model/vietnamese_tokenizer.pkl"
-                ]
+                # Cập nhật thông số từ config file
+                if 'max_length' in config:
+                    self.max_length = config['max_length']
+                if 'vocab_size' in config:
+                    self.max_words = config['vocab_size']
+                if 'model_type' in config:
+                    self.model_type = config['model_type']
+                if 'labels' in config:
+                    self.labels = config['labels']
                 
-                for path in potential_paths:
-                    if os.path.exists(path):
-                        tokenizer_path = path
-                        break
-            
-            # Tải tokenizer nếu tìm thấy
-            if tokenizer_path and os.path.exists(tokenizer_path):
-                try:
-                    with open(tokenizer_path, 'rb') as handle:
-                        self.tokenizer = pickle.load(handle)
-                    logger.info(f"Đã tải Vietnamese tokenizer từ {tokenizer_path}")
-                except Exception as load_error:
-                    logger.error(f"Lỗi khi tải tokenizer: {load_error}")
-                    logger.info("Tạo tokenizer mới do không thể tải file")
-                    self.tokenizer = Tokenizer(num_words=self.max_words, filters='!"#$%&()*+,-./:;<=>?@[\\]^_`{|}~\t\n')
-                    # Fit với một số văn bản mẫu tiếng Việt cơ bản
-                    sample_texts = [
-                        "mẫu văn bản tiếng việt", 
-                        "thêm một số từ vựng phổ biến", 
-                        "ngôn từ thù ghét căm thù", 
-                        "từ ngữ xúc phạm đồ ngu ngốc",
-                        "spam quảng cáo giảm giá khuyến mãi",
-                        "đây là văn bản bình thường không có nội dung tiêu cực"
-                    ]
-                    self.tokenizer.fit_on_texts(sample_texts)
-            else:
-                logger.warning("Không tìm thấy tokenizer, khởi tạo mới (chỉ dùng cho phát triển)")
-                self.tokenizer = Tokenizer(num_words=self.max_words, filters='!"#$%&()*+,-./:;<=>?@[\\]^_`{|}~\t\n')
-                # Fit với một số văn bản mẫu tiếng Việt
-                sample_texts = [
-                    "mẫu văn bản tiếng việt", 
-                    "thêm một số từ vựng phổ biến", 
-                    "ngôn từ thù ghét căm thù", 
-                    "từ ngữ xúc phạm đồ ngu ngốc",
-                    "spam quảng cáo giảm giá khuyến mãi",
-                    "đây là văn bản bình thường không có nội dung tiêu cực"
-                ]
-                self.tokenizer.fit_on_texts(sample_texts)
+                logger.info(f"Đã tải cấu hình model từ {self.config_path}. Model type: {self.model_type}")
         except Exception as e:
-            logger.error(f"Lỗi khi tải tokenizer: {e}")
-            self.tokenizer = Tokenizer(num_words=self.max_words, filters='!"#$%&()*+,-./:;<=>?@[\\]^_`{|}~\t\n')
-            # Fit với một số văn bản mẫu tiếng Việt
-            sample_texts = [
-                "mẫu văn bản tiếng việt", 
-                "thêm một số từ vựng phổ biến", 
-                "ngôn từ thù ghét căm thù", 
-                "từ ngữ xúc phạm đồ ngu ngốc",
-                "spam quảng cáo giảm giá khuyến mãi",
-                "đây là văn bản bình thường không có nội dung tiêu cực"
-            ]
-            self.tokenizer.fit_on_texts(sample_texts)
-            logger.info("Đã tạo tokenizer mới do không thể tải file")
-        
-        self.loaded = True
+            logger.error(f"Lỗi khi tải cấu hình model: {str(e)}")
     
-    def _fix_input_layer(self, config):
-        """Sửa các vấn đề tương thích với cấu hình InputLayer cũ"""
-        if 'batch_shape' in config:
-            batch_shape = config.pop('batch_shape')
-            config['batch_input_shape'] = batch_shape
-        return tf.keras.layers.InputLayer(**config)
+    def load_model(self):
+        """Tải model từ đường dẫn cấu hình"""
+        # Nếu đã tải model rồi thì skip
+        if self.loaded and self.model is not None:
+            return
+
+        try:
+            logger.info(f"Đang tải model từ {self.model_path}...")
+
+            # Kiểm tra các model mới trong thư mục model
+            model_files = {
+                "lstm": "model/best_model_LSTM.h5",
+                "cnn": "model/cnn/model.safetensors",
+                "grn": "model/grn/model.safetensors",
+                "bert": "model/bert/model.safetensors",
+                "phobert": "model/phobert/model.safetensors",
+                "bert4news": "model/bert4news/model.safetensors"
+            }
+            
+            # Thử tìm và tải model phù hợp với loại đã cấu hình
+            if self.model_type in model_files and os.path.exists(model_files[self.model_type]):
+                model_path = model_files[self.model_type]
+                logger.info(f"Tìm thấy model '{self.model_type}' tại {model_path}")
+            else:
+                # Fallback về LSTM nếu không tìm thấy model cấu hình
+                model_path = model_files.get("lstm", self.model_path)
+                if os.path.exists(model_path):
+                    logger.info(f"Fallback về model LSTM tại {model_path}")
+                else:
+                    model_path = self.model_path
+                    logger.info(f"Sử dụng model mặc định tại {model_path}")
+            
+            # Sử dụng ModelAdapter để tải model bất kể định dạng nào
+            self.model = ModelAdapter.load_model(model_path, self.device)
+            logger.info(f"Đã tải model thành công: {model_path}")
+            
+            # Tải tokenizer phù hợp
+            self._load_tokenizer(model_path)
+            
+            self.loaded = True
+            
+        except Exception as e:
+            logger.error(f"Lỗi khi tải model: {str(e)}")
+            # Tạo model dummy
+            self._create_dummy_model()
+    
+    def _load_tokenizer(self, model_path):
+        """Tải tokenizer phù hợp với model"""
+        try:
+            # Thử tìm tokenizer theo mẫu "<model_path>_tokenizer.pkl" hoặc thư mục chứa tokenizer
+            tokenizer_path = model_path.replace('.h5', '_tokenizer.pkl').replace('.safetensors', '_tokenizer.pkl')
+            if not os.path.exists(tokenizer_path):
+                # Thử tìm trong thư mục model/
+                tokenizer_path = os.path.join("model", "tokenizer.pkl")
+            
+            if os.path.exists(tokenizer_path):
+                with open(tokenizer_path, 'rb') as f:
+                    self.tokenizer = pickle.load(f)
+                logger.info(f"Đã tải tokenizer từ {tokenizer_path}")
+            else:
+                # Tạo tokenizer mới
+                logger.warning("Không tìm thấy tokenizer, tạo mới")
+                self.tokenizer = Tokenizer(num_words=self.max_words)
+                
+                # Nếu có tập từ vựng, fit tokenizer với tập đó
+                if os.path.exists(self.vocab_path):
+                    with open(self.vocab_path, 'r', encoding='utf-8') as f:
+                        vocab = [line.strip() for line in f.readlines()]
+                    self.tokenizer.fit_on_texts(vocab)
+                    logger.info(f"Đã fit tokenizer với từ vựng từ {self.vocab_path}")
+        except Exception as e:
+            logger.error(f"Lỗi khi tải tokenizer: {str(e)}")
+            self.tokenizer = Tokenizer(num_words=self.max_words)
     
     def _create_dummy_model(self):
-        """Tạo dummy model cho mục đích kiểm thử"""
+        """Tạo model giả để demo"""
+        logger.warning("Tạo model dummy để demo")
+        
         inputs = tf.keras.Input(shape=(self.max_length,))
-        x = tf.keras.layers.Embedding(self.max_words, 128, input_length=self.max_length)(inputs)
+        x = tf.keras.layers.Embedding(self.max_words, 128)(inputs)
         x = tf.keras.layers.LSTM(128)(x)
         outputs = tf.keras.layers.Dense(len(self.labels), activation='softmax')(x)
-        model = tf.keras.Model(inputs=inputs, outputs=outputs)
-        model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
-        return model
+        
+        self.model = tf.keras.Model(inputs=inputs, outputs=outputs)
+        self.model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+        self.tokenizer = Tokenizer(num_words=self.max_words)
+        self.loaded = True
     
-    def _preprocess_text(self, text):
-        """Tiền xử lý văn bản tiếng Việt cho dự đoán"""
-        # Tiền xử lý cơ bản
-        text = preprocess_text(text)
+    def preprocess(self, text: str) -> np.ndarray:
+        """Tiền xử lý văn bản đầu vào"""
+        # Đảm bảo model và tokenizer đã được tải
+        if not self.loaded:
+            self.load_model()
         
-        # Sử dụng underthesea cho tokenize tiếng Việt nếu có
-        try:
-            from underthesea import word_tokenize
-            tokenized_text = word_tokenize(text, format="text")
-            text = tokenized_text
-        except ImportError:
-            # Fallback nếu không có underthesea
-            pass
+        # Tiền xử lý text
+        processed_text = preprocess_text(text)
         
-        # Tokenize và pad
-        sequences = self.tokenizer.texts_to_sequences([text])
-        padded_sequences = pad_sequences(sequences, maxlen=self.max_length)
+        # Kiểm tra loại model để có phương pháp tiền xử lý phù hợp
+        if self.model_type in ["bert", "phobert", "bert4news"]:
+            # Sử dụng Hugging Face tokenizer nếu có
+            try:
+                from transformers import AutoTokenizer
+                
+                # Map model_type to pretrained model name
+                model_name_map = {
+                    "bert": "bert-base-multilingual-cased",
+                    "phobert": "vinai/phobert-base",
+                    "bert4news": "NlpHUST/vibert4news-base-cased"
+                }
+                
+                model_name = model_name_map.get(self.model_type, "bert-base-multilingual-cased")
+                tokenizer = AutoTokenizer.from_pretrained(model_name)
+                
+                # Tokenize với BERT tokenizer
+                encoded = tokenizer(
+                    processed_text, 
+                    truncation=True,
+                    padding="max_length",
+                    max_length=self.max_length,
+                    return_tensors="tf"
+                )
+                
+                return encoded
+                
+            except ImportError:
+                logger.warning("Thư viện transformers không khả dụng, sử dụng tiền xử lý thông thường")
+                # Fallback về phương pháp thông thường
         
-        return padded_sequences, text
+        # Tiền xử lý thông thường với Keras Tokenizer
+        sequences = self.tokenizer.texts_to_sequences([processed_text])
+        padded = pad_sequences(sequences, maxlen=self.max_length)
+        
+        return padded
     
-    def predict(self, text) -> Tuple[int, float, Dict[str, float]]:
+    def predict(self, text: str, model_type: str = None) -> Tuple[int, float, Dict[str, float]]:
         """
-        Dự đoán nhãn cho văn bản tiếng Việt với khả năng phát hiện spam nâng cao
+        Dự đoán phân loại cho văn bản
         
         Args:
-            text (str): Văn bản cần dự đoán
+            text: Văn bản cần phân loại
+            model_type: Loại mô hình cần sử dụng (lstm, cnn, bert, phobert, bert4news, grn)
             
         Returns:
-            Tuple[int, float, Dict[str, float]]: Nhãn dự đoán, độ tin cậy, và xác suất cho từng nhãn
+            Tuple[int, float, Dict[str, float]]: (predicted_class, confidence, probabilities)
         """
         # Đảm bảo model đã được tải
         if not self.loaded:
             self.load_model()
         
-        # Kiểm tra model đã tải chưa
-        if not self.loaded or not self.model:
-            logger.error("Model chưa được tải.")
-            return 0, 0.5, {label: 0.25 for label in self.get_labels()}
+        # Xử lý văn bản trống
+        if not text or not text.strip():
+            # Trả về nhãn "clean" với độ tin cậy cao
+            probabilities = {label: 0.0 for label in self.labels}
+            probabilities[self.labels[0]] = 1.0
+            return 0, 1.0, probabilities
         
-        # Tiền xử lý văn bản
-        try:
-            preprocessed_text, cleaned_text = self._preprocess_text(text)
-        except Exception as e:
-            logger.error(f"Lỗi khi tiền xử lý văn bản: {e}")
-            # Fallback nếu tiền xử lý thất bại
-            return 0, 0.5, {label: 0.25 for label in self.get_labels()}
-        
-        # Lấy các đặc trưng spam bổ sung
-        _, spam_features = preprocess_for_spam_detection(text)
-        
-        # Thực hiện dự đoán với model
-        try:
-            prediction = self.model.predict(preprocessed_text)[0]
-        except Exception as e:
-            logger.error(f"Lỗi khi dự đoán: {e}")
-            # Fallback nếu dự đoán thất bại
-            return 0, 0.5, {label: 0.25 for label in self.get_labels()}
-        
-        # Lấy nhãn và độ tin cậy
-        predicted_class = np.argmax(prediction)
-        confidence = float(prediction[predicted_class])
-        
-        # Tạo dictionary xác suất cho từng nhãn
-        probabilities = {label: float(prob) for label, prob in zip(self.get_labels(), prediction)}
-        
-        # Áp dụng các quy tắc heuristic cho việc phát hiện spam nâng cao
-        # Nếu model không chắc chắn nhưng có các dấu hiệu spam mạnh
-        if predicted_class != 3 and confidence < 0.8:  # Nếu không được dự đoán là spam với độ tin cậy cao
-            spam_score = 0
-            
-            # Cộng điểm dựa trên các đặc trưng spam
-            if spam_features['has_url']:
-                spam_score += 0.2
-            
-            if spam_features['has_suspicious_url']:
-                spam_score += 0.3
-            
-            if spam_features['url_count'] > 1:
-                spam_score += 0.1 * min(spam_features['url_count'], 3)  # Giới hạn tối đa
-            
-            if spam_features['spam_keyword_count'] > 0:
-                spam_score += 0.15 * min(spam_features['spam_keyword_count'], 5)  # Giới hạn tối đa
-            
-            if spam_features['has_excessive_punctuation']:
-                spam_score += 0.1
-                
-            if spam_features['has_all_caps_words']:
-                spam_score += 0.1
-            
-            # Ghi đè dự đoán nếu spam score đủ cao
-            if spam_score > 0.5:
-                predicted_class = 3  # Spam
-                confidence = max(confidence, spam_score)
-                # Cập nhật probabilities
-                probabilities = {label: 0.1 for label in self.get_labels()}
-                probabilities[self.get_labels()[3]] = confidence
-        
-        # Log kết quả ở chế độ debug
-        logger.debug(f"Dự đoán cho '{text[:50]}...': {self.get_labels()[predicted_class]} (tin cậy: {confidence:.2f})")
-        
-        return int(predicted_class), confidence, probabilities
-    
-    async def predict_async(self, text) -> Tuple[int, float, Dict[str, float]]:
-        """
-        Phiên bản bất đồng bộ của hàm predict
-        """
-        # Hiện tại, chỉ gọi phiên bản đồng bộ vì TensorFlow không có API bất đồng bộ
-        # Trong tương lai, có thể thay đổi để sử dụng worker pool hoặc giải pháp khác
-        return self.predict(text)
-    
-    def get_model_info(self) -> Dict[str, Any]:
-        """
-        Lấy thông tin về model
-        
-        Returns:
-            Dict[str, Any]: Thông tin model
-        """
-        total_params = 0
-        if hasattr(self.model, 'count_params'):
+        # Kiểm tra và sử dụng model_type được chỉ định
+        current_model_type = self.model_type
+        if model_type and model_type != self.model_type:
             try:
-                total_params = self.model.count_params()
-            except:
-                pass
+                # Lưu lại model_type hiện tại
+                self.model_type = model_type
+                
+                # Kiểm tra các model mới trong thư mục model
+                model_files = {
+                    "lstm": "model/best_model_LSTM.h5",
+                    "cnn": "model/cnn/model.safetensors",
+                    "grn": "model/grn/model.safetensors",
+                    "bert": "model/bert/model.safetensors",
+                    "phobert": "model/phobert/model.safetensors",
+                    "bert4news": "model/bert4news/model.safetensors"
+                }
+                
+                # Kiểm tra nếu model tồn tại
+                if model_type in model_files and os.path.exists(model_files[model_type]):
+                    # Tải model mới
+                    temp_model = ModelAdapter.load_model(model_files[model_type], self.device)
+                    
+                    # Tìm tokenizer phù hợp
+                    tokenizer_path = model_files[model_type].replace('.h5', '_tokenizer.pkl').replace('.safetensors', '_tokenizer.pkl')
+                    if not os.path.exists(tokenizer_path):
+                        # Thử tìm trong thư mục model/
+                        tokenizer_path = os.path.join("model", "tokenizer.pkl")
+                    
+                    temp_tokenizer = None
+                    if os.path.exists(tokenizer_path):
+                        with open(tokenizer_path, 'rb') as f:
+                            temp_tokenizer = pickle.load(f)
+                    
+                    # Sử dụng model và tokenizer tạm thời
+                    original_model = self.model
+                    original_tokenizer = self.tokenizer
+                    
+                    self.model = temp_model
+                    if temp_tokenizer:
+                        self.tokenizer = temp_tokenizer
+                    
+                    # Thực hiện dự đoán
+                    try:
+                        processed_input = self.preprocess(text)
+                        prediction = self.model.predict(processed_input)
+                        
+                        # Lấy kết quả
+                        if isinstance(prediction, list):
+                            probs = prediction[0]
+                        else:
+                            probs = prediction[0] if prediction.ndim > 1 else prediction
+                        
+                        # Lấy class có xác suất cao nhất
+                        predicted_class = np.argmax(probs)
+                        confidence = float(probs[predicted_class])
+                        
+                        # Chuẩn bị dictionary probabilities
+                        probabilities = {
+                            self.labels[i]: float(probs[i]) for i in range(len(self.labels))
+                        }
+                        
+                        # Áp dụng rule-based heuristics cho spam
+                        _, spam_features = preprocess_for_spam_detection(text)
+                        
+                        # Tích hợp phát hiện spam bổ sung
+                        spam_class = 3  # Index cho spam
+                        if predicted_class != spam_class and confidence < 0.8:
+                            spam_score = 0
+                            
+                            if spam_features.get('has_url', False):
+                                spam_score += 0.2
+                            
+                            if spam_features.get('has_suspicious_url', False):
+                                spam_score += 0.3
+                            
+                            if spam_features.get('url_count', 0) > 1:
+                                spam_score += 0.1 * spam_features.get('url_count', 0)
+                            
+                            if spam_features.get('spam_keyword_count', 0) > 0:
+                                spam_score += 0.15 * spam_features.get('spam_keyword_count', 0)
+                            
+                            if spam_features.get('has_excessive_punctuation', False):
+                                spam_score += 0.1
+                            
+                            if spam_features.get('has_all_caps_words', False):
+                                spam_score += 0.1
+                            
+                            # Ghi đè dự đoán nếu spam_score đủ cao
+                            if spam_score > 0.5:
+                                predicted_class = spam_class
+                                confidence = max(confidence, spam_score)
+                                
+                                # Cập nhật probabilities
+                                probabilities = {label: 0.1 for label in self.labels}
+                                probabilities[self.labels[spam_class]] = spam_score
+                        
+                        # Khôi phục model và tokenizer gốc
+                        self.model = original_model
+                        self.tokenizer = original_tokenizer
+                        self.model_type = current_model_type
+                        
+                        return int(predicted_class), confidence, probabilities
+                        
+                    except Exception as e:
+                        logger.error(f"Lỗi khi dự đoán với model {model_type}: {str(e)}")
+                        # Khôi phục model và tokenizer gốc
+                        self.model = original_model
+                        self.tokenizer = original_tokenizer
+                        self.model_type = current_model_type
+                else:
+                    logger.warning(f"Không tìm thấy model {model_type}, sử dụng model mặc định")
+            except Exception as e:
+                logger.error(f"Lỗi khi tải model {model_type}: {str(e)}")
+                # Đảm bảo khôi phục model_type ban đầu
+                self.model_type = current_model_type
         
-        return {
-            "model_path": self.model_path,
-            "max_length": self.max_length,
-            "max_words": self.max_words,
-            "device": self.device,
-            "labels": self.get_labels(),
-            "is_dummy": not os.path.exists(self.model_path),
-            "total_params": total_params,
-            "vocab_size": len(self.tokenizer.word_index) + 1 if self.tokenizer else 0
-        }
-    
-    def extract_important_features(self, text) -> List[str]:
-        """
-        Trích xuất các đặc trưng quan trọng từ văn bản
-        
-        Args:
-            text (str): Văn bản cần trích xuất
+        try:
+            # Tiền xử lý text
+            processed_input = self.preprocess(text)
             
-        Returns:
-            List[str]: Danh sách các đặc trưng quan trọng
-        """
-        # Tiền xử lý văn bản
-        _, cleaned_text = self._preprocess_text(text)
-        
-        # Trích xuất keywords
-        keywords = extract_keywords(cleaned_text)
-        
-        return keywords
-    
-    def get_labels(self) -> List[str]:
-        """Lấy danh sách các nhãn"""
-        return self.labels or ["clean", "offensive", "hate", "spam"]
-    
-    def is_loaded(self) -> bool:
-        """Kiểm tra model đã được tải chưa"""
-        return self.loaded
+            # Dự đoán
+            prediction = self.model.predict(processed_input)
+            
+            # Lấy kết quả
+            if isinstance(prediction, list):
+                probs = prediction[0]
+            else:
+                probs = prediction[0] if prediction.ndim > 1 else prediction
+            
+            # Lấy class có xác suất cao nhất
+            predicted_class = np.argmax(probs)
+            confidence = float(probs[predicted_class])
+            
+            # Chuẩn bị dictionary probabilities
+            probabilities = {
+                self.labels[i]: float(probs[i]) for i in range(len(self.labels))
+            }
+            
+            # Tích hợp phát hiện spam bổ sung
+            _, spam_features = preprocess_for_spam_detection(text)
+            
+            # Áp dụng rule-based heuristics cho spam
+            spam_class = 3  # Index cho spam
+            if predicted_class != spam_class and confidence < 0.8:
+                spam_score = 0
+                
+                if spam_features.get('has_url', False):
+                    spam_score += 0.2
+                
+                if spam_features.get('has_suspicious_url', False):
+                    spam_score += 0.3
+                
+                if spam_features.get('url_count', 0) > 1:
+                    spam_score += 0.1 * spam_features.get('url_count', 0)
+                
+                if spam_features.get('spam_keyword_count', 0) > 0:
+                    spam_score += 0.15 * spam_features.get('spam_keyword_count', 0)
+                
+                if spam_features.get('has_excessive_punctuation', False):
+                    spam_score += 0.1
+                
+                if spam_features.get('has_all_caps_words', False):
+                    spam_score += 0.1
+                
+                # Ghi đè dự đoán nếu spam_score đủ cao
+                if spam_score > 0.5:
+                    predicted_class = spam_class
+                    confidence = max(confidence, spam_score)
+                    
+                    # Cập nhật probabilities
+                    probabilities = {label: 0.1 for label in self.labels}
+                    probabilities[self.labels[spam_class]] = spam_score
+            
+            return int(predicted_class), confidence, probabilities
+            
+        except Exception as e:
+            logger.error(f"Lỗi khi dự đoán: {str(e)}")
+            # Fallback về clean với độ tin cậy thấp
+            probabilities = {label: 0.2 for label in self.labels}
+            probabilities[self.labels[0]] = 0.4
+            return 0, 0.4, probabilities
 
-# Khởi tạo singleton instance
+# Singleton instance
 _model_instance = None
 
-def get_ml_model() -> MLModel:
+def get_model_instance() -> MLModel:
     """
-    Lấy instance MLModel (Singleton pattern)
-    
-    Returns:
-        MLModel: Instance ML model
+    Trả về singleton instance của MLModel
     """
     global _model_instance
     if _model_instance is None:
@@ -465,15 +550,9 @@ def get_ml_model() -> MLModel:
 
 def predict_text(text: str) -> Tuple[int, float, Dict[str, float]]:
     """
-    Hàm helper để dự đoán nhãn cho văn bản
-    
-    Args:
-        text (str): Văn bản cần dự đoán
-        
-    Returns:
-        Tuple[int, float, Dict[str, float]]: Nhãn dự đoán, độ tin cậy, và xác suất cho từng nhãn
+    Hàm tiện ích để dự đoán text mà không cần tạo instance mới
     """
-    model = get_ml_model()
+    model = get_model_instance()
     return model.predict(text)
 
 def get_model_stats() -> Dict[str, Any]:
@@ -483,5 +562,5 @@ def get_model_stats() -> Dict[str, Any]:
     Returns:
         Dict[str, Any]: Thống kê về model
     """
-    model = get_ml_model()
+    model = get_model_instance()
     return model.get_model_info()

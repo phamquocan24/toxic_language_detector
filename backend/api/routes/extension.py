@@ -90,9 +90,11 @@ from backend.utils.vector_utils import extract_features
 from backend.api.routes.auth import get_current_user
 from backend.config.settings import settings
 import sqlalchemy as sa
+import logging
 
 router = APIRouter()
 ml_model = MLModel()
+logger = logging.getLogger(__name__)
 
 # Hàm xác thực tùy chọn
 def get_optional_current_user(db: Session = Depends(get_db)):
@@ -109,8 +111,11 @@ async def extension_detect(
     """
     API endpoint để extension gửi và phân tích một comment
     """
-    # Thực hiện dự đoán
-    prediction, confidence, probabilities = ml_model.predict(request.text)
+    # Lấy model type từ request nếu có, mặc định là None (sẽ dùng model mặc định)
+    model_type = getattr(request, 'model_type', None)
+    
+    # Thực hiện dự đoán với model type được chỉ định (nếu có)
+    prediction, confidence, probabilities = ml_model.predict(request.text, model_type=model_type)
     
     # Ánh xạ dự đoán sang text
     prediction_text = {0: "clean", 1: "offensive", 2: "hate", 3: "spam"}[prediction]
@@ -158,6 +163,9 @@ async def extension_batch_detect(
     # Lấy tham số save_to_db từ request, mặc định là False
     save_to_db = request.dict().get('save_to_db', False)
     
+    # Lấy tham số model_type từ request, mặc định là None (sẽ dùng model mặc định)
+    model_type = request.dict().get('model_type', None)
+    
     # Kiểm tra và trích xuất items từ request
     # Hỗ trợ cả 2 cách gửi: comments (từ model) hoặc items (từ extension)
     items = []
@@ -168,16 +176,18 @@ async def extension_batch_detect(
     elif 'items' in request_dict and request_dict['items']:
         items = request_dict['items']
     
+    logger.info(f"Extension batch detect: Nhận {len(items)} items, save_to_db={save_to_db}, model_type={model_type}")
+    
     for item in items:
         # Đảm bảo item có text
         if not item.get('text'):
             continue
             
-        # Thực hiện dự đoán
-        prediction, confidence, probabilities = ml_model.predict(item['text'])
+        # Thực hiện dự đoán sử dụng mô hình đã được cập nhật và model_type được chỉ định (nếu có)
+        prediction, confidence, probabilities = ml_model.predict(item['text'], model_type=model_type)
         
         # Ánh xạ dự đoán sang text
-        prediction_text = {0: "clean", 1: "offensive", 2: "hate", 3: "spam"}[prediction]
+        prediction_text = {0: "bình thường", 1: "xúc phạm", 2: "thù ghét", 3: "spam"}[prediction]
         
         # Lấy các thông tin khác từ item
         platform = item.get('platform', 'unknown')
@@ -210,14 +220,25 @@ async def extension_batch_detect(
             "prediction_text": prediction_text
         })
     
-    # Ghi log hoạt động
-    log = Log(
-        user_id=current_user.id if current_user else None,
-        action=f"Batch prediction: {len(items)} items" + (", saved to DB" if save_to_db else ", not saved to DB"),
-        timestamp=datetime.utcnow()
-    )
-    db.add(log)
-    db.commit()
+    # Ghi log hoạt động chỉ khi save_to_db=True
+    if save_to_db:
+        log = Log(
+            user_id=current_user.id if current_user else None,
+            action=f"Batch prediction: {len(items)} items saved to DB",
+            timestamp=datetime.utcnow()
+        )
+        db.add(log)
+        db.commit()
+    else:
+        # Ghi log phân tích mà không lưu
+        if current_user:
+            log = Log(
+                user_id=current_user.id,
+                action=f"Batch prediction: {len(items)} items analyzed (not saved)",
+                timestamp=datetime.utcnow()
+            )
+            db.add(log)
+            db.commit()
     
     return {
         "count": len(results),

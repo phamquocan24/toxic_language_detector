@@ -3062,3 +3062,33 @@ input:checked + .slider:after {
   animation: spin 0.8s linear infinite;
   box-sizing: border-box;
 }
+
+/* Style for the model selection in settings */
+.model-selection {
+  margin-bottom: 20px;
+}
+
+.model-selection select {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  background-color: var(--input-bg);
+  color: var(--text-color);
+  font-size: 14px;
+  margin-top: 8px;
+  margin-bottom: 8px;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.model-selection select:focus {
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 2px rgba(2, 136, 209, 0.2);
+  outline: none;
+}
+
+.model-selection .setting-description {
+  font-size: 12px;
+  color: var(--secondary-text-color);
+  margin-top: 4px;
+}

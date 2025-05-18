@@ -38,9 +38,17 @@
   filter: blur(3px);
 }
 
+/* Container cho indicators và buttons */
+.toxic-indicator-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 5px;
+  flex-wrap: wrap;
+}
+
 /* Reveal button */
 .toxic-reveal-btn {
-  margin-left: 8px;
   padding: 2px 8px;
   background-color: #F44336;
   color: white;
@@ -52,4 +60,37 @@
 
 .toxic-reveal-btn:hover {
   background-color: #D32F2F;
+}
+
+/* Report button */
+.report-incorrect-btn {
+  font-size: 12px;
+  padding: 2px 8px;
+  background-color: #e0e0e0;
+  border: 1px solid #999;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #333 !important;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.report-incorrect-btn:hover {
+  background-color: #d0d0d0;
+  border-color: #666;
+  color: #000 !important;
+}
+
+.report-incorrect-btn:active {
+  transform: translateY(1px);
+  box-shadow: none;
+}
+
+.report-incorrect-btn:disabled {
+  opacity: 0.7;
+  cursor: default;
+  background-color: #c0c0c0;
+  color: #666 !important;
+  box-shadow: none;
 }
