@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline'; object-src 'self'">
+  <title>Toxic Language Detector</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <!-- Skip link for accessibility -->
+  <a href="#main-content" class="skip-link">Chuyển đến nội dung</a>
+  
+  <div class="container">
+    <div class="header">
+      <img src="../icons/iris_scan.png" alt="Logo" class="logo">
+      <h1>Toxic Language Detector</h1>
+    </div>
+    
+    <div class="toggle-container">
+      <label class="switch" for="enable-toggle">
+        <input type="checkbox" id="enable-toggle" checked>
+        <span class="slider"></span>
+      </label>
+      <span>Enable Extension</span>
+    </div>
+    
+    <main id="main-content">
+      <div class="tabs">
+        <div class="tab-header">
+          <button class="tab-button active" data-tab="analyze" aria-selected="true">
+            <span class="icon">📊</span>
+            Phân tích
+          </button>
+          <button class="tab-button requires-auth" data-tab="stats" aria-selected="false">
+            <span class="icon">📈</span>
+            Thống kê
+          </button>
+          <button class="tab-button requires-auth" data-tab="settings" aria-selected="false">
+            <span class="icon">⚙️</span>
+            Cài đặt
+          </button>
+          <button class="tab-button" data-tab="account" aria-selected="false">
+            <span class="icon">👤</span>
+            Tài khoản
+          </button>
+          <button class="tab-button requires-auth" data-tab="help" aria-selected="false">
+            <span class="icon">❓</span>
+            Trợ giúp
+          </button>
+        </div>
+        
+        <div class="tab-content">
+          <!-- Tab 1: Analyze tab -->
+          <div class="tab-pane active" id="analyze-tab" role="tabpanel" aria-labelledby="analyze-tab">
+            <h2>Phân tích nội dung</h2>
+            <div class="analyze-mode-switch">
+              <button id="single-mode-btn" class="mode-btn active" aria-pressed="true">Phân tích 1 dòng</button>
+              <button id="batch-mode-btn" class="mode-btn" aria-pressed="false">Phân tích hàng loạt</button>
+            </div>
+            
+            <div id="single-analyze-area">
+              <div class="analyze-container">
+                <div class="platform-detection">
+                  <span class="label">Nền tảng:</span>
+                  <span id="current-platform" class="platform">Chưa xác định</span>
+                </div>
+                
+                <div class="form-group">
+                  <label for="analyze-text" class="sr-only">Nhập văn bản cần phân tích</label>
+                  <textarea id="analyze-text" placeholder="Nhập văn bản cần phân tích..." aria-label="Nội dung cần phân tích"></textarea>
+                </div>
+                
+                <div class="analyze-options">
+                  <label class="checkbox">
+                    <input type="checkbox" id="anonymous-mode">
+                    <span class="checkmark"></span>
+                    Ẩn danh người gửi
+                  </label>
+                  
+                  <div class="region-select">
+                    <label for="region">Vùng miền:</label>
+                    <select id="region" aria-label="Chọn vùng miền">
+                      <option value="all">Toàn quốc</option>
+                      <option value="north">Miền Bắc</option>
+                      <option value="central">Miền Trung</option>
+                      <option value="south">Miền Nam</option>
+                    </select>
+                  </div>
+                </div>
+                
+                <button id="analyze-button" class="action-button" aria-label="Phân tích văn bản">
+                  <span class="icon">🔍</span>
+                  Phân tích
+                </button>
+                
+                <div id="result-container" class="result-container hidden" aria-live="polite">
+                  <h3>Kết quả phân tích:</h3>
+                  
+                  <div class="result-item">
+                    <div class="result-label">Phân loại:</div>
+                    <div id="result-category" class="result-value"></div>
+                  </div>
+                  
+                  <div class="result-item">
+                    <div class="result-label">Độ tin cậy:</div>
+                    <div id="result-confidence" class="result-value"></div>
+                  </div>
+                  
+                  <div class="result-progress">
+                    <div class="progress-item">
+                      <span>Bình thường:</span>
+                      <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                        <div id="progress-clean" class="progress-fill" style="width: 0%"></div>
+                      </div>
+                      <span id="percent-clean">0%</span>
+                    </div>
+                    
+                    <div class="progress-item">
+                      <span>Xúc phạm:</span>
+                      <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                        <div id="progress-offensive" class="progress-fill progress-offensive" style="width: 0%"></div>
+                      </div>
+                      <span id="percent-offensive">0%</span>
+                    </div>
+                    
+                    <div class="progress-item">
+                      <span>Thù ghét:</span>
+                      <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                        <div id="progress-hate" class="progress-fill progress-hate" style="width: 0%"></div>
+                      </div>
+                      <span id="percent-hate">0%</span>
+                    </div>
+                    
+                    <div class="progress-item">
+                      <span>Spam:</span>
+                      <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                        <div id="progress-spam" class="progress-fill progress-spam" style="width: 0%"></div>
+                      </div>
+                      <span id="percent-spam">0%</span>
+                    </div>
+                  </div>
+                  
+                  <div class="result-advanced hidden" id="result-advanced">
+                    <div class="result-item">
+                      <div class="result-label">Sắc thái:</div>
+                      <div id="result-emotion"></div>
+                    </div>
+                    
+                    <div class="result-item">
+                      <div class="result-label">Mục đích:</div>
+                      <div id="result-intent"></div>
+                    </div>
+                    
+                    <div class="result-item">
+                      <div class="result-label">Từ khóa:</div>
+                      <div id="result-keywords" class="keywords-container"></div>
+                    </div>
+                  </div>
+                  
+                  <button id="report-button" class="btn btn-secondary btn-icon" data-tooltip="Báo cáo kết quả phân tích không chính xác">
+                    <span class="icon">🚩</span>
+                    Báo cáo phân tích sai
+                  </button>
+                </div>
+              </div>
+            </div>
+            
+            <div id="batch-analyze-area" style="display:none;">
+              <div class="analyze-container">
+                <div class="form-group">
+                  <label for="batch-input" class="sr-only">Nhập nhiều bình luận để phân tích hàng loạt</label>
+                  <textarea id="batch-input" placeholder="Nhập mỗi dòng một bình luận..." aria-label="Nội dung phân tích hàng loạt"></textarea>
+                </div>
+                
+                <div class="batch-actions">
+                  <button id="batch-detect-btn" class="action-button" aria-label="Phân tích tất cả bình luận">
+                    <span class="icon">⚡</span>
+                    Phân tích hàng loạt
+                  </button>
+                  
+                  <div class="form-group">
+                    <label for="batch-file-input" class="sr-only">Tải lên file chứa bình luận</label>
+                    <input type="file" id="batch-file-input" accept=".txt,.csv" aria-label="Tải lên file chứa bình luận">
+                  </div>
+                </div>
+                
+                <div id="batch-result-container" class="result-container hidden" aria-live="polite">
+                  <div class="batch-summary">
+                    <h4>Tổng quan kết quả</h4>
+                    <div class="summary-stats">
+                      <div>Tổng số: <strong id="batch-total">0</strong></div>
+                      <div>Bình thường: <strong id="batch-clean-count" class="clean">0</strong></div>
+                      <div>Xúc phạm: <strong id="batch-offensive-count" class="offensive">0</strong></div>
+                      <div>Thù ghét: <strong id="batch-hate-count" class="hate">0</strong></div>
+                      <div>Spam: <strong id="batch-spam-count" class="spam">0</strong></div>
+                    </div>
+                  </div>
+                  
+                  <div id="batch-result-list"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Tab 2: Settings -->
+          <div class="tab-pane" id="settings-tab" role="tabpanel" aria-labelledby="settings-tab">
+            <h2>Cài đặt</h2>
+      
+      <div class="setting-item">
+              <label for="threshold">Ngưỡng nhạy:</label>
+              <input type="range" id="threshold" min="0.5" max="0.9" step="0.05" value="0.7" aria-valuemin="0.5" aria-valuemax="0.9" aria-valuenow="0.7">
+        <span id="threshold-value">0.7</span>
+      </div>
+      
+      <div class="setting-item">
+        <label class="checkbox">
+          <input type="checkbox" id="highlight-toxic" checked>
+          <span class="checkmark"></span>
+                Đánh dấu nội dung độc hại
+        </label>
+      </div>
+      
+            <div class="setting-item requires-auth">
+              <label class="checkbox">
+                <input type="checkbox" id="save-data" checked>
+                <span class="checkmark"></span>
+                Lưu data phân tích
+              </label>
+              <div class="setting-description">Giúp cải thiện mô hình AI của chúng tôi</div>
+            </div>
+            
+            <!-- Model selection setting -->
+            <div class="setting-item model-selection">
+              <label for="model-type">Chọn mô hình AI phân tích:</label>
+              <select id="model-type" aria-label="Chọn mô hình AI phân tích">
+                <option value="lstm">LSTM (nhanh, nhẹ)</option>
+                <option value="cnn">CNN (độ chính xác cao hơn)</option>
+                <option value="bert">BERT (chính xác nhất)</option>
+                <option value="phobert">PhoBERT (tối ưu cho tiếng Việt)</option>
+                <option value="bert4news">BERT4News (cho văn bản tin tức)</option>
+                <option value="grn">GRN (tiết kiệm tài nguyên)</option>
+              </select>
+              <div class="setting-description">Mô hình càng phức tạp thì độ chính xác càng cao nhưng tốc độ sẽ chậm hơn</div>
+            </div>
+            
+            <h3>Hiển thị trên nền tảng:</h3>
+      <div class="platforms">
+        <label class="checkbox">
+          <input type="checkbox" id="platform-facebook" checked>
+          <span class="checkmark"></span>
+          Facebook
+        </label>
+        
+        <label class="checkbox">
+          <input type="checkbox" id="platform-youtube" checked>
+          <span class="checkmark"></span>
+          YouTube
+        </label>
+        
+        <label class="checkbox">
+          <input type="checkbox" id="platform-twitter" checked>
+          <span class="checkmark"></span>
+          Twitter
+        </label>
+                    
+              <label class="checkbox">
+                <input type="checkbox" id="platform-tiktok">
+                <span class="checkmark"></span>
+                TikTok
+              </label>
+            </div>
+            
+            <h3>Tùy chọn hiển thị:</h3>
+            <div class="display-options">
+              <label class="checkbox">
+                <input type="checkbox" id="show-clean" checked>
+                <span class="checkmark"></span>
+                Hiện bình thường
+              </label>
+              
+              <label class="checkbox">
+                <input type="checkbox" id="show-offensive" checked>
+                <span class="checkmark"></span>
+                Hiện xúc phạm
+              </label>
+              
+              <label class="checkbox">
+                <input type="checkbox" id="show-hate" checked>
+                <span class="checkmark"></span>
+                Hiện thù ghét
+              </label>
+              
+              <label class="checkbox">
+                <input type="checkbox" id="show-spam" checked>
+                <span class="checkmark"></span>
+                Hiện spam
+              </label>
+            </div>
+            
+            <div class="theme-switch">
+              <span>Giao diện:</span>
+              <div class="theme-buttons">
+                <button id="theme-light" class="theme-button active">Sáng</button>
+                <button id="theme-dark" class="theme-button">Tối</button>
+                <button id="theme-auto" class="theme-button">Tự động</button>
+              </div>
+      </div>
+    </div>
+    
+          <!-- Tab 3: Statistics -->
+          <div class="tab-pane" id="stats-tab">
+      <h2>Thống kê</h2>
+            
+            <div class="simple-stats-info">
+              <p>Thống kê đơn giản (biểu đồ đã được tắt)</p>
+            </div>
+            
+      <div class="stat-grid">
+        <div class="stat-item">
+                <div class="stat-value" id="tab-stat-scanned">0</div>
+          <div class="stat-label">Đã quét</div>
+        </div>
+        
+        <div class="stat-item clean">
+                <div class="stat-value" id="tab-stat-clean">0</div>
+          <div class="stat-label">Bình thường</div>
+        </div>
+        
+        <div class="stat-item offensive">
+                <div class="stat-value" id="tab-stat-offensive">0</div>
+          <div class="stat-label">Xúc phạm</div>
+        </div>
+        
+        <div class="stat-item hate">
+                <div class="stat-value" id="tab-stat-hate">0</div>
+          <div class="stat-label">Thù ghét</div>
+        </div>
+        
+        <div class="stat-item spam">
+                <div class="stat-value" id="tab-stat-spam">0</div>
+          <div class="stat-label">Spam</div>
+              </div>
+            </div>
+            
+            <div class="reset-stats requires-auth">
+              <button id="reset-stats" class="reset-btn">Đặt lại thống kê</button>
+            </div>
+          </div>
+          
+          <!-- Tab 4: Account -->
+          <div class="tab-pane" id="account-tab">
+            <!-- Login Form - Shown when not logged in -->
+            <div id="login-section" class="auth-section">
+              <h2>Đăng nhập</h2>
+              <form id="login-form" class="auth-form">
+                <div class="form-group">
+                  <label for="login-username">Tên đăng nhập:</label>
+                  <input type="text" id="login-username" name="username" required>
+                </div>
+                
+                <div class="form-group">
+                  <label for="login-password">Mật khẩu:</label>
+                  <input type="password" id="login-password" name="password" required>
+                </div>
+                
+                <div class="form-group checkbox-group">
+                  <label class="checkbox">
+                    <input type="checkbox" id="login-remember" name="remember_me">
+                    <span class="checkmark"></span>
+                    Ghi nhớ đăng nhập
+                  </label>
+                </div>
+                
+                <div class="form-actions">
+                  <button type="submit" class="primary-button">Đăng nhập</button>
+                  <button type="button" id="show-register" class="secondary-button">Đăng ký mới</button>
+                </div>
+                
+                <div class="form-footer">
+                  <a href="#" id="forgot-password">Quên mật khẩu?</a>
+                </div>
+              </form>
+            </div>
+            
+            <!-- Register Form - Hidden by default -->
+            <div id="register-section" class="auth-section hidden">
+              <h2>Đăng ký tài khoản</h2>
+              <form id="register-form" class="auth-form">
+                <div class="form-group">
+                  <label for="register-username">Tên đăng nhập:</label>
+                  <input type="text" id="register-username" name="username" required>
+                </div>
+                
+                <div class="form-group">
+                  <label for="register-email">Email:</label>
+                  <input type="email" id="register-email" name="email" required>
+                </div>
+                
+                <div class="form-group">
+                  <label for="register-name">Họ tên (tùy chọn):</label>
+                  <input type="text" id="register-name" name="name">
+                </div>
+                
+                <div class="form-group">
+                  <label for="register-password">Mật khẩu:</label>
+                  <input type="password" id="register-password" name="password" required>
+                </div>
+                
+                <div class="form-group">
+                  <label for="register-confirm-password">Xác nhận mật khẩu:</label>
+                  <input type="password" id="register-confirm-password" name="confirm_password" required>
+                </div>
+                
+                <div class="form-actions">
+                  <button type="submit" class="primary-button">Đăng ký</button>
+                  <button type="button" id="show-login" class="secondary-button">Đã có tài khoản</button>
+                </div>
+              </form>
+            </div>
+            
+            <!-- Reset Password Form - Hidden by default -->
+            <div id="reset-password-section" class="auth-section hidden">
+              <h2>Khôi phục mật khẩu</h2>
+              <form id="reset-password-form" class="auth-form">
+                <div class="form-group">
+                  <label for="reset-email">Email:</label>
+                  <input type="email" id="reset-email" name="email" required>
+                </div>
+                
+                <div class="form-actions">
+                  <button type="submit" class="primary-button">Gửi yêu cầu</button>
+                  <button type="button" id="cancel-reset" class="secondary-button">Quay lại</button>
+                </div>
+              </form>
+            </div>
+            
+            <!-- User Profile - Hidden until logged in -->
+            <div id="profile-section" class="auth-section hidden">
+              <h2>Thông tin tài khoản</h2>
+              <div class="profile-info">
+                <div class="profile-field">
+                  <div class="profile-label">Tên đăng nhập:</div>
+                  <div id="profile-username" class="profile-value"></div>
+                </div>
+                
+                <div class="profile-field">
+                  <div class="profile-label">Email:</div>
+                  <div id="profile-email" class="profile-value"></div>
+                </div>
+                
+                <div class="profile-field">
+                  <div class="profile-label">Họ tên:</div>
+                  <div id="profile-name" class="profile-value"></div>
+                </div>
+                
+                <div class="profile-field">
+                  <div class="profile-label">Vai trò:</div>
+                  <div id="profile-role" class="profile-value"></div>
+                </div>
+              </div>
+              
+              <div class="profile-actions">
+                <button id="change-password-btn" class="secondary-button">Đổi mật khẩu</button>
+                <button id="logout-btn" class="warning-button">Đăng xuất</button>
+              </div>
+            </div>
+            
+            <!-- Change Password Form - Hidden by default -->
+            <div id="change-password-section" class="auth-section hidden">
+              <h2>Đổi mật khẩu</h2>
+              <form id="change-password-form" class="auth-form">
+                <div class="form-group">
+                  <label for="current-password">Mật khẩu hiện tại:</label>
+                  <input type="password" id="current-password" name="current_password" required>
+                </div>
+                
+                <div class="form-group">
+                  <label for="new-password">Mật khẩu mới:</label>
+                  <input type="password" id="new-password" name="new_password" required>
+                </div>
+                
+                <div class="form-group">
+                  <label for="confirm-new-password">Xác nhận mật khẩu mới:</label>
+                  <input type="password" id="confirm-new-password" name="confirm_new_password" required>
+                </div>
+                
+                <div class="form-actions">
+                  <button type="submit" class="primary-button">Cập nhật</button>
+                  <button type="button" id="cancel-change-password" class="secondary-button">Hủy bỏ</button>
+                </div>
+              </form>
+            </div>
+          </div>
+          
+          <!-- Tab 5: Help -->
+          <div class="tab-pane" id="help-tab">
+            <div class="help-section">
+              <h2>Trợ giúp</h2>
+              <p>Đây là trang trợ giúp của ứng dụng. Nếu bạn cần trợ giúp, vui lòng liên hệ với chúng tôi.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="footer">
+      <p>Toxic Language Detector v1.0.0</p>
+      <p class="small">Developed for Research</p>
+    </div>
+    
+    <!-- Notifications -->
+    <div id="notification" class="notification hidden"></div>
+  </div>
+  
+  <!-- Scripts -->
+  <script src="popup.js"></script>
+</body>
+</html>

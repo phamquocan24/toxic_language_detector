@@ -87,7 +87,7 @@ from backend.api.models.prediction import (
 )
 from backend.services.ml_model import MLModel
 from backend.utils.vector_utils import extract_features
-from backend.api.routes.auth import get_current_user
+from backend.api.routes.auth import get_current_user, get_optional_current_user
 from backend.config.settings import settings
 import sqlalchemy as sa
 import logging
@@ -95,11 +95,6 @@ import logging
 router = APIRouter()
 ml_model = MLModel()
 logger = logging.getLogger(__name__)
-
-# Hàm xác thực tùy chọn
-def get_optional_current_user(db: Session = Depends(get_db)):
-    """Hàm xác thực không bắt buộc, luôn trả về None"""
-    return None
 
 @router.post("/detect", response_model=PredictionResponse)
 async def extension_detect(
@@ -470,3 +465,81 @@ def store_extension_prediction(
     db.commit()
     
     return comment.id
+
+@router.post("/stats/reset")
+async def reset_extension_stats(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    API endpoint để reset thống kê của extension cho user hiện tại
+    """
+    # Check if user is authenticated
+    if not current_user:
+        raise HTTPException(status_code=401, detail="User chưa xác thực")
+
+    try:
+        # Xóa tất cả comments của user hiện tại
+        db.query(Comment).filter(Comment.user_id == current_user.id).delete()
+        db.commit()
+        
+        # Ghi log
+        log = Log(
+            user_id=current_user.id,
+            action="Reset extension statistics",
+            timestamp=datetime.utcnow()
+        )
+        db.add(log)
+        db.commit()
+        
+        return {"detail": "Thống kê đã được reset thành công"}
+    
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error resetting stats: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Lỗi khi reset thống kê: {str(e)}")
+
+@router.post("/report")
+async def report_extension_analysis(
+    request: Dict[str, Any],
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+    current_user: Optional[User] = Depends(get_optional_current_user)
+):
+    """
+    API endpoint để extension báo cáo phân tích không chính xác
+    """
+    # Kiểm tra dữ liệu
+    if not request.get("text"):
+        raise HTTPException(status_code=400, detail="Dữ liệu không hợp lệ, cần có text")
+    
+    # Trích xuất thông tin từ request
+    text = request.get("text")
+    original_prediction = request.get("prediction")
+    suggested_prediction = request.get("suggested_prediction")
+    reason = request.get("reason", "")
+    
+    # Thêm vào bảng feedback hoặc report (nếu có)
+    try:
+        # Ghi log báo cáo
+        log = Log(
+            user_id=current_user.id if current_user else None,
+            action=f"Report incorrect analysis: original={original_prediction}, suggested={suggested_prediction}",
+            timestamp=datetime.utcnow()
+        )
+        db.add(log)
+        
+        # TODO: Thêm vào bảng feedback nếu có
+        # Có thể thêm vào background task để cập nhật model
+        
+        db.commit()
+        return {"detail": "Báo cáo đã được ghi nhận, cảm ơn phản hồi của bạn"}
+    
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error reporting analysis: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Lỗi khi gửi báo cáo: {str(e)}")
+
+# Đăng ký router feedback trong main.py
+def get_feedback_router():
+    return feedback_router

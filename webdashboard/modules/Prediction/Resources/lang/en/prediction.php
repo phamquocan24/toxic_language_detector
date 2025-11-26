@@ -1,0 +1,85 @@
+<?php
+
+return [
+    'predictions' => 'Predictions',
+    'prediction' => 'Prediction',
+    'batch' => 'Batch Prediction',
+    'upload' => 'Upload CSV',
+    'similar' => 'Similar Comments',
+    'comment_id' => 'Comment ID',
+    'platform' => 'Platform',
+    'text' => 'Text',
+    'content' => 'Content',
+    'confidence' => 'Confidence',
+    'keywords' => 'Keywords',
+    'save_results' => 'Save Results',
+    'similarity_threshold' => 'Similarity Threshold',
+    'limit' => 'Limit',
+    'timestamp' => 'Time',
+    'filter_data' => 'Filter Data',
+    'prediction_text' => 'Prediction Text',
+    'source_user_name' => 'Source User',
+    'source_url' => 'Source URL',
+
+    'placeholders' => [
+        'search' => 'Search predictions...',
+        'comment_id' => 'Enter comment ID...',
+        'text' => 'Enter comment text...',
+        'source_user_name' => 'Enter source username...',
+        'source_url' => 'Enter source URL...',
+        'limit' => 'Maximum number of results',
+        'threshold' => 'Minimum similarity score (0-1)',
+    ],
+
+    'messages' => [
+        'search_no_results' => 'No matching results found',
+        'no_similar_comments' => 'No similar comments found matching the specified criteria',
+        'comment_not_found' => 'Comment not found with ID',
+        'processing' => 'Analyzing your data. This may take a moment...',
+        'no_comments' => 'Please enter at least one comment for analysis',
+        'success_analyze' => 'Successfully analyzed',
+        'saved_to_database' => 'and saved to database',
+    ],
+
+    'buttons' => [
+        'search' => 'Search',
+        'reset' => 'Reset',
+        'submit' => 'Submit',
+        'analyze' => 'Analyze Comments',
+        'find_similar' => 'Find Similar Comments',
+        'upload_analyze' => 'Upload and Analyze',
+        'add_comment' => 'Add Another Comment',
+        'remove' => 'Remove',
+        'download' => 'Download Results',
+        'details' => 'Details',
+        'close' => 'Close',
+    ],
+
+    'categories' => [
+        'all' => 'All',
+        'clean' => 'Clean',
+        'offensive' => 'Offensive',
+        'hate' => 'Hate',
+        'spam' => 'Spam',
+    ],
+
+    'labels' => [
+        'comments' => 'Comments for Analysis',
+        'comment' => 'Comment',
+        'comments_lowercase' => 'comments',
+        'save_database' => 'Save results to database',
+        'saving_to_database' => 'and saving results to database',
+        'results' => 'Prediction Results',
+        'file_preview' => 'File Preview',
+        'analysis_progress' => 'Analysis Progress',
+        'source_comment' => 'Source Comment',
+        'similar_comments' => 'Similar Comments',
+        'prediction_details' => 'Prediction Details',
+        'comment_details' => 'Comment Details',
+        'options' => 'Options',
+    ],
+
+    'help' => [
+        'save_database' => 'Checking this option will save the prediction results to the database for future reference',
+    ],
+];

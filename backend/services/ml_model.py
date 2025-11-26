@@ -180,13 +180,13 @@ class MLModel:
     def _load_config(self):
         """Tải cấu hình model từ file config.json"""
         try:
-            if os.path.exists(self.config_path):
-                with open(self.config_path, 'r', encoding='utf-8') as f:
-                    config = json.load(f)
+                if os.path.exists(self.config_path):
+                        with open(self.config_path, 'r', encoding='utf-8') as f:
+                            config = json.load(f)
                 
                 # Cập nhật thông số từ config file
-                if 'max_length' in config:
-                    self.max_length = config['max_length']
+                            if 'max_length' in config:
+                                self.max_length = config['max_length']
                 if 'vocab_size' in config:
                     self.max_words = config['vocab_size']
                 if 'model_type' in config:
@@ -323,7 +323,7 @@ class MLModel:
                 return encoded
                 
             except ImportError:
-                logger.warning("Thư viện transformers không khả dụng, sử dụng tiền xử lý thông thường")
+                    logger.warning("Thư viện transformers không khả dụng, sử dụng tiền xử lý thông thường")
                 # Fallback về phương pháp thông thường
         
         # Tiền xử lý thông thường với Keras Tokenizer
@@ -422,31 +422,31 @@ class MLModel:
                         spam_class = 3  # Index cho spam
                         if predicted_class != spam_class and confidence < 0.8:
                             spam_score = 0
-                            
+            
                             if spam_features.get('has_url', False):
                                 spam_score += 0.2
-                            
+            
                             if spam_features.get('has_suspicious_url', False):
                                 spam_score += 0.3
-                            
+            
                             if spam_features.get('url_count', 0) > 1:
                                 spam_score += 0.1 * spam_features.get('url_count', 0)
-                            
+            
                             if spam_features.get('spam_keyword_count', 0) > 0:
                                 spam_score += 0.15 * spam_features.get('spam_keyword_count', 0)
-                            
+            
                             if spam_features.get('has_excessive_punctuation', False):
                                 spam_score += 0.1
-                            
+                
                             if spam_features.get('has_all_caps_words', False):
                                 spam_score += 0.1
-                            
+            
                             # Ghi đè dự đoán nếu spam_score đủ cao
                             if spam_score > 0.5:
                                 predicted_class = spam_class
                                 confidence = max(confidence, spam_score)
                                 
-                                # Cập nhật probabilities
+                            # Cập nhật probabilities
                                 probabilities = {label: 0.1 for label in self.labels}
                                 probabilities[self.labels[spam_class]] = spam_score
                         
@@ -454,9 +454,9 @@ class MLModel:
                         self.model = original_model
                         self.tokenizer = original_tokenizer
                         self.model_type = current_model_type
-                        
+        
                         return int(predicted_class), confidence, probabilities
-                        
+    
                     except Exception as e:
                         logger.error(f"Lỗi khi dự đoán với model {model_type}: {str(e)}")
                         # Khôi phục model và tokenizer gốc

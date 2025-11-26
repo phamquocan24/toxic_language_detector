@@ -1,37 +1,72 @@
-# Base image có CUDA 11.8, cuDNN 8 và Ubuntu
-FROM nvidia/cuda:11.8.0-cudnn8-devel-ubuntu22.04
+# Multi-stage build for Toxic Language Detector Backend
 
-# Cài Python 3.10
-RUN apt-get update && apt-get install -y \
-    python3.10 python3.10-venv python3-pip python3.10-dev \
-    git curl wget unzip \
-    libglib2.0-0 libsm6 libxext6 libxrender-dev \
-    && rm -rf /var/lib/apt/lists/*
+# Stage 1: Builder
+FROM python:3.10-slim as builder
 
-# Dùng Python 3.10 làm mặc định
-RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.10 1
+LABEL maintainer="Toxic Language Detector Team"
+LABEL description="Backend API for Toxic Language Detection"
 
-# Thiết lập thư mục làm việc
+# Set working directory
 WORKDIR /app
 
-# Copy requirements và cài thư viện
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    g++ \
+    git \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements
 COPY requirements.txt .
-RUN python -m pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
 
-# Copy mã nguồn vào container
-COPY . .
+# Install Python dependencies
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
 
-# Cài đặt TensorRT (nếu bạn có file .tar.gz, hoặc đang dùng server riêng)
-# COPY TensorRT-10.x.x.x.tar.gz /tmp/
-# RUN cd /tmp && tar -xvzf TensorRT-*.tar.gz && \
-#     cp -r TensorRT-*/python/* /usr/local/lib/python3.10/dist-packages/ && \
-#     cp -r TensorRT-*/lib/* /usr/lib/x86_64-linux-gnu/
+# Stage 2: Runtime
+FROM python:3.10-slim
 
-# Nếu bạn dùng model chuyển đổi sẵn trước khi chạy server
-RUN python convert_model.py
+WORKDIR /app
 
-# Mở port cho FastAPI
+# Install runtime dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    libgomp1 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy Python packages from builder
+COPY --from=builder /usr/local/lib/python3.10/site-packages /usr/local/lib/python3.10/site-packages
+COPY --from=builder /usr/local/bin /usr/local/bin
+
+# Create non-root user
+RUN useradd -m -u 1000 appuser && \
+    mkdir -p /app/logs /app/model /app/data && \
+    chown -R appuser:appuser /app
+
+# Copy application code
+COPY --chown=appuser:appuser . .
+
+# Switch to non-root user
+USER appuser
+
+# Expose port
 EXPOSE 7860
 
-# Chạy app bằng uvicorn
-CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "7860"]
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD curl -f http://localhost:7860/health || exit 1
+
+# Set environment variables
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PORT=7860
+
+# Run application
+CMD ["gunicorn", "app:app", \
+     "--workers", "4", \
+     "--worker-class", "uvicorn.workers.UvicornWorker", \
+     "--bind", "0.0.0.0:7860", \
+     "--access-logfile", "-", \
+     "--error-logfile", "-", \
+     "--log-level", "info"]

@@ -96,6 +96,7 @@
 # api/routes/auth.py
 from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks, Request
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi.security.utils import get_authorization_scheme_param
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from datetime import datetime, timedelta
@@ -110,6 +111,18 @@ import time
 
 router = APIRouter()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")
+
+# Class tùy chỉnh để xử lý authentication không bắt buộc
+class OAuth2PasswordBearerOptional(OAuth2PasswordBearer):
+    async def __call__(self, request: Request):
+        authorization = request.headers.get("Authorization")
+        scheme, param = get_authorization_scheme_param(authorization)
+        if not authorization or scheme.lower() != "bearer":
+            return None
+        return param
+
+# Scheme tùy chọn cho authentication không bắt buộc
+oauth2_scheme_optional = OAuth2PasswordBearerOptional(tokenUrl="/auth/token")
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     to_encode = data.copy()
@@ -144,6 +157,22 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
     db.commit()
     
     return user
+
+def get_optional_current_user(token: Optional[str] = Depends(oauth2_scheme_optional), db: Session = Depends(get_db)):
+    """Hàm xác thực không bắt buộc, trả về None nếu không xác thực được"""
+    if not token:
+        return None
+    try:
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        username: str = payload.get("sub")
+        if username is None:
+            return None
+        user = db.query(User).filter(User.username == username).first()
+        if user is None:
+            return None
+        return user
+    except JWTError:
+        return None
 
 def get_admin_user(current_user: User = Depends(get_current_user)):
     if current_user.role.name != "admin":

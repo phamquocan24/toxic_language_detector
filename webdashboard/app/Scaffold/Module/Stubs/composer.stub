@@ -1,0 +1,34 @@
+{
+    "name": "$VENDOR$/$LOWER_NAME$",
+    "description": "",
+    "authors": [
+        {
+            "name": "$AUTHOR_NAME$",
+            "email": "$AUTHOR_EMAIL$"
+        }
+    ],
+    "require": {
+        "php": "^8.1.0"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [],
+            "aliases": {
+
+            }
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "$MODULE_NAMESPACE$\\$STUDLY_NAME$\\": "",
+            "$MODULE_NAMESPACE$\\$STUDLY_NAME$\\App\\": "app/",
+            "$MODULE_NAMESPACE$\\$STUDLY_NAME$\\Database\\Factories\\": "database/factories/",
+            "$MODULE_NAMESPACE$\\$STUDLY_NAME$\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "$MODULE_NAMESPACE$\\$STUDLY_NAME$\\Tests\\": "tests/"
+        }
+    }
+}

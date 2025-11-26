@@ -1,0 +1,36 @@
+<?php
+
+namespace Modules\$STUDLY_NAME$\Providers;
+
+use Illuminate\Support\ServiceProvider;
+
+class $STUDLY_NAME$ServiceProvider extends ServiceProvider
+{
+    protected string $moduleName = '$STUDLY_NAME$';
+
+    protected string $moduleNameLower = '$LOWER_NAME$';
+
+    /**
+     * Boot the application events.
+     */
+    public function boot(): void
+    {
+        //
+    }
+
+     /**
+     * Register the service provider.
+     */
+    public function register(): void
+    {
+        //
+    }
+
+    /**
+     * Register the service provider.
+     */
+    public function provides(): array
+    {
+        return [];
+    }
+}

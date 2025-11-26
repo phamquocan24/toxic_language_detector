@@ -21,6 +21,8 @@ from datetime import datetime
 # Kiểm tra xem có các module backend không
 try:
     from backend.api.routes import admin, auth, extension, prediction, toxic_detection
+    # Thêm import feedback router mới
+    from backend.api.routes.feedback import router as feedback_router
     from backend.core.middleware import LogMiddleware, RateLimitMiddleware, ExceptionMiddleware
     from backend.db.models.base import Base, engine
     from backend.config.settings import settings
@@ -441,6 +443,27 @@ if USING_BACKEND:
         app.include_router(extension.router, prefix="/extension", tags=["extension"])
         app.include_router(prediction.router, prefix="/predict", tags=["prediction"])
         app.include_router(toxic_detection.router, prefix="/toxic", tags=["toxic"])
+        app.include_router(feedback_router, prefix="/feedback", tags=["feedback"])
+        
+        # Add Prometheus metrics endpoint if enabled
+        try:
+            from backend.monitoring.metrics import get_metrics_collector
+            from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
+            from fastapi.responses import Response
+            
+            metrics_collector = get_metrics_collector()
+            
+            @app.get("/metrics", include_in_schema=False)
+            async def metrics_endpoint():
+                """Prometheus metrics endpoint"""
+                return Response(
+                    content=generate_latest(),
+                    media_type=CONTENT_TYPE_LATEST
+                )
+            
+            logger.info("Prometheus metrics endpoint enabled at /metrics")
+        except Exception as e:
+            logger.warning(f"Could not enable Prometheus metrics: {str(e)}")
         
         logger.info("Đã thêm routes từ backend")
     except Exception as e:

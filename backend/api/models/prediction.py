@@ -122,6 +122,10 @@ class PredictionRequest(BaseModel):
     metadata: Optional[Dict[str, Any]] = None
     save_to_db: bool = False
     model_type: Optional[str] = None
+    
+    model_config = {
+        "protected_namespaces": ()  # Tắt cảnh báo về không gian tên được bảo vệ (model_)
+    }
 
 class PredictionResponse(BaseModel):
     text: str
@@ -161,6 +165,10 @@ class BatchPredictionRequest(BaseModel):
     save_to_db: bool = False  # Có lưu vào DB không
     store_clean: bool = False  # Có lưu comments sạch không
     model_type: Optional[str] = None  # Loại model muốn sử dụng
+    
+    model_config = {
+        "protected_namespaces": ()  # Tắt cảnh báo về không gian tên được bảo vệ (model_)
+    }
     
     @field_validator('comments', 'items')
     @classmethod

@@ -96,13 +96,64 @@ class Settings(BaseSettings):
         "chrome-extension://*",   # Chrome extension
     ]
     
-    # ML Model settings
+    # ML Model settings (Single model - backward compatible)
     MODEL_PATH: str = os.getenv("MODEL_PATH", "model/model.safetensors")
+    MODEL_TYPE: Optional[str] = os.getenv("MODEL_TYPE", None)
     MODEL_VOCAB_PATH: str = os.getenv("MODEL_VOCAB_PATH", "model/vocab.txt")
     MODEL_CONFIG_PATH: str = os.getenv("MODEL_CONFIG_PATH", "model/config.json")
     MODEL_PRELOAD: bool = os.getenv("MODEL_PRELOAD", "True").lower() == "true"
     MODEL_DEVICE: str = os.getenv("MODEL_DEVICE", "cpu")  # "cpu" or "cuda"
     MODEL_LABELS: List[str] = ["clean", "offensive", "hate", "spam"]
+    
+    # Multi-Model Support (Optional - backward compatible)
+    DEFAULT_MODEL: Optional[str] = os.getenv("DEFAULT_MODEL", None)
+    MODEL_LOADING_MODE: Optional[str] = os.getenv("MODEL_LOADING_MODE", "single")
+    AVAILABLE_MODELS: Optional[str] = os.getenv("AVAILABLE_MODELS", None)
+    
+    # LSTM Model
+    MODEL_LSTM_PATH: Optional[str] = os.getenv("MODEL_LSTM_PATH", None)
+    MODEL_LSTM_TYPE: Optional[str] = os.getenv("MODEL_LSTM_TYPE", None)
+    MODEL_LSTM_VOCAB: Optional[str] = os.getenv("MODEL_LSTM_VOCAB", None)
+    MODEL_LSTM_CONFIG: Optional[str] = os.getenv("MODEL_LSTM_CONFIG", None)
+    
+    # CNN Model
+    MODEL_CNN_PATH: Optional[str] = os.getenv("MODEL_CNN_PATH", None)
+    MODEL_CNN_TYPE: Optional[str] = os.getenv("MODEL_CNN_TYPE", None)
+    MODEL_CNN_VOCAB: Optional[str] = os.getenv("MODEL_CNN_VOCAB", None)
+    MODEL_CNN_CONFIG: Optional[str] = os.getenv("MODEL_CNN_CONFIG", None)
+    
+    # GRU Model
+    MODEL_GRU_PATH: Optional[str] = os.getenv("MODEL_GRU_PATH", None)
+    MODEL_GRU_TYPE: Optional[str] = os.getenv("MODEL_GRU_TYPE", None)
+    MODEL_GRU_VOCAB: Optional[str] = os.getenv("MODEL_GRU_VOCAB", None)
+    MODEL_GRU_CONFIG: Optional[str] = os.getenv("MODEL_GRU_CONFIG", None)
+    
+    # BERT Model
+    MODEL_BERT_PATH: Optional[str] = os.getenv("MODEL_BERT_PATH", None)
+    MODEL_BERT_TYPE: Optional[str] = os.getenv("MODEL_BERT_TYPE", None)
+    MODEL_BERT_VOCAB: Optional[str] = os.getenv("MODEL_BERT_VOCAB", None)
+    MODEL_BERT_CONFIG: Optional[str] = os.getenv("MODEL_BERT_CONFIG", None)
+    
+    # BERT1800 Model
+    MODEL_BERT1800_PATH: Optional[str] = os.getenv("MODEL_BERT1800_PATH", None)
+    MODEL_BERT1800_TYPE: Optional[str] = os.getenv("MODEL_BERT1800_TYPE", None)
+    MODEL_BERT1800_VOCAB: Optional[str] = os.getenv("MODEL_BERT1800_VOCAB", None)
+    MODEL_BERT1800_CONFIG: Optional[str] = os.getenv("MODEL_BERT1800_CONFIG", None)
+    
+    # BERT4News Model
+    MODEL_BERT4NEWS_PATH: Optional[str] = os.getenv("MODEL_BERT4NEWS_PATH", None)
+    MODEL_BERT4NEWS_TYPE: Optional[str] = os.getenv("MODEL_BERT4NEWS_TYPE", None)
+    MODEL_BERT4NEWS_VOCAB: Optional[str] = os.getenv("MODEL_BERT4NEWS_VOCAB", None)
+    MODEL_BERT4NEWS_CONFIG: Optional[str] = os.getenv("MODEL_BERT4NEWS_CONFIG", None)
+    
+    # PhoBERT Model
+    MODEL_PHOBERT_PATH: Optional[str] = os.getenv("MODEL_PHOBERT_PATH", None)
+    MODEL_PHOBERT_TYPE: Optional[str] = os.getenv("MODEL_PHOBERT_TYPE", None)
+    MODEL_PHOBERT_VOCAB: Optional[str] = os.getenv("MODEL_PHOBERT_VOCAB", None)
+    MODEL_PHOBERT_CONFIG: Optional[str] = os.getenv("MODEL_PHOBERT_CONFIG", None)
+    
+    # Rate Limiting
+    RATE_LIMIT_PER_MINUTE: Optional[int] = int(os.getenv("RATE_LIMIT_PER_MINUTE", "60"))
     
     # Vector database settings
     VECTOR_DB_TYPE: str = os.getenv("VECTOR_DB_TYPE", "sqlite")  # sqlite, postgres, milvus
@@ -142,6 +193,20 @@ class Settings(BaseSettings):
     RATE_LIMIT_ENABLED: bool = os.getenv("RATE_LIMIT_ENABLED", "True").lower() == "true"
     RATE_LIMIT_REQUESTS: int = int(os.getenv("RATE_LIMIT_REQUESTS", "100"))
     RATE_LIMIT_PERIOD: int = int(os.getenv("RATE_LIMIT_PERIOD", "60"))  # In seconds
+    
+    # Redis settings (optional - falls back to in-memory if not configured)
+    REDIS_ENABLED: bool = os.getenv("REDIS_ENABLED", "False").lower() == "true"
+    REDIS_URL: Optional[str] = os.getenv("REDIS_URL", None)  # e.g., "redis://localhost:6379/0"
+    REDIS_PASSWORD: Optional[str] = os.getenv("REDIS_PASSWORD", None)
+    REDIS_DB: int = int(os.getenv("REDIS_DB", "0"))
+    REDIS_MAX_CONNECTIONS: int = int(os.getenv("REDIS_MAX_CONNECTIONS", "10"))
+    REDIS_SOCKET_TIMEOUT: int = int(os.getenv("REDIS_SOCKET_TIMEOUT", "5"))
+    REDIS_SOCKET_CONNECT_TIMEOUT: int = int(os.getenv("REDIS_SOCKET_CONNECT_TIMEOUT", "5"))
+    
+    # Prometheus monitoring (optional)
+    PROMETHEUS_ENABLED: bool = os.getenv("PROMETHEUS_ENABLED", "False").lower() == "true"
+    PROMETHEUS_PORT: int = int(os.getenv("PROMETHEUS_PORT", "9090"))
+    PROMETHEUS_PREFIX: str = os.getenv("PROMETHEUS_PREFIX", "toxic_detector")
     
     # Logging
     LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO")

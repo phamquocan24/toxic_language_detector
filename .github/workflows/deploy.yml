@@ -1,0 +1,57 @@
+name: Deploy
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: Run tests
+      run: |
+        pytest tests -v
+    
+    - name: Deploy to production
+      # Add your deployment commands here
+      # Examples:
+      # - Deploy to Heroku
+      # - Deploy to AWS
+      # - Deploy to VPS via SSH
+      run: |
+        echo "Deployment steps would go here"
+        # Example for Heroku:
+        # git push https://heroku:${{ secrets.HEROKU_API_KEY }}@git.heroku.com/${{ secrets.HEROKU_APP_NAME }}.git main
+    
+    - name: Create Release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        draft: false
+        prerelease: false
+    
+    - name: Notify deployment
+      if: success()
+      run: |
+        echo "Deployment successful!"
+        # Add notification logic (Slack, Discord, Email, etc.)
+

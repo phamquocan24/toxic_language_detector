@@ -1,0 +1,169 @@
+===================================================================
+WEB DASHBOARD KẾT NỐI VỚI BACKEND - TÓM TẮT THAY ĐỔI
+===================================================================
+
+📅 Date: 2025-10-23
+
+-------------------------------------------------------------------
+🎯 MỤC TIÊU:
+-------------------------------------------------------------------
+Kết nối Web Dashboard (Laravel/PHP) với Backend API (Python/FastAPI)
+để hiển thị dữ liệu thực từ Comment, User, Log tables thay vì 
+Product, Brand tables cũ.
+
+-------------------------------------------------------------------
+✅ ĐÃ THỰC HIỆN:
+-------------------------------------------------------------------
+
+1. DashboardController.php (webdashboard/modules/Admin/Http/Controllers/Admin/)
+   ✓ getStats() - Đổi từ Product/Brand sang Comment/User
+     - totalSales → totalComments (từ bảng comments)
+     - totalOrders → totalPlatforms (số platforms unique)
+     - totalProducts → totalFeedbacks (comments đã được review)
+     - totalCustomers → totalUsers (từ bảng users)
+   
+   ✓ getProductPrices() → Đổi thành comment labels distribution
+     - Thay vì phân loại sản phẩm theo giá
+     - Đếm comments theo prediction: Clean, Spam, Offensive, Hate
+   
+   ✓ getLatestProducts() → Đổi thành latest comments
+     - Hiển thị 5 comments mới nhất
+     - Bao gồm: content (50 chars), platform, prediction, confidence
+   
+   ✓ getLatestBrands() → Đổi thành latest logs
+     - Hiển thị 5 logs mới nhất từ bảng logs
+     - Bao gồm: action, user_id, timestamp
+   
+   ✓ getLatestUsers() - Sửa để tương thích với schema mới
+     - Đổi từ first_name/last_name sang name field
+     - Đổi từ role sang role_id
+     - Tách name thành first_name + last_name để tương thích với JS
+
+2. Feedbacks Module - Sửa namespace và view name
+   ✓ StatisticsController.php 
+     - Namespace: Modules\Statistics → Modules\Feedbacks
+     - View: statistics::admin.index → feedbacks::admin.index
+   
+   ✓ StatisticsServiceProvider.php
+     - Namespace: Modules\Statistics → Modules\Feedbacks
+     - moduleName: 'Statistics' → 'Feedbacks'
+     - moduleNameLower: 'statistics' → 'feedbacks'
+   
+   ✓ RouteServiceProvider.php
+     - Namespace: Modules\Statistics → Modules\Feedbacks
+     - module_path('Statistics') → module_path('Feedbacks')
+
+-------------------------------------------------------------------
+🔗 KẾT NỐI VỚI BACKEND API:
+-------------------------------------------------------------------
+
+Feedbacks Module đã sẵn sàng kết nối với Backend Python API:
+- GET /toxic/statistics (thống kê tổng quan)
+- GET /toxic/trend (xu hướng theo thời gian)
+- GET /toxic/platforms (danh sách platforms)
+- GET /toxic/toxic-keywords (từ khóa độc hại)
+
+API URL được cấu hình qua:
+- config/app.php: 'api_url' => env('API_URL', 'http://localhost/api')
+- modules/Feedbacks/Config: env('TOXIC_API_URL', 'http://localhost:7860')
+
+-------------------------------------------------------------------
+📊 DATABASE SCHEMA:
+-------------------------------------------------------------------
+
+Đã tương thích với schema:
+✓ comments table: id, content, platform, prediction, confidence, user_id
+✓ users table: id, name, email, role_id
+✓ logs table: id, user_id, action, timestamp
+✓ roles table: id, name
+
+-------------------------------------------------------------------
+🎨 FRONTEND (Dashboard.js):
+-------------------------------------------------------------------
+
+Không cần thay đổi - JavaScript dashboard.js vẫn gọi cùng endpoints:
+- /admin/api/dashboard/stats
+- /admin/api/dashboard/product-prices (giờ trả về comment labels)
+- /admin/api/dashboard/latest-products (giờ trả về comments)
+- /admin/api/dashboard/latest-brands (giờ trả về logs)
+- /admin/api/dashboard/latest-users
+
+Mapping data vẫn giữ nguyên structure để không phải sửa JS.
+
+-------------------------------------------------------------------
+⚙️ CONFIGURATION CẦN THIẾT:
+-------------------------------------------------------------------
+
+1. File .env cần thêm (nếu chưa có):
+   API_URL=http://localhost:7860
+   TOXIC_API_URL=http://localhost:7860
+
+2. Database connection (config/database.php):
+   Đảm bảo kết nối đến cùng database với backend Python
+   hoặc sync dữ liệu giữa 2 databases
+
+-------------------------------------------------------------------
+🔄 ĐỒNG BỘ DỮ LIỆU:
+-------------------------------------------------------------------
+
+Backend Python (FastAPI) sẽ ghi dữ liệu vào:
+- comments table (qua /predict/* endpoints)
+- users table (qua /auth/* endpoints)
+- logs table (qua các actions)
+
+Web Dashboard (Laravel) sẽ đọc dữ liệu từ cùng database để hiển thị.
+
+-------------------------------------------------------------------
+✨ KẾT QUẢ:
+-------------------------------------------------------------------
+
+Dashboard giờ sẽ hiển thị:
+📊 4 Cards:
+  - Total Comments (thay vì Total Sales)
+  - Total Platforms (thay vì Total Orders)
+  - Total Feedbacks/Reviews (thay vì Total Products)
+  - Total Users
+
+📈 Chart:
+  - Comment Labels Distribution (Clean, Spam, Offensive, Hate)
+  - Thay vì Product Price Categories
+
+📋 Tables:
+  - Latest Comments (thay vì Latest Products)
+  - Latest Logs (thay vì Latest Brands)
+  - Latest Users (vẫn giữ)
+
+🔍 Feedbacks/Statistics Page:
+  - Kết nối trực tiếp với Backend API
+  - Hiển thị real-time statistics, trends, toxic keywords
+
+-------------------------------------------------------------------
+🚀 TESTING:
+-------------------------------------------------------------------
+
+1. Start Backend API:
+   cd backend
+   python -m uvicorn app:app --reload --host 0.0.0.0 --port 7860
+
+2. Start Web Dashboard:
+   cd webdashboard
+   php artisan serve --port=8080
+
+3. Login và kiểm tra:
+   http://localhost:8080 → Dashboard
+   http://localhost:8080/admin/statistics → Feedbacks/Reports
+
+-------------------------------------------------------------------
+📝 NOTES:
+-------------------------------------------------------------------
+
+- KHÔNG tạo file mới
+- KHÔNG thay đổi database migrations
+- CHỈ sửa logic trong controllers để đọc từ tables đúng
+- JavaScript/CSS giữ nguyên, chỉ nhận data từ API đã đổi structure
+- Backend API endpoints vẫn giữ nguyên (/toxic/*, /auth/*, /predict/*)
+
+===================================================================
+HOÀN THÀNH - Web Dashboard đã được kết nối với Backend API
+===================================================================
+
