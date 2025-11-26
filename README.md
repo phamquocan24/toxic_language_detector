@@ -561,7 +561,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ### Contact
 - 🐛 [GitHub Issues](https://github.com/yourusername/toxic-language-detector/issues)
 - 💬 [GitHub Discussions](https://github.com/yourusername/toxic-language-detector/discussions)
-- 📧 Email: support@yourdomain.com
+- 📧 Email: anpham25052004@gmail.com
 
 ---
 
